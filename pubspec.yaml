@@ -1,0 +1,20 @@
+name: windows_doc_capture
+description: Windows x64 only document capture with isolated detection, quality warnings and perspective correction.
+version: 0.1.0-dev.1
+publish_to: none
+environment:
+  sdk: '>=3.8.0 <4.0.0'
+  flutter: '>=3.32.8'
+dependencies:
+  flutter:
+    sdk: flutter
+  image: 4.5.4
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+flutter:
+  plugin:
+    platforms:
+      windows:
+        pluginClass: WindowsDocCapturePlugin

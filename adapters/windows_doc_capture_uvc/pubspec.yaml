@@ -1,0 +1,17 @@
+name: windows_doc_capture_uvc
+description: Explicit experimental Windows x64 flutter_ffi_uvc adapter for windows_doc_capture.
+version: 0.1.0-dev.1
+publish_to: none
+environment:
+  sdk: '>=3.8.1 <4.0.0'
+  flutter: '>=3.32.8'
+dependencies:
+  flutter:
+    sdk: flutter
+  windows_doc_capture:
+    path: ../..
+  flutter_ffi_uvc: 1.1.2
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0

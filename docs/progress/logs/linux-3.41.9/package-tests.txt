@@ -1,0 +1,26 @@
+00:00 +0: loading /workspace/document_detect_windows/test/auto_capture_test.dart
+00:00 +0: /workspace/document_detect_windows/test/auto_capture_test.dart: requires eight stable frames and visible 500ms feedback
+00:00 +1: /workspace/document_detect_windows/test/auto_capture_test.dart: fast frame count alone never skips feedback
+00:00 +2: /workspace/document_detect_windows/test/auto_capture_test.dart: motion accumulates relative to stable anchor and resets counter
+00:00 +3: /workspace/document_detect_windows/test/auto_capture_test.dart: bad quality, missing frame and time gaps reset stability
+00:00 +4: /workspace/document_detect_windows/test/auto_capture_test.dart: cooldown requires paper removal before a second auto capture
+00:00 +5: /workspace/document_detect_windows/test/auto_capture_test.dart: invalid feedback interval rejected
+00:00 +6: /workspace/document_detect_windows/test/auto_capture_test.dart: warning metadata and severity are accessible and bounded
+00:00 +7: /workspace/document_detect_windows/test/detector_test.dart: detects A4 geometry, exposure and sharpness inside ROI
+00:00 +8: /workspace/document_detect_windows/test/detector_test.dart: rejects blank frame and small objects
+00:00 +9: /workspace/document_detect_windows/test/detector_test.dart: perspective quadrilateral retains distinct corners and detects tilt
+00:00 +10: /workspace/document_detect_windows/test/detector_test.dart: maps downsampled detector coordinates back to full pixels
+00:00 +11: /workspace/document_detect_windows/test/detector_test.dart: textureless paper does not inherit sharpness from its outside border
+00:00 +12: /workspace/document_detect_windows/test/detector_test.dart: too dark, glare and incomplete paper produce warnings
+00:00 +13: /workspace/document_detect_windows/test/crop_test.dart: perspective inverse mapping preserves all four colored corners
+00:00 +14: /workspace/document_detect_windows/test/crop_test.dart: perspective inverse mapping preserves all four colored corners
+00:00 +15: /workspace/document_detect_windows/test/crop_test.dart: fresh full resolution crop encodes JPEG and saves exact bytes to unique files
+00:01 +16: /workspace/document_detect_windows/test/crop_test.dart: fresh full resolution crop encodes JPEG and saves exact bytes to unique files
+00:01 +17: /workspace/document_detect_windows/test/crop_test.dart: fresh full resolution crop encodes JPEG and saves exact bytes to unique files
+00:02 +18: /workspace/document_detect_windows/test/controller_test.dart: automatic callback uses fresh snapshot and stops on stream errors
+00:02 +19: /workspace/document_detect_windows/test/controller_test.dart: automatic callback uses fresh snapshot and stops on stream errors
+00:02 +20: /workspace/document_detect_windows/test/controller_test.dart: automatic callback uses fresh snapshot and stops on stream errors
+00:02 +21: /workspace/document_detect_windows/test/controller_test.dart: automatic callback uses fresh snapshot and stops on stream errors
+00:02 +22: /workspace/document_detect_windows/test/controller_test.dart: production guard rejects unsupported OS or architecture before opening hardware
+00:02 +23: /workspace/document_detect_windows/test/analyzer_test.dart: persistent isolate processes active then newest pending frame
+00:03 +24: All tests passed!

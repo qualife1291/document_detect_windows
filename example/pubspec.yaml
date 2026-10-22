@@ -1,0 +1,24 @@
+name: windows_doc_capture_example
+description: Windows x64 document capture kiosk example with explicit experimental UVC adapter.
+version: 0.1.0+1
+publish_to: none
+environment:
+  sdk: '>=3.8.1 <4.0.0'
+  flutter: '>=3.32.8'
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  windows_doc_capture:
+    path: ..
+  windows_doc_capture_uvc:
+    path: ../adapters/windows_doc_capture_uvc
+dev_dependencies:
+  integration_test:
+    sdk: flutter
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+flutter:
+  uses-material-design: true

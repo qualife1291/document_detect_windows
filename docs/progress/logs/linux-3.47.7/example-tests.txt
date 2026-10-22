@@ -1,0 +1,4 @@
+00:00 +0: loading /workspace/document_detect_windows/example/test/kiosk_test.dart
+00:00 +0: Vietnamese kiosk supports start, manual result, retake and Esc
+00:02 +1: all quality warnings remain readable on a reduced-motion kiosk
+00:02 +2: All tests passed!

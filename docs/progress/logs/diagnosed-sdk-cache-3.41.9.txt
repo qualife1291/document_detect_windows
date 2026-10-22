@@ -1,0 +1,21 @@
+00:00 +0: loading /workspace/document_detect_windows/example/test/kiosk_test.dart
+00:00 +0: Vietnamese kiosk supports start, manual result, retake and Esc
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following _Exception was thrown running a test:
+Exception: Asset 'shaders/ink_sparkle.frag' manifest could not be decoded: INVALID_ARGUMENT:
+Unsupported runtime stages format version. Expected 1, got 0.
+
+When the exception was thrown, this was the stack:
+#0      new FragmentProgram._fromAsset (dart:ui/painting.dart:5337:7)
+#1      FragmentProgram.fromAsset.<anonymous closure> (dart:ui/painting.dart:5365:39)
+(elided 15 frames from dart:async and package:stack_trace)
+
+The test description was:
+  Vietnamese kiosk supports start, manual result, retake and Esc
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:01 +0 -1: Vietnamese kiosk supports start, manual result, retake and Esc [E]
+  Test failed. See exception logs above.
+  The test description was: Vietnamese kiosk supports start, manual result, retake and Esc
+  
+00:02 +0 -1: all quality warnings remain readable on a reduced-motion kiosk
+00:02 +1 -1: Some tests failed.

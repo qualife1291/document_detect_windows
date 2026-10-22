@@ -1,0 +1,4 @@
+Read-only pub.dev API lookup, 2026-10-22. No camera measurements.
+windows_doc_capture: HTTP 404
+camera_desktop: version=2.0.0 sdk={'sdk': '^3.11.0', 'flutter': '>=3.3.0'}
+flutter_ffi_uvc: version=1.1.2 sdk={'sdk': '^3.8.1', 'flutter': '>=3.32.0'}

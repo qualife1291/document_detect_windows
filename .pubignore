@@ -1,0 +1,6 @@
+docs/progress/
+test/
+tool/
+.github/
+adapters/
+docs/specification.md

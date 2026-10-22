@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+# Supplemental checks only; Windows handover cannot be established on Linux.
+set -euo pipefail
+repo_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
+flutter_cmd="${FLUTTER_BIN:-flutter}"
+sdk_label="${SDK_LABEL:-local}"
+log_dir="$repo_dir/docs/progress/logs/linux-$sdk_label"
+mkdir -p "$log_dir"
+export ANALYZER_STATE_LOCATION_OVERRIDE="${ANALYZER_STATE_LOCATION_OVERRIDE:-/workspace/.dartServer}"
+export XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-/workspace/.config}"
+export PUB_CACHE="${PUB_CACHE:-/workspace/.pub-cache}"
+export CI=true FLUTTER_SUPPRESS_ANALYTICS=true
+# Engine shader/test assets are incompatible across these SDK versions.
+cd "$repo_dir"
+"$flutter_cmd" clean 2>&1 | tee "$log_dir/package-clean.txt"
+cd "$repo_dir/example"
+"$flutter_cmd" clean 2>&1 | tee "$log_dir/example-clean.txt"
+cd "$repo_dir"
+"$flutter_cmd" --version 2>&1 | tee "$log_dir/version.txt"
+"$flutter_cmd" pub get 2>&1 | tee "$log_dir/package-pub-get.txt"
+"$flutter_cmd" analyze 2>&1 | tee "$log_dir/package-analyze.txt"
+"$flutter_cmd" test --reporter expanded 2>&1 | tee "$log_dir/package-tests.txt"
+"$flutter_cmd" test tool/detection_benchmark.dart --reporter expanded 2>&1 | tee "$log_dir/detection-benchmark.txt"
+cd "$repo_dir/adapters/windows_doc_capture_uvc"
+"$flutter_cmd" pub get 2>&1 | tee "$log_dir/uvc-pub-get.txt"
+"$flutter_cmd" analyze 2>&1 | tee "$log_dir/uvc-analyze.txt"
+cd "$repo_dir/example"
+"$flutter_cmd" pub get 2>&1 | tee "$log_dir/example-pub-get.txt"
+"$flutter_cmd" analyze 2>&1 | tee "$log_dir/example-analyze.txt"
+"$flutter_cmd" test --reporter expanded 2>&1 | tee "$log_dir/example-tests.txt"

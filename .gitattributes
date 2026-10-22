@@ -1,0 +1,3 @@
+* text=auto
+# Preserve tool output as evidence, including progress-line padding.
+docs/progress/logs/** -whitespace

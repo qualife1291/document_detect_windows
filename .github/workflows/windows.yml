@@ -1,0 +1,46 @@
+name: Windows x64 SDK matrix
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  windows:
+    runs-on: windows-2022
+    timeout-minutes: 35
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - sdk: '3.32.8'
+            version: '3.32.8'
+          - sdk: '3.41.9'
+            version: '3.41.9'
+          - sdk: stable
+            version: ''
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: ${{ matrix.version }}
+          cache: true
+      - name: Resolve, analyze, test, benchmark and build example
+        shell: pwsh
+        run: ./tool/verify_windows.ps1
+      - name: Analyze optional camera_desktop candidate
+        if: matrix.sdk != '3.32.8'
+        working-directory: adapters/windows_doc_capture_desktop
+        shell: pwsh
+        run: |
+          flutter pub get
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          flutter analyze
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: windows-${{ matrix.sdk }}-evidence
+          path: docs/progress/logs/windows-*/
+          if-no-files-found: error

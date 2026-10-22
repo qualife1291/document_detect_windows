@@ -1,0 +1,17 @@
+name: windows_doc_capture_desktop
+description: Optional Windows x64 camera_desktop measurement candidate; requires Dart 3.11.
+version: 0.1.0-dev.1
+publish_to: none
+environment:
+  sdk: '>=3.11.0 <4.0.0'
+  flutter: '>=3.41.9'
+dependencies:
+  flutter:
+    sdk: flutter
+  windows_doc_capture:
+    path: ../..
+  camera_desktop: 2.0.0
+  camera_platform_interface: ^2.7.0
+  image: 4.5.4
+dev_dependencies:
+  flutter_lints: ^5.0.0
