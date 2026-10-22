@@ -303,9 +303,12 @@ class WindowsDocCapture {
   Future<void> dispose() async {
     if (_disposed) return;
     _disposed = true;
-    await stop();
-    await _warnings.close();
-    await _statuses.close();
-    await _errors.close();
+    try {
+      await stop();
+    } finally {
+      await _warnings.close();
+      await _statuses.close();
+      await _errors.close();
+    }
   }
 }

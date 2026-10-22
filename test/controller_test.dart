@@ -9,7 +9,7 @@ import 'fixtures.dart';
 class FakeSource implements FrameSource {
   final stream = StreamController<FrameBuffer>.broadcast();
   FrameBuffer? latest;
-  bool running = false, fail = false;
+  bool running = false, fail = false, failStop = false;
   @override
   Stream<FrameBuffer> get frames => stream.stream;
   @override
@@ -32,6 +32,7 @@ class FakeSource implements FrameSource {
   @override
   Future<void> stop() async {
     running = false;
+    if (failStop) throw StateError('Native stop failed');
   }
 
   @override
@@ -128,6 +129,24 @@ void main() {
         messenger.setMockMethodCallHandler(channel, null);
       }
       await c.dispose();
+      await source.stream.close();
+    },
+  );
+  test(
+    'dispose closes public streams even when native stop reports an error',
+    () async {
+      final source = FakeSource();
+      final capture = WindowsDocCapture.testing(frameSource: source);
+      await capture.start();
+      final closed = Future.wait([
+        capture.warnings.drain<void>(),
+        capture.statuses.drain<void>(),
+        capture.errors.drain<void>(),
+      ]);
+      source.failStop = true;
+      await expectLater(capture.dispose(), throwsStateError);
+      await closed.timeout(const Duration(seconds: 2));
+      expect(source.running, isFalse);
       await source.stream.close();
     },
   );
