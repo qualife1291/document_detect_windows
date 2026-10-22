@@ -22,5 +22,6 @@
 00:02 +20: /workspace/document_detect_windows/test/controller_test.dart: automatic callback uses fresh snapshot and stops on stream errors
 00:02 +21: /workspace/document_detect_windows/test/controller_test.dart: automatic callback uses fresh snapshot and stops on stream errors
 00:02 +22: /workspace/document_detect_windows/test/controller_test.dart: production guard rejects unsupported OS or architecture before opening hardware
-00:03 +23: /workspace/document_detect_windows/test/analyzer_test.dart: persistent isolate processes active then newest pending frame
-00:03 +24: All tests passed!
+00:02 +23: /workspace/document_detect_windows/test/controller_test.dart: dispose closes public streams even when native stop reports an error
+00:02 +24: /workspace/document_detect_windows/test/analyzer_test.dart: persistent isolate processes active then newest pending frame
+00:03 +25: All tests passed!

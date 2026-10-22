@@ -1,0 +1,27 @@
+00:00 +0: loading D:/a/document_detect_windows/document_detect_windows/test/analyzer_test.dart
+00:00 +0: D:/a/document_detect_windows/document_detect_windows/test/analyzer_test.dart: persistent isolate processes active then newest pending frame
+00:00 +1: D:/a/document_detect_windows/document_detect_windows/test/auto_capture_test.dart: requires eight stable frames and visible 500ms feedback
+00:00 +2: D:/a/document_detect_windows/document_detect_windows/test/auto_capture_test.dart: fast frame count alone never skips feedback
+00:00 +3: D:/a/document_detect_windows/document_detect_windows/test/auto_capture_test.dart: motion accumulates relative to stable anchor and resets counter
+00:00 +4: D:/a/document_detect_windows/document_detect_windows/test/auto_capture_test.dart: bad quality, missing frame and time gaps reset stability
+00:00 +5: D:/a/document_detect_windows/document_detect_windows/test/auto_capture_test.dart: cooldown requires paper removal before a second auto capture
+00:00 +6: D:/a/document_detect_windows/document_detect_windows/test/auto_capture_test.dart: invalid feedback interval rejected
+00:00 +7: D:/a/document_detect_windows/document_detect_windows/test/auto_capture_test.dart: warning metadata and severity are accessible and bounded
+00:01 +8: D:/a/document_detect_windows/document_detect_windows/test/controller_test.dart: manual capture is single flight, restartable, and empty frames return null
+00:01 +9: D:/a/document_detect_windows/document_detect_windows/test/controller_test.dart: camera error fails start and can be retried without leaking analyzer
+00:01 +10: D:/a/document_detect_windows/document_detect_windows/test/controller_test.dart: automatic callback uses fresh snapshot and stops on stream errors
+00:02 +11: D:/a/document_detect_windows/document_detect_windows/test/controller_test.dart: automatic callback uses fresh snapshot and stops on stream errors
+00:03 +12: D:/a/document_detect_windows/document_detect_windows/test/crop_test.dart: fresh full resolution crop encodes JPEG and saves exact bytes to unique files
+00:03 +13: D:/a/document_detect_windows/document_detect_windows/test/crop_test.dart: fresh full resolution crop encodes JPEG and saves exact bytes to unique files
+00:03 +14: D:/a/document_detect_windows/document_detect_windows/test/crop_test.dart: fresh full resolution crop encodes JPEG and saves exact bytes to unique files
+00:03 +15: D:/a/document_detect_windows/document_detect_windows/test/crop_test.dart: no document and automatic poor quality never produce an output
+00:04 +16: D:/a/document_detect_windows/document_detect_windows/test/crop_test.dart: file IO failures propagate instead of returning a nonexistent savedPath
+00:04 +17: D:/a/document_detect_windows/document_detect_windows/test/crop_test.dart: moving full-resolution snapshot is rejected against the stable quad
+00:04 +18: D:/a/document_detect_windows/document_detect_windows/test/detector_test.dart: detects A4 geometry, exposure and sharpness inside ROI
+00:04 +19: D:/a/document_detect_windows/document_detect_windows/test/detector_test.dart: rejects blank frame and small objects
+00:04 +20: D:/a/document_detect_windows/document_detect_windows/test/detector_test.dart: perspective quadrilateral retains distinct corners and detects tilt
+00:04 +21: D:/a/document_detect_windows/document_detect_windows/test/detector_test.dart: maps downsampled detector coordinates back to full pixels
+00:04 +22: D:/a/document_detect_windows/document_detect_windows/test/detector_test.dart: textureless paper does not inherit sharpness from its outside border
+00:04 +23: D:/a/document_detect_windows/document_detect_windows/test/detector_test.dart: too dark, glare and incomplete paper produce warnings
+00:04 +24: D:/a/document_detect_windows/document_detect_windows/test/detector_test.dart: disposal is enforced
+00:04 +25: All tests passed!

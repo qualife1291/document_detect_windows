@@ -4,7 +4,7 @@
 Local USB camera preview, document geometry/quality analysis in an isolate,
 auto capture with visible preparation feedback, and full-resolution perspective
 correction. No OCR, document recognition model, telemetry or remote service.
-The detector requires a contrasting background. Physical Windows validation
+The detector requires a contrasting background. Physical camera validation
 and camera backend selection are still outstanding; see `docs/limitations.md`.
 
 ## Prerequisites

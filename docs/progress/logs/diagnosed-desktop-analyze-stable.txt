@@ -1,0 +1,2 @@
+2026-10-22T17:51:29.4255964Z warning - Returning a 'Future' without 'await' inside a try block. Try adding an 'await' - lib\windows_doc_capture_desktop.dart:143:7 - unawaited_return_in_try_block
+2026-10-22T17:51:29.4396714Z 1 issue found. (ran in 5.7s)

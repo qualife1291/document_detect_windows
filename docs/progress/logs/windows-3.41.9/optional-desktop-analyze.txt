@@ -1,0 +1,8 @@
+2026-10-22T18:15:29.3828557Z Analyzing windows_doc_capture_desktop...                        
+2026-10-22T18:15:29.3841438Z No issues found! (ran in 7.1s)
+2026-10-22T18:15:29.4835520Z ##[group]Run actions/upload-artifact@v4
+2026-10-22T18:15:29.4835758Z with:
+2026-10-22T18:15:29.4835884Z   name: windows-3.41.9-evidence
+2026-10-22T18:15:29.4836043Z   path: docs/progress/logs/windows-*/
+2026-10-22T18:15:29.4836205Z   if-no-files-found: error
+2026-10-22T18:15:29.4836340Z   compression-level: 6

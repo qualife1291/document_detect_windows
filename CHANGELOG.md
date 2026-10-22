@@ -15,7 +15,12 @@ This changelog follows Keep a Changelog. No production release has been made.
   quality messages and analysis metrics.
 - Synthetic functional tests and Windows SDK matrix automation.
 
+### Fixed
+
+- Close public event streams even if native camera shutdown reports an error.
+- Finish decoding desktop still images before removing their temporary files.
+
 ### Known limitations
 
-- Windows native build, real camera, accessibility and performance gates are
+- Physical Windows camera, accessibility and kiosk performance gates are
   pending; the implementation is not a completed handover.

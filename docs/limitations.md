@@ -1,8 +1,9 @@
 # Known limitations
 
 - Experimental implementation. No physical Windows camera/backend comparison
-  or final production backend selection has been made. No Windows native build
-  or driver behavior is claimed from Linux tests.
+  or final production backend selection has been made. Windows x64 native
+  builds and synthetic tests have Windows CI evidence; physical camera/driver
+  behavior is still unverified.
 - The detector finds contrasting convex quadrilaterals, not document semantics.
   Rectangular non-documents may trigger it; weak contrast, patterned backgrounds,
   shadows, occlusion and specular glare can defeat it. The operator must validate
