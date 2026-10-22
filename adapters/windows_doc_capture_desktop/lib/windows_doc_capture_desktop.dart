@@ -140,7 +140,7 @@ class DesktopFrameSource implements FrameSource {
         await file.readAsBytes(),
       ]);
       final timestamp = DateTime.now(), sequence = ++_sequence;
-      return Isolate.run(() {
+      return await Isolate.run(() {
         final decoded = img.decodeImage(encoded.materialize().asUint8List());
         if (decoded == null) return null;
         return FrameBuffer(
