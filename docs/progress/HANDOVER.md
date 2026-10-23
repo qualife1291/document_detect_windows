@@ -1,6 +1,12 @@
 Handover: CHUA DAT
 
-# Bằng chứng bàn giao — 2026-10-22
+# Bằng chứng bàn giao
+
+Cập nhật preview 2026-10-23: đã thêm callback enum và overlay bốn góc.
+Bảng Windows bên dưới là baseline của commit dd825c9, chưa xác nhận thay đổi
+preview mới. Các log Linux đang được cập nhật cho suite mới. Kết quả Windows
+sẽ được thay bằng log của đúng commit mới sau khi CI hoàn tất.
+
 
 Chưa đạt mục 9.1 (camera thật/kiosk) và 9.3 (Windows accessibility/Nielsen).
 Cloud machine là Linux x86_64; Windows build/test được chạy riêng trên GitHub

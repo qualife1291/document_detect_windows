@@ -1,10 +1,13 @@
 import 'dart:async';
 import 'package:flutter/widgets.dart';
+import 'package:flutter/foundation.dart' show ValueListenable;
 import '../capture/auto_capture_controller.dart';
 import '../capture/captured_document.dart';
 import '../capture/crop_pipeline.dart';
 import '../detection/quality_analyzer.dart';
 import '../platform/windows_ffi/platform_guard.dart';
+import '../preview/document_camera_preview.dart';
+import '../preview/document_preview_status.dart';
 import '../warnings/preview_warning.dart';
 import 'camera_backend.dart';
 import 'frame_source.dart';
@@ -50,6 +53,12 @@ class WindowsDocCapture {
   final _statuses = StreamController<CaptureStatus>.broadcast();
   final _errors = StreamController<Object>.broadcast();
   final _clock = Stopwatch()..start();
+  final _previewStatus = ValueNotifier<DocumentPreviewStatus>(
+    DocumentPreviewStatus(state: DocumentPreviewState.idle),
+  );
+  Timer? _previewExpiry;
+  ValueChanged<DocumentPreviewState>? _onDocumentStateChanged;
+  static const _previewMaxAge = Duration(milliseconds: 500);
   DocumentQualityAnalyzer? _analyzer;
   StreamSubscription<FrameBuffer>? _frames;
   StreamSubscription<QualityReport>? _reports;
@@ -65,6 +74,11 @@ class WindowsDocCapture {
   Stream<PreviewWarning> get warnings => _warnings.stream;
   Stream<CaptureStatus> get statuses => _statuses.stream;
   Stream<Object> get errors => _errors.stream;
+
+  /// Updates on every accepted detection, including corner motion when the
+  /// primary enum state stays unchanged. Listen with ValueListenableBuilder.
+  ValueListenable<DocumentPreviewStatus> get previewStatus => _previewStatus;
+  DocumentPreviewStatus get currentPreviewStatus => _previewStatus.value;
   Size get previewSize => _source.previewSize;
   bool get isRunning => _running;
   double? get deliveredPreviewFps {
@@ -84,7 +98,25 @@ class WindowsDocCapture {
     return _source.listDevices();
   }
 
-  Widget buildPreview() => _source.buildPreview();
+  Widget buildPreview({
+    bool showDocumentCorners = true,
+    BoxFit fit = BoxFit.contain,
+    Alignment alignment = Alignment.center,
+    Color validColor = const Color(0xff69f0ae),
+    Color warningColor = const Color(0xffffcc80),
+    double strokeWidth = 3,
+    double cornerLength = 24,
+  }) => DocumentCameraPreview(
+    frameSource: _source,
+    status: previewStatus,
+    showDocumentCorners: showDocumentCorners,
+    fit: fit,
+    alignment: alignment,
+    validColor: validColor,
+    warningColor: warningColor,
+    strokeWidth: strokeWidth,
+    cornerLength: cornerLength,
+  );
 
   Future<void> start({
     String? deviceId,
@@ -92,6 +124,7 @@ class WindowsDocCapture {
     bool enableAutoCapture = true,
     String? saveDirectory,
     void Function(CapturedDocument)? onAutoCapture,
+    ValueChanged<DocumentPreviewState>? onDocumentStateChanged,
   }) async {
     if (_disposed) throw StateError('Capture disposed');
     if (_stopping != null) await _stopping;
@@ -99,6 +132,7 @@ class WindowsDocCapture {
     if (_running || _starting != null) {
       throw StateError('Camera already starting or running');
     }
+    _onDocumentStateChanged = onDocumentStateChanged;
     final future = _start(
       deviceId,
       preset,
@@ -121,7 +155,11 @@ class WindowsDocCapture {
     String? directory,
     void Function(CapturedDocument)? callback,
   ) async {
-    await _verifyPlatform();
+    // Settle _starting before notifying consumer callbacks, which can stop().
+    await Future<void>.value();
+    _publishPreview(
+      DocumentPreviewStatus(state: DocumentPreviewState.processing),
+    );
     _directory = directory;
     _startupError = null;
     _callback = callback;
@@ -135,6 +173,7 @@ class WindowsDocCapture {
     );
     _analyzer = analyzer;
     try {
+      await _verifyPlatform();
       await analyzer.start();
       _reports = analyzer.reports.listen(
         (report) => _onReport(report, epoch),
@@ -148,7 +187,12 @@ class WindowsDocCapture {
       await _source.start(deviceId: device, preset: preset);
       if (_startupError != null) throw _startupError!;
       _running = true;
+      // Rebuild a preview mounted before start() with the negotiated dimensions.
+      _publishPreview(
+        DocumentPreviewStatus(state: DocumentPreviewState.processing),
+      );
     } catch (_) {
+      _publishPreview(DocumentPreviewStatus(state: DocumentPreviewState.error));
       await _cleanup();
       rethrow;
     }
@@ -160,10 +204,12 @@ class WindowsDocCapture {
       return;
     }
     _auto.reset();
+    _previewExpiry?.cancel();
+    _publishPreview(DocumentPreviewStatus(state: DocumentPreviewState.error));
     _errors.add(error);
     // Fail closed after device loss; discard stale frames and restart explicitly.
     unawaited(
-      stop().catchError((Object e) {
+      _stopSession(DocumentPreviewState.error).catchError((Object e) {
         if (!_disposed) _errors.add(e);
       }),
     );
@@ -172,9 +218,9 @@ class WindowsDocCapture {
   void _onReport(QualityReport report, int epoch) {
     if (!_running || epoch != _epoch) return;
     final age = DateTime.now().difference(report.capturedAt);
-    if (age > const Duration(milliseconds: 500) ||
-        age < const Duration(seconds: -1)) {
+    if (age > _previewMaxAge || age < const Duration(seconds: -1)) {
       _auto.reset();
+      _expirePreview(epoch);
       return;
     }
     final result = report.result;
@@ -205,7 +251,65 @@ class WindowsDocCapture {
         detectionFps: seconds > 0 ? _reportsCount / seconds : 0,
       ),
     );
+    final phase = _capture != null || trigger
+        ? DocumentPreviewState.capturing
+        : _autoEnabled && _auto.state == AutoCaptureState.cooldown
+        ? DocumentPreviewState.cooldown
+        : null;
+    _publishPreview(
+      DocumentPreviewStatus.fromReport(
+        report,
+        warnings: warnings,
+        state: phase,
+      ),
+    );
+    if (!_running || epoch != _epoch) return;
+    _previewExpiry?.cancel();
+    final remaining = _previewMaxAge - (age.isNegative ? Duration.zero : age);
+    _previewExpiry = Timer(remaining, () => _expirePreview(epoch));
     if (trigger) unawaited(_performAutoCapture(epoch, q!));
+  }
+
+  void _expirePreview(int epoch) {
+    if (!_running || epoch != _epoch) return;
+    _auto.reset();
+    _previewExpiry?.cancel();
+    _publishPreview(
+      DocumentPreviewStatus(
+        state: _capture != null
+            ? DocumentPreviewState.capturing
+            : DocumentPreviewState.processing,
+      ),
+    );
+  }
+
+  void _publishPreview(DocumentPreviewStatus value) {
+    final changed = _previewStatus.value.state != value.state;
+    _previewStatus.value = value;
+    if (changed && !_disposed && identical(_previewStatus.value, value)) {
+      try {
+        _onDocumentStateChanged?.call(value.state);
+      } catch (error) {
+        // An integration callback must not interrupt camera/detection cleanup.
+        _errors.add(error);
+      }
+    }
+  }
+
+  void _publishCapturePhase(DocumentPreviewState state) {
+    final previous = currentPreviewStatus;
+    final report = previous.report;
+    final fresh =
+        report != null &&
+        DateTime.now().difference(report.capturedAt) <= _previewMaxAge;
+    _publishPreview(
+      DocumentPreviewStatus(
+        state: state,
+        normalizedQuad: fresh ? previous.normalizedQuad : null,
+        warnings: fresh ? previous.warnings : const [],
+        report: fresh ? report : null,
+      ),
+    );
   }
 
   Future<void> _performAutoCapture(int epoch, List<Offset> expectedQuad) async {
@@ -228,13 +332,18 @@ class WindowsDocCapture {
     List<Offset>? expectedQuad,
   }) async {
     if (!_running || _disposed || _capture != null) return null;
+    final epoch = _epoch;
     final future = _captureFrame(auto, expectedQuad);
     _capture = future;
+    _publishCapturePhase(DocumentPreviewState.capturing);
     try {
       return await future;
     } finally {
       _capture = null;
       _auto.captureCompleted(_clock.elapsed);
+      if (_running && epoch == _epoch && !_disposed) {
+        _publishCapturePhase(DocumentPreviewState.cooldown);
+      }
     }
   }
 
@@ -257,18 +366,35 @@ class WindowsDocCapture {
     );
   }
 
-  Future<void> stop() async {
-    if (_stopping != null) return _stopping;
-    final future = _stop();
-    _stopping = future;
+  Future<void> stop() => _disposed
+      ? Future<void>.value()
+      : _stopSession(DocumentPreviewState.idle);
+
+  Future<void> _stopSession(DocumentPreviewState finalState) {
+    final pending = _stopping;
+    if (pending != null) return pending;
+    final completion = Completer<void>();
+    // Install the shared future before idle/error notifications can reenter stop.
+    _stopping = completion.future;
+    unawaited(_completeStop(finalState, completion));
+    return completion.future;
+  }
+
+  Future<void> _completeStop(
+    DocumentPreviewState finalState,
+    Completer<void> completion,
+  ) async {
     try {
-      await future;
+      await _stop(finalState);
+      completion.complete();
+    } catch (error, stack) {
+      completion.completeError(error, stack);
     } finally {
       _stopping = null;
     }
   }
 
-  Future<void> _stop() async {
+  Future<void> _stop(DocumentPreviewState finalState) async {
     if (_starting != null) {
       try {
         await _starting;
@@ -279,6 +405,8 @@ class WindowsDocCapture {
     _running = false;
     ++_epoch;
     _auto.reset();
+    _previewExpiry?.cancel();
+    _publishPreview(DocumentPreviewStatus(state: finalState));
     final capture = _capture;
     if (capture != null) {
       try {
@@ -291,6 +419,7 @@ class WindowsDocCapture {
   }
 
   Future<void> _cleanup() async {
+    _previewExpiry?.cancel();
     await _frames?.cancel();
     _frames = null;
     await _reports?.cancel();
@@ -304,11 +433,13 @@ class WindowsDocCapture {
     if (_disposed) return;
     _disposed = true;
     try {
-      await stop();
+      await _stopSession(DocumentPreviewState.idle);
     } finally {
       await _warnings.close();
       await _statuses.close();
       await _errors.close();
+      _onDocumentStateChanged = null;
+      _previewStatus.dispose();
     }
   }
 }

@@ -95,6 +95,13 @@ void main() {
       });
       await tester.pumpAndSettle();
       expect(find.text('Chuẩn bị chụp — giữ yên'), findsOneWidget);
+      expect(find.byType(DocumentCameraPreview), findsOneWidget);
+      final corners = tester
+          .widgetList<CustomPaint>(find.byType(CustomPaint))
+          .map((w) => w.painter)
+          .whereType<DocumentCornersPainter>()
+          .single;
+      expect(corners.normalizedQuad, hasLength(4));
       expect(find.byType(LinearProgressIndicator), findsNothing);
       expect(tester.takeException(), isNull);
       await tester.pumpWidget(const SizedBox.shrink());

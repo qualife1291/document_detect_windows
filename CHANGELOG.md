@@ -6,6 +6,13 @@ This changelog follows Keep a Changelog. No production release has been made.
 
 ### Added
 
+- Built-in live four-corner document overlay with matching contain/cover/fill
+  coordinates, perspective-following corner markers and configurable styling.
+- `DocumentPreviewState` enum callback (`onDocumentStateChanged`) and
+  `previewStatus` listenable for per-frame geometry and quality UI, including
+  detection while auto-capture is disabled.
+- Clear expired/stopped/error preview corners and report capture lifecycle states.
+
 - Windows x64 plugin guard and explicit, interchangeable camera frame sources.
 - Experimental UVC adapter and separately resolved camera_desktop candidate.
 - Pure Dart document geometry, ROI quality warnings, isolated latest-frame

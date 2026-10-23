@@ -47,6 +47,7 @@ class _CapturePageState extends State<CapturePage> {
   StreamSubscription<CaptureStatus>? _statusSub;
   StreamSubscription<Object>? _errorSub;
   CaptureStatus? _status;
+  DocumentPreviewState _documentState = DocumentPreviewState.idle;
   CapturedDocument? _result;
   List<CameraDevice> _devices = [];
   String? _device, _error;
@@ -110,6 +111,18 @@ class _CapturePageState extends State<CapturePage> {
         enableAutoCapture: _auto,
         saveDirectory: _save ? _saveDirectory.text.trim() : null,
         onAutoCapture: _showResult,
+        onDocumentStateChanged: (state) {
+          if (mounted) {
+            setState(() {
+              _documentState = state;
+              if (state == DocumentPreviewState.processing ||
+                  state == DocumentPreviewState.idle ||
+                  state == DocumentPreviewState.error) {
+                _status = null;
+              }
+            });
+          }
+        },
       );
       if (mounted) setState(() => _started = true);
     } catch (_) {
@@ -181,7 +194,7 @@ class _CapturePageState extends State<CapturePage> {
   @override
   Widget build(BuildContext context) {
     final status = _status;
-    final warning = status == null
+    final qualityWarning = status == null
         ? 'Đưa giấy tờ vào khung'
         : status.warnings.isEmpty
         ? status.state == AutoCaptureState.cooldown
@@ -190,7 +203,16 @@ class _CapturePageState extends State<CapturePage> {
               ? 'Giữ yên — đang chuẩn bị chụp'
               : 'Sẵn sàng chụp'
         : status.warnings.map((w) => w.message).join(' • ');
-    final feedback = _auto && status?.state == AutoCaptureState.stable;
+    final warning = switch (_documentState) {
+      DocumentPreviewState.processing => 'Đang xử lý giấy tờ…',
+      DocumentPreviewState.capturing => 'Đang chụp và xử lý ảnh…',
+      DocumentPreviewState.error => 'Camera gặp lỗi, hãy thử lại',
+      _ => qualityWarning,
+    };
+    final feedback =
+        _auto &&
+        _documentState == DocumentPreviewState.clear &&
+        status?.state == AutoCaptureState.stable;
     final reduceMotion = MediaQuery.of(context).disableAnimations;
     return Shortcuts(
       shortcuts: const {
@@ -327,12 +349,6 @@ class _CapturePageState extends State<CapturePage> {
                             children: [
                               const ColoredBox(color: Colors.black),
                               if (_started) capture.buildPreview(),
-                              if (status != null && _started)
-                                IgnorePointer(
-                                  child: CustomPaint(
-                                    painter: _QuadPainter(status),
-                                  ),
-                                ),
                               Align(
                                 alignment: Alignment.topCenter,
                                 child: Container(
@@ -479,41 +495,6 @@ class _CapturePageState extends State<CapturePage> {
       ),
     );
   }
-}
-
-class _QuadPainter extends CustomPainter {
-  const _QuadPainter(this.status);
-  final CaptureStatus status;
-  @override
-  void paint(Canvas canvas, Size size) {
-    final q = status.report.result.quad;
-    if (q == null || q.length != 4) return;
-    final frame = status.report.frameSize;
-    final path = Path()
-      ..moveTo(
-        q[0].dx / frame.width * size.width,
-        q[0].dy / frame.height * size.height,
-      );
-    for (final p in q.skip(1)) {
-      path.lineTo(
-        p.dx / frame.width * size.width,
-        p.dy / frame.height * size.height,
-      );
-    }
-    path.close();
-    canvas.drawPath(
-      path,
-      Paint()
-        ..color = (status.warnings.isEmpty
-            ? const Color(0xff69f0ae)
-            : const Color(0xffffcc80))
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 4,
-    );
-  }
-
-  @override
-  bool shouldRepaint(_QuadPainter oldDelegate) => oldDelegate.status != status;
 }
 
 class _RetakeIntent extends Intent {

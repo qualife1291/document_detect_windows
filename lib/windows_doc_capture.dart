@@ -11,3 +11,6 @@ export 'src/capture/auto_capture_controller.dart';
 export 'src/capture/captured_document.dart';
 export 'src/capture/crop_pipeline.dart';
 export 'src/warnings/preview_warning.dart';
+
+export 'src/preview/document_preview_status.dart';
+export 'src/preview/document_camera_preview.dart';

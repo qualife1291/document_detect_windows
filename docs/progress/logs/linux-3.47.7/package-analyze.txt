@@ -1,2 +1,2 @@
 Analyzing document_detect_windows...                            
-No issues found! (ran in 6.6s)
+No issues found! (ran in 5.2s)

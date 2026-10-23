@@ -73,8 +73,8 @@ await capture.start(
     consume(document.croppedJpeg); // caller owns retention and delivery
   },
 );
-// Put capture.buildPreview() inside an AspectRatio(capture.previewSize.aspectRatio).
-// Use capture.statuses for quad, quality, stable feedback, detection FPS and time.
+// Put capture.buildPreview() in an Expanded or a SizedBox. Four corners are drawn automatically.
+// Use capture.previewStatus for UI state/corners, and capture.statuses for analysis metrics.
 final manual = await capture.captureNow(); // null when busy or no document
 await capture.stop(); // can start again
 await warnings.cancel();
@@ -95,6 +95,85 @@ corners in full-resolution pixel coordinates, sharpness, coverage, timestamp,
 optional saved path and processing time. A fresh snapshot is detected again
 before crop. JPEG quality defaults to 90. Saved files use opaque random names;
 only cropped JPEGs are persisted by the UVC flow. No retention policy is applied.
+
+## Live detection, corner overlay and enum callback
+
+Detection starts with the camera and runs even when `enableAutoCapture: false`.
+Auto-capture controls taking photos; it does not disable detection or quality
+callbacks. Inside a Flutter `State` that owns `capture`:
+
+```dart
+DocumentPreviewState documentState = DocumentPreviewState.idle;
+
+Future<void> startCamera() async {
+  await capture.start(
+    enableAutoCapture: false,
+    onDocumentStateChanged: (DocumentPreviewState state) {
+      if (mounted) setState(() => documentState = state);
+    },
+  );
+}
+
+Widget buildDocumentPreview() => SizedBox(
+  height: 420,
+  child: capture.buildPreview(
+    fit: BoxFit.contain,
+    showDocumentCorners: true, // default
+    validColor: const Color(0xff69f0ae),
+    warningColor: const Color(0xffffcc80),
+    cornerLength: 24,
+    strokeWidth: 3,
+  ),
+);
+```
+
+`buildPreview()` keeps the native camera texture and four L-shaped corner markers
+in the same coordinate space. `BoxFit.contain` shows the complete camera frame;
+`BoxFit.cover` crops it while keeping marker coordinates aligned. Markers follow
+the detected quadrilateral edges, including perspective. Turning
+`showDocumentCorners` off keeps the same preview fit. Avoid separately mirroring
+or rotating only the texture; apply app transforms to the whole preview widget.
+
+| Enum | Meaning for app UI |
+| --- | --- |
+| `idle` | Camera stopped |
+| `processing` | Starting or waiting for fresh analysis |
+| `noDocument` | No valid document quadrilateral |
+| `outOfFrame` | Insufficient camera-frame margin or coverage |
+| `tooDark` / `tooBright` | Exposure unsuitable |
+| `blurry` | Document ROI is not sharp enough |
+| `tilted` | Perspective/corner angles exceed the threshold |
+| `clear` | All quality checks pass; movement/stability may still prevent auto-capture |
+| `capturing` | Snapshot / perspective / JPEG processing is in progress |
+| `cooldown` | Capture finished; auto-capture is waiting to rearm |
+| `error` | Camera startup or frame stream failed |
+
+The callback fires only when the enum changes, including lifecycle transitions.
+It does not flicker to `processing` for every frame. Quality priority is
+`noDocument` → `outOfFrame` → `tooDark` → `tooBright` → `blurry` → `tilted` →
+`clear`; capture lifecycle states take priority while capturing/cooling down.
+All simultaneous warnings are retained in the snapshot. A synchronous exception
+in the enum callback is delivered on `errors` and does not stop analysis.
+
+For frame-by-frame custom UI, listen to `capture.previewStatus`, a
+`ValueListenable<DocumentPreviewStatus>`. It updates on every accepted analysis,
+including corner movement while the enum stays unchanged:
+
+```dart
+ValueListenableBuilder<DocumentPreviewStatus>(
+  valueListenable: capture.previewStatus,
+  builder: (context, status, child) => Text(status.state.name),
+);
+// Also available synchronously: capture.currentPreviewStatus.
+```
+
+`normalizedQuad` is an immutable TL/TR/BR/BL list relative to the complete,
+unmirrored camera frame. It is null when no document is found, the controller
+stops/errors, or analysis expires after 500 ms. Expiry clears old markers even
+when no new frame arrives. `report` contains sharpness/coverage/exposure and
+analysis-frame dimensions. Use `projectDocumentQuad()` with the same `BoxFit`
+and `Alignment` if drawing your own overlay. Quality enums describe the full
+camera frame, even if the app chooses to crop the viewport with `cover`.
 
 ## Thresholds and feedback
 
