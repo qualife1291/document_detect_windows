@@ -68,3 +68,13 @@ capture rejection. Linux/Windows đạt cả ba SDK: 89 package tests, 3 example
 tests, hai benchmark, endurance 30 s Linux / 60 s Windows và Windows release build.
 Windows source `ca13fd4`, [workflow](https://github.com/qualife1291/document_detect_windows/actions/runs/39909113059).
 Số đo synthetic không thay camera thật/24–168 h; xem [review](PHYSICAL_LOG_REVIEW.md).
+
+## Crop theo log thứ hai — 2026-10-23
+
+Log 437 events: 10/11 capture thành công, 1 motion rejection, không có error;
+analysis FPS trung vị 9.4. Đã thêm cropPadding mặc định .02, bounded source-frame
+geometry và cropQuad riêng, giữ detect/quality/motion và JPEG gốc. Linux/Windows
+đạt ba SDK: 102 package tests, 3 example tests, hai benchmark, endurance 30/60 s
+và Windows x64 release build. Source `b83c42c`, [workflow](https://github.com/qualife1291/document_detect_windows/actions/runs/39915232027).
+Preview thêm cornerRadius mặc định 0, example chọn 6 px.
+Chưa đo mất chữ trên pixel người dùng; xem [review crop](CROP_LOG_REVIEW.md).

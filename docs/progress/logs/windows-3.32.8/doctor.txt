@@ -1,4 +1,4 @@
-[√] Flutter (Channel stable, 3.32.8, on Microsoft Windows [Version 10.0.20348.5622], locale en-US) [1,831ms]
+[√] Flutter (Channel stable, 3.32.8, on Microsoft Windows [Version 10.0.20348.5622], locale en-US) [1,431ms]
     • Flutter version 3.32.8 on channel stable at C:\hostedtoolcache\windows\flutter\stable-3.32.8-x64\flutter
     • Upstream repository https://github.com/flutter/flutter.git
     • Framework revision edada7c56e (1 year, 3 months ago), 2025-07-25 14:08:03 +0000
@@ -6,9 +6,9 @@
     • Dart version 3.8.1
     • DevTools version 2.45.1
 
-[√] Windows Version (Server 2022 Datacenter 64-bit, 21H2, 2009) [11.7s]
+[√] Windows Version (Server 2022 Datacenter 64-bit, 21H2, 2009) [9.2s]
 
-[!] Android toolchain - develop for Android devices (Android SDK version 37.0.0) [16.3s]
+[!] Android toolchain - develop for Android devices (Android SDK version 37.0.0) [13.6s]
     • Android SDK at C:\Android\android-sdk
     • Platform android-37.2-beta3, build-tools 37.0.0
     • ANDROID_HOME = C:\Android\android-sdk
@@ -19,23 +19,23 @@
     X Could not determine java version
     ! Some Android licenses not accepted. To resolve this, run: flutter doctor --android-licenses
 
-[√] Chrome - develop for the web [952ms]
+[√] Chrome - develop for the web [489ms]
     • Chrome at C:\Program Files\Google\Chrome\Application\chrome.exe
 
-[√] Visual Studio - develop Windows apps (Visual Studio Enterprise 2022 17.14.41 (September 2026)) [951ms]
+[√] Visual Studio - develop Windows apps (Visual Studio Enterprise 2022 17.14.41 (September 2026)) [487ms]
     • Visual Studio at C:\Program Files\Microsoft Visual Studio\2022\Enterprise
     • Visual Studio Enterprise 2022 version 17.14.37710.0
     • Windows 10 SDK version 10.0.26100.0
 
-[!] Android Studio (not installed) [38ms]
+[!] Android Studio (not installed) [40ms]
     • Android Studio not found; download from https://developer.android.com/studio/index.html
       (or visit https://flutter.dev/to/windows-android-setup for detailed instructions).
 
-[√] Connected device (2 available) [5.7s]
+[√] Connected device (2 available) [4.6s]
     • Windows (desktop) • windows • windows-x64    • Microsoft Windows [Version 10.0.20348.5622]
     • Chrome (web)      • chrome  • web-javascript • unknown
 
-[√] Network resources [479ms]
+[√] Network resources [415ms]
     • All expected network resources are available.
 
 ! Doctor found issues in 2 categories.

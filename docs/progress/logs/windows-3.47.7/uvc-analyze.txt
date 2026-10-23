@@ -1,2 +1,2 @@
 Analyzing windows_doc_capture_uvc...                            
-No issues found! (ran in 5.7s)
+No issues found! (ran in 5.4s)

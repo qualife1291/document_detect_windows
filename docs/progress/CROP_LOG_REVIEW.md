@@ -83,3 +83,15 @@ Pull main, chạy example profile với `DOC_CAPTURE_LOGS=true` như README. Ch�
 có chữ sát cả bốn mép, auto/manual, góc bo/xiên và sát biên camera. So sánh JPEG
 nguyên bản với ảnh crop; giữ `capture_processing` tương ứng. Cần cặp ảnh gốc/crop
 để phân biệt sai quad, thiếu margin và nội dung đã ở ngoài sensor nếu còn mất chữ.
+
+## Validation bản đã commit
+
+Nguồn `b83c42cf269bfb71462b6f342a09fd04fbff76a8`; [Windows CI](https://github.com/qualife1291/document_detect_windows/actions/runs/39915232027)
+đạt Flutter 3.32.8, 3.41.9, 3.47.7: analyze, 102 package tests, 3 example tests,
+hai benchmark, endurance 60 s/SDK và release build Windows x64. Linux cùng ba
+SDK đạt analyze/tests/benchmark, endurance 30 s/SDK; adapter desktop analyze đạt
+trên 3.41.9/3.47.7. Không skip/disable test. Source cuối chỉ thêm tài liệu sau CI.
+
+[Provenance và artifact hashes](logs/ci-provenance.json), [bảng SDK](HANDOVER.md).
+Bản margin này chưa được người dùng chụp lại trên camera; synthetic regression
+không thay thế việc đối chiếu ảnh thật hoặc kiểm chứng 24/7.

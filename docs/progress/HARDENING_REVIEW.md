@@ -1,10 +1,10 @@
 # Camera / continuous-operation review — 2026-10-23
 
-Linux validation passed on Flutter 3.32.8, 3.41.9 and 3.47.7: 89 package
+Linux validation passed on Flutter 3.32.8, 3.41.9 and 3.47.7: 102 package
 tests, 3 example tests, benchmark and 30 s endurance per SDK. Both optional
 desktop SDK analyzers also passed. Windows validation also passed on the same
 three SDKs, including release builds and 60 s synthetic endurance per SDK at
-source `ca13fd4`. Physical 24/7 acceptance remains
+source `b83c42c`. Physical 24/7 acceptance remains
 pending. This report distinguishes deterministic regression coverage from
 camera/driver and document-dataset evidence that is not available in cloud CI.
 
@@ -82,17 +82,17 @@ Raw [baseline](logs/hardening/linux-baseline-benchmark.txt) and
 
 ## Windows endurance on the committed source
 
-[Workflow](https://github.com/qualife1291/document_detect_windows/actions/runs/39909113059)
-validated `ca13fd45e6bc96d37b2f551a86ccd68431de7232`. Each job also passed
-89 package tests, 3 example tests, benchmark and release build. Endurance logs
+[Workflow](https://github.com/qualife1291/document_detect_windows/actions/runs/39915232027)
+validated `b83c42cf269bfb71462b6f342a09fd04fbff76a8`. Each job also passed
+102 package tests, 3 example tests, benchmark and release build. Endurance logs
 are in the corresponding `logs/windows-*/endurance.txt` and artifact provenance
 is in `logs/ci-provenance.json`.
 
 | Flutter | Duration | Offered frames | Reports | Dropped pending frames | Peak process RSS bytes |
 | --- | --- | --- | --- | --- | --- |
-| 3.32.8 | 60 s | 19950 | 1330 | 18620 | 147017728 |
-| 3.41.9 | 60 s | 26160 | 1744 | 24416 | 153059328 |
-| 3.47.7 | 60 s | 21780 | 1452 | 20328 | 157982720 |
+| 3.32.8 | 60 s | 19950 | 1330 | 18620 | 146788352 |
+| 3.41.9 | 60 s | 21570 | 1438 | 20132 | 155672576 |
+| 3.47.7 | 60 s | 21630 | 1442 | 20188 | 158007296 |
 
 These Windows tests use synthetic RGBA under flutter-test, without a camera,
 USB transport, native Texture or a kiosk's background workload. They verify
@@ -106,3 +106,9 @@ See [README](../../README.md#copy-diagnostic-logs-from-physical-testing).
 Physical-test follow-up: cadence, clipped-background selection, weak-edge fallback,
 white/custom frame styling, faster warp and opt-in filters are covered by 13
 additional tests. See [physical log review](PHYSICAL_LOG_REVIEW.md).
+
+Crop-margin follow-up: eight crop regressions cover edge content, bounded
+perspective margins, invalid input, scaling, original bytes and distinct detected/
+actual crop corners. Quality/motion checks retain unpadded geometry. See
+[second-log review](CROP_LOG_REVIEW.md). Five preview-radius regressions additionally
+cover both frame styles, bounding, rounding and invalid values.

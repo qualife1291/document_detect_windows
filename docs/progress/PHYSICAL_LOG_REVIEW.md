@@ -102,7 +102,7 @@ Giữ giấy rồi lấy ra để kiểm tra cooldown, thử mép sensor, phản
 đối chiếu `capture_processing.decision`, stage times, health FPS/stableFrames.
 Đo native alignment/CPU/RSS và chạy soak 24–168 giờ vẫn là gate thiết bị thật.
 
-## Validation bản đã commit
+## Validation lượt ca13fd4 (trước crop-margin follow-up)
 
 Nguồn `ca13fd45e6bc96d37b2f551a86ccd68431de7232`; [Windows CI](https://github.com/qualife1291/document_detect_windows/actions/runs/39909113059)
 đạt Flutter 3.32.8, 3.41.9, 3.47.7: 89 package tests, 3 example tests, hai
@@ -118,5 +118,7 @@ Windows hosted VM, synthetic 1280×720, flutter-test; không phải latency came
 | 3.41.9 | 27.04 ms | 183.88 ms |
 | 3.47.7 | 47.60 ms | 290.11 ms |
 
-Xem `logs/windows-*/processing-benchmark.txt` và [provenance](logs/ci-provenance.json).
-Chưa chạy camera người dùng với bản mới và chưa xác nhận 24/7.
+Artifact gốc của các số đo này nằm trong workflow ca13fd4 ở trên. Sau lượt này
+người dùng đã gửi debug_log_2; xem [review crop](CROP_LOG_REVIEW.md). Các file
+`logs/windows-*` và provenance hiện tại được cập nhật theo lượt crop-margin mới.
+Chưa xác nhận 24/7.
