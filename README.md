@@ -203,6 +203,21 @@ rejected. After capture, remove the document and wait for cooldown (2 seconds)
 before another automatic capture. Camera preview remains a native texture;
 analysis and JPEG/perspective processing run off the UI isolate.
 
+## Continuous operation and low-end devices
+
+Analysis is throttled (`analysisInterval`, default 100 ms) and adapters skip
+sampling while the analyzer or capture worker is busy. Stop/dispose cancel
+crop/JPEG work and suppress late session results. One capture controller at a
+time owns camera access in a Dart isolate; await cleanup before another camera
+feature starts. Do not enumerate devices while preview is active.
+
+For a weak PC, begin with `ResolutionPreset.medium` and an analysis interval of
+200 ms, then measure responsiveness and document readability. A 5/8 MP sensor
+does not imply full sensor resolution at the default preset. The upstream UVC
+API still copies full RGBA before sampling; full 8 MP low-end latency and 24/7
+stability require physical profiling. See [continuous operation](docs/continuous_operation.md)
+for cancellation/file behavior, document/light coverage and the physical soak matrix.
+
 ## Validation
 
 ```powershell

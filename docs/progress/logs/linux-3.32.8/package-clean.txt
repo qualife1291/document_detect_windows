@@ -1,2 +1,1 @@
-Deleting build...                                                   10ms
 Deleting .dart_tool...                                               0ms

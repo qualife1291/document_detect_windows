@@ -55,3 +55,20 @@ abstract class FrameSource {
 abstract interface class FrameSourceDiagnostics {
   double? get deliveredPreviewFps;
 }
+
+/// Optional pull backpressure. Adapters should avoid copying a high-resolution
+/// native frame while analysis already has work, and while capture is running.
+abstract interface class AnalysisDemandSource {
+  set analysisWanted(bool Function()? wanted);
+}
+
+/// Serializes native lifecycle operations, including enumeration and snapshots.
+/// A failed operation does not poison subsequent cleanup/restart.
+class CameraOperationQueue {
+  Future<void> _tail = Future<void>.value();
+  Future<T> run<T>(Future<T> Function() operation) {
+    final result = _tail.then((_) => operation());
+    _tail = result.then<void>((_) {}, onError: (Object _, StackTrace __) {});
+    return result;
+  }
+}

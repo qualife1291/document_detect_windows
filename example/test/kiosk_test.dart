@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ui' show AppExitResponse;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -7,6 +8,7 @@ import 'package:windows_doc_capture_example/capture_app.dart';
 import '../../test/fixtures.dart';
 
 class _Source implements FrameSource {
+  Completer<void>? stopGate;
   final controller = StreamController<FrameBuffer>.broadcast();
   @override
   Stream<FrameBuffer> get frames => controller.stream;
@@ -24,12 +26,47 @@ class _Source implements FrameSource {
     ResolutionPreset preset = ResolutionPreset.high,
   }) async {}
   @override
-  Future<void> stop() async {}
+  Future<void> stop() async {
+    await stopGate?.future;
+  }
+
   @override
   Future<FrameBuffer?> latestFullResolutionFrame() async => fixture();
 }
 
 void main() {
+  testWidgets('graceful window exit awaits camera cleanup', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(1280, 960));
+    final source = _Source();
+    final capture = WindowsDocCapture.testing(frameSource: source);
+    await tester.pumpWidget(CaptureApp(capture: capture));
+    await tester.pumpAndSettle();
+    await tester.runAsync(() async {
+      await tester.tap(find.text('Bắt đầu'));
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+    });
+    await tester.pumpAndSettle();
+    expect(capture.isRunning, isTrue);
+    await tester.runAsync(() async {
+      source.stopGate = Completer<void>();
+      var completed = false;
+      final exit = tester.binding.handleRequestAppExit().then((response) {
+        completed = true;
+        return response;
+      });
+      await Future<void>.delayed(const Duration(milliseconds: 20));
+      expect(completed, isFalse);
+      source.stopGate!.complete();
+      expect(await exit, AppExitResponse.exit);
+      expect(capture.isRunning, isFalse);
+    });
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.runAsync(() async {
+      await capture.dispose();
+      await source.controller.close();
+    });
+    await tester.binding.setSurfaceSize(null);
+  });
   testWidgets(
     'Vietnamese kiosk supports start, manual result, retake and Esc',
     (tester) async {
@@ -60,11 +97,13 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Đã chụp giấy tờ'), findsNothing);
       expect(tester.takeException(), isNull);
-      await tester.pumpWidget(const SizedBox.shrink());
+      // Await real isolate cleanup outside the fake widget clock, before
+      // unmounting starts the same disposal future from State.dispose().
       await tester.runAsync(() async {
         await capture.dispose();
         await source.controller.close();
       });
+      await tester.pumpWidget(const SizedBox.shrink());
       await tester.binding.setSurfaceSize(null);
     },
   );
@@ -104,11 +143,13 @@ void main() {
       expect(corners.normalizedQuad, hasLength(4));
       expect(find.byType(LinearProgressIndicator), findsNothing);
       expect(tester.takeException(), isNull);
-      await tester.pumpWidget(const SizedBox.shrink());
+      // Await real isolate cleanup outside the fake widget clock, before
+      // unmounting starts the same disposal future from State.dispose().
       await tester.runAsync(() async {
         await capture.dispose();
         await source.controller.close();
       });
+      await tester.pumpWidget(const SizedBox.shrink());
       tester.binding.platformDispatcher.clearAccessibilityFeaturesTestValue();
       await tester.binding.setSurfaceSize(null);
     },

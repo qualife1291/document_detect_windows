@@ -32,22 +32,37 @@ class DocumentQualityAnalyzer {
   final _ready = Completer<SendPort>();
   ReceivePort? _receive;
   Isolate? _isolate;
-  Future<void>? _starting;
-  bool _busy = false, _closed = false;
+  Future<void>? _starting, _disposing;
+  SendPort? _port;
+  Timer? _watchdog;
+  bool _busy = false, _closed = false, _failed = false;
   FrameBuffer? _pending;
   int droppedFrames = 0;
+  bool get canAcceptFrame => !_closed && !_failed && _port != null && !_busy;
   int get pendingFrames => _pending == null ? 0 : 1;
 
-  Future<void> start() => _starting ??= _start();
+  Future<void> start() {
+    if (_closed || _failed) {
+      return Future.error(StateError('Analyzer closed or failed'));
+    }
+    return _starting ??= _start();
+  }
+
   Future<void> _start() async {
     if (_closed) throw StateError('Analyzer closed');
     _receive = ReceivePort();
     _receive!.listen((dynamic message) {
       if (message is SendPort) {
-        _ready.complete(message);
+        _port = message;
+        if (!_ready.isCompleted) _ready.complete(message);
         return;
       }
       if (_closed) return;
+      _watchdog?.cancel();
+      if (message is! QualityReport && message != 'analysisError') {
+        _fail(StateError('Document analysis worker exited'));
+        return;
+      }
       _busy = false;
       if (message is QualityReport) {
         _reports.add(message);
@@ -58,12 +73,28 @@ class DocumentQualityAnalyzer {
       _pending = null;
       if (next != null) _send(next);
     });
-    _isolate = await Isolate.spawn(_worker, (_receive!.sendPort, maxWidth));
-    await _ready.future.timeout(const Duration(seconds: 10));
+    final ready = _ready.future;
+    unawaited(ready.then<void>((_) {}, onError: (Object _, StackTrace __) {}));
+    try {
+      _isolate = await Isolate.spawn(
+        _worker,
+        (_receive!.sendPort, maxWidth),
+        onError: _receive!.sendPort,
+        onExit: _receive!.sendPort,
+        errorsAreFatal: true,
+      );
+      await ready.timeout(const Duration(seconds: 10));
+    } catch (_) {
+      _failed = true;
+      _port = null;
+      _isolate?.kill(priority: Isolate.immediate);
+      _receive?.close();
+      rethrow;
+    }
   }
 
   void add(FrameBuffer frame) {
-    if (_closed || !_ready.isCompleted) return;
+    if (_closed || _failed || _port == null) return;
     if (_busy) {
       if (_pending != null) droppedFrames++;
       _pending = frame;
@@ -75,23 +106,42 @@ class DocumentQualityAnalyzer {
 
   void _send(FrameBuffer f) {
     _busy = true;
-    _ready.future.then((port) {
+    _port!.send((
+      f.width,
+      f.height,
+      TransferableTypedData.fromList([f.rgba]),
+      f.capturedAt,
+      f.sequence,
+    ));
+    _watchdog?.cancel();
+    _watchdog = Timer(const Duration(seconds: 5), () {
       if (!_closed) {
-        port.send((
-          f.width,
-          f.height,
-          TransferableTypedData.fromList([f.rgba]),
-          f.capturedAt,
-          f.sequence,
-        ));
+        _fail(TimeoutException('Document analysis stalled'));
       }
     });
   }
 
-  Future<void> dispose() async {
+  void _fail(Object error) {
+    if (_closed || _failed) return;
+    _failed = true;
+    _busy = false;
+    _pending = null;
+    _port = null;
+    _watchdog?.cancel();
+    _isolate?.kill(priority: Isolate.immediate);
+    if (!_ready.isCompleted) {
+      _ready.completeError(error);
+    } else {
+      _reports.addError(error);
+    }
+  }
+
+  Future<void> dispose() => _disposing ??= _dispose();
+  Future<void> _dispose() async {
     if (_closed) return;
     _closed = true;
     _pending = null;
+    _watchdog?.cancel();
     if (_starting != null) {
       try {
         await _starting;

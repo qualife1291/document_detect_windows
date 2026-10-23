@@ -112,7 +112,9 @@ class DocumentCameraPreview extends StatelessWidget {
                         child: SizedBox(
                           width: cameraSize.width,
                           height: cameraSize.height,
-                          child: frameSource.buildPreview(),
+                          child: RepaintBoundary(
+                            child: frameSource.buildPreview(),
+                          ),
                         ),
                       ),
                     if (ready && showDocumentCorners)

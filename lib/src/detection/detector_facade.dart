@@ -25,8 +25,9 @@ class PureDartDocumentDetector implements DocumentDetector {
 
   DetectionResult detectSync(FrameBuffer frame) {
     if (_disposed) throw StateError('Detector disposed');
-    final w = math.min(frame.width, maxWidth);
-    final h = math.max(2, (frame.height * w / frame.width).round());
+    final scale = math.min(1.0, maxWidth / math.max(frame.width, frame.height));
+    final w = math.max(2, (frame.width * scale).round());
+    final h = math.max(2, (frame.height * scale).round());
     final gray = Uint8List(w * h);
     for (var y = 0; y < h; y++) {
       final sy = math.min(frame.height - 1, (y * frame.height / h).floor());
@@ -67,22 +68,32 @@ class PureDartDocumentDetector implements DocumentDetector {
         var head = 0, tail = 1;
         queue[0] = seed;
         visited[seed] = 1;
-        final boundary = <Offset>[];
+        final boundary = <int>[];
         while (head < tail) {
           final p = queue[head++], x = p % w, y = p ~/ w;
           var border = false;
-          for (final n in [
-            x > 0 ? p - 1 : -1,
-            x < w - 1 ? p + 1 : -1,
-            y > 0 ? p - w : -1,
-            y < h - 1 ? p + w : -1,
-            if (mode == 0) ...[
-              x > 0 && y > 0 ? p - w - 1 : -1,
-              x < w - 1 && y > 0 ? p - w + 1 : -1,
-              x > 0 && y < h - 1 ? p + w - 1 : -1,
-              x < w - 1 && y < h - 1 ? p + w + 1 : -1,
-            ],
-          ]) {
+          const neighbors = [
+            -1,
+            0,
+            1,
+            0,
+            0,
+            -1,
+            0,
+            1,
+            -1,
+            -1,
+            1,
+            -1,
+            -1,
+            1,
+            1,
+            1,
+          ];
+          final neighborCount = mode == 0 ? 16 : 8;
+          for (var j = 0; j < neighborCount; j += 2) {
+            final nx = x + neighbors[j], ny = y + neighbors[j + 1];
+            final n = nx < 0 || nx >= w || ny < 0 || ny >= h ? -1 : ny * w + nx;
             if (n < 0 || !foreground(n)) {
               border = true;
               continue;
@@ -92,10 +103,18 @@ class PureDartDocumentDetector implements DocumentDetector {
               queue[tail++] = n;
             }
           }
-          if (border) boundary.add(Offset(x.toDouble(), y.toDouble()));
+          // A component needs at least 5% of the frame to be a document.
+          // Keep pixel indices first; avoid Offset objects for tiny text/noise.
+          if (border) boundary.add(p);
         }
         if ((mode != 0 && tail < w * h * .05) || boundary.length < 20) continue;
-        final quad = fitQuad(convexHull(boundary));
+        final quad = fitQuad(
+          convexHull(
+            boundary
+                .map((p) => Offset((p % w).toDouble(), (p ~/ w).toDouble()))
+                .toList(),
+          ),
+        );
         if (quad == null) continue;
         final area = polygonArea(quad);
         if (area < w * h * .05 ||
@@ -108,7 +127,7 @@ class PureDartDocumentDetector implements DocumentDetector {
         final b =
             ((quad[3] - quad[0]).distance + (quad[2] - quad[1]).distance) / 2;
         final ratio = math.max(a, b) / math.min(a, b);
-        if (ratio < 1.15 || ratio > 2.05 || tiltOf(quad) > 45) continue;
+        if (ratio < 1 || ratio > 3.0 || tiltOf(quad) > 45) continue;
         // A background enclosing a dark document has low contour fill and/or
         // occupies the complete border; do not mistake it for the document.
         final score = area * (mode == 0 ? 1 : (tail / area).clamp(0, 1));

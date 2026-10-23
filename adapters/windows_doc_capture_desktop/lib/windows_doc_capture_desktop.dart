@@ -11,8 +11,12 @@ import 'package:image/image.dart' as img;
 import 'package:windows_doc_capture/windows_doc_capture.dart';
 
 /// Optional measurement candidate: dependencies intentionally outside root graph.
-class DesktopFrameSource implements FrameSource {
+class DesktopFrameSource implements FrameSource, AnalysisDemandSource {
   final _backend = CameraDesktopPlugin();
+  final _operations = CameraOperationQueue();
+  bool Function()? _analysisWanted;
+  @override
+  set analysisWanted(bool Function()? wanted) => _analysisWanted = wanted;
   final _frames = StreamController<FrameBuffer>.broadcast();
   StreamSubscription<camera.CameraImageData>? _subscription;
   StreamSubscription<camera.CameraErrorEvent>? _errors;
@@ -20,6 +24,14 @@ class DesktopFrameSource implements FrameSource {
   Size _size = Size.zero;
   int _sequence = 0;
   final _sampleClock = Stopwatch()..start();
+  final _deliveryClock = Stopwatch();
+  Timer? _watchdog;
+
+  void _streamFailure(String message) {
+    _watchdog?.cancel();
+    if (_id != null) _frames.addError(StateError(message));
+  }
+
   @override
   Stream<FrameBuffer> get frames => _frames.stream;
   @override
@@ -29,7 +41,9 @@ class DesktopFrameSource implements FrameSource {
   }
 
   @override
-  Future<List<CameraDevice>> listDevices() async {
+  Future<List<CameraDevice>> listDevices() => _operations.run(_listDevices);
+
+  Future<List<CameraDevice>> _listDevices() async {
     _check();
     return (await _backend.availableCameras())
         .map((d) => CameraDevice(id: d.name, name: d.name))
@@ -40,6 +54,11 @@ class DesktopFrameSource implements FrameSource {
   Future<void> start({
     String? deviceId,
     ResolutionPreset preset = ResolutionPreset.high,
+  }) => _operations.run(() => _start(deviceId: deviceId, preset: preset));
+
+  Future<void> _start({
+    String? deviceId,
+    required ResolutionPreset preset,
   }) async {
     _check();
     if (_id != null) throw StateError('Camera already started');
@@ -64,17 +83,42 @@ class DesktopFrameSource implements FrameSource {
         enableAudio: false,
       );
       _id = id;
-      final initialized = _backend.onCameraInitialized(id).first;
+      final initialized = Completer<camera.CameraInitializedEvent>();
+      final initialization = _backend
+          .onCameraInitialized(id)
+          .listen(
+            (event) {
+              if (!initialized.isCompleted) initialized.complete(event);
+            },
+            onError: (Object error, StackTrace stack) {
+              if (!initialized.isCompleted) {
+                initialized.completeError(error, stack);
+              }
+            },
+          );
+      unawaited(
+        initialized.future.then<void>(
+          (_) {},
+          onError: (Object _, StackTrace __) {},
+        ),
+      );
       _errors = _backend.onCameraError(id).listen((_) {
         _frames.addError(
           StateError('Camera gặp lỗi. Kiểm tra quyền camera và kết nối USB.'),
         );
       });
-      await _backend.initializeCamera(
-        id,
-        imageFormatGroup: camera.ImageFormatGroup.bgra8888,
-      );
-      final event = await initialized.timeout(const Duration(seconds: 10));
+      late camera.CameraInitializedEvent event;
+      try {
+        await _backend
+            .initializeCamera(
+              id,
+              imageFormatGroup: camera.ImageFormatGroup.bgra8888,
+            )
+            .timeout(const Duration(seconds: 10));
+        event = await initialized.future.timeout(const Duration(seconds: 10));
+      } finally {
+        await initialization.cancel();
+      }
       _size = Size(event.previewWidth, event.previewHeight);
       _sampleClock
         ..reset()
@@ -83,7 +127,13 @@ class DesktopFrameSource implements FrameSource {
           .onStreamedFrameAvailable(id)
           .listen(
             (frame) {
-              if (_sampleClock.elapsedMilliseconds < 100) return;
+              _deliveryClock
+                ..reset()
+                ..start();
+              if (_sampleClock.elapsedMilliseconds < 100 ||
+                  !(_analysisWanted?.call() ?? true)) {
+                return;
+              }
               _sampleClock.reset();
               if (frame.format.group != camera.ImageFormatGroup.bgra8888 ||
                   frame.planes.isEmpty) {
@@ -92,9 +142,31 @@ class DesktopFrameSource implements FrameSource {
                 );
                 return;
               }
-              final p = frame.planes.first,
-                  w = math.min(640, frame.width),
-                  h = math.max(2, (frame.height * w / frame.width).round());
+              final p = frame.planes.first;
+              if (frame.width < 2 ||
+                  frame.height < 2 ||
+                  frame.width * frame.height > 33554432 ||
+                  p.bytesPerRow < frame.width * 4 ||
+                  p.bytes.length <
+                      (frame.height - 1) * p.bytesPerRow + frame.width * 4) {
+                _frames.addError(
+                  StateError('Invalid BGRA frame dimensions or stride'),
+                );
+                return;
+              }
+              final w = math.max(
+                    2,
+                    (frame.width *
+                            math.min(
+                              1,
+                              640 / math.max(frame.width, frame.height),
+                            ))
+                        .round(),
+                  ),
+                  h = math.max(
+                    2,
+                    math.min(640, (frame.height * w / frame.width).round()),
+                  );
               final bytes = Uint8List(w * h * 4);
               for (var y = 0; y < h; y++) {
                 for (var x = 0; x < w; x++) {
@@ -119,20 +191,50 @@ class DesktopFrameSource implements FrameSource {
               );
             },
             onError: (Object _) {
-              _frames.addError(StateError('Camera frame stream failed'));
+              _streamFailure('Camera frame stream failed');
             },
+            onDone: () => _streamFailure('Camera frame stream closed'),
           );
+      _deliveryClock
+        ..reset()
+        ..start();
+      _watchdog = Timer.periodic(const Duration(seconds: 1), (_) {
+        if (_deliveryClock.elapsed > const Duration(seconds: 2)) {
+          _streamFailure(
+            'Camera stopped delivering frames. Reconnect and restart.',
+          );
+        }
+      });
     } catch (_) {
-      await stop();
+      await _stop();
       rethrow;
     }
   }
 
   @override
   Future<FrameBuffer?> latestFullResolutionFrame() async {
-    final id = _id;
-    if (id == null) return null;
-    final file = await _backend.takePicture(id);
+    // Serialize only the native request. Decode owns bytes/file and can finish
+    // independently while stop releases the camera.
+    final file = await _operations.run(() async {
+      final id = _id;
+      if (id == null) return null;
+      var abandoned = false;
+      final request = _backend.takePicture(id);
+      unawaited(
+        request
+            .then<void>((lateFile) async {
+              if (abandoned) await File(lateFile.path).delete();
+            })
+            .catchError((Object _) {}),
+      );
+      try {
+        return await request.timeout(const Duration(seconds: 10));
+      } catch (_) {
+        abandoned = true;
+        rethrow;
+      }
+    });
+    if (file == null) return null;
     try {
       // Native backend writes a temporary full-resolution image. Delete it
       // immediately; operator-managed saveDirectory applies only to outputs.
@@ -170,7 +272,12 @@ class DesktopFrameSource implements FrameSource {
   }
 
   @override
-  Future<void> stop() async {
+  Future<void> stop() => _operations.run(_stop);
+
+  Future<void> _stop() async {
+    _watchdog?.cancel();
+    _watchdog = null;
+    _deliveryClock.stop();
     await _subscription?.cancel();
     _subscription = null;
     await _errors?.cancel();

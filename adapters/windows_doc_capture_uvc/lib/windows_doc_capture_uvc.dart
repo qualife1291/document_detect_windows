@@ -7,7 +7,12 @@ import 'package:flutter_ffi_uvc/flutter_ffi_uvc.dart';
 import 'package:windows_doc_capture/windows_doc_capture.dart';
 
 /// Experimental candidate, not a measured default. Preview stays in Texture.
-class UvcFrameSource implements FrameSource, FrameSourceDiagnostics {
+class UvcFrameSource
+    implements FrameSource, FrameSourceDiagnostics, AnalysisDemandSource {
+  final _operations = CameraOperationQueue();
+  bool Function()? _analysisWanted;
+  @override
+  set analysisWanted(bool Function()? wanted) => _analysisWanted = wanted;
   final _frames = StreamController<FrameBuffer>.broadcast();
   UvcCamera? _camera;
   Timer? _timer;
@@ -29,15 +34,18 @@ class UvcFrameSource implements FrameSource, FrameSourceDiagnostics {
   }
 
   @override
-  Future<List<CameraDevice>> listDevices() async {
+  Future<List<CameraDevice>> listDevices() => _operations.run(_listDevices);
+
+  Future<List<CameraDevice>> _listDevices() async {
     try {
       return (await _getCamera().listUsbDevices())
           .map((d) => CameraDevice(id: '${d.deviceId}', name: d.displayName))
           .toList();
     } finally {
       if (_texture == null) {
-        await _camera?.dispose();
+        final camera = _camera;
         _camera = null;
+        await camera?.dispose();
       }
     }
   }
@@ -46,6 +54,11 @@ class UvcFrameSource implements FrameSource, FrameSourceDiagnostics {
   Future<void> start({
     String? deviceId,
     ResolutionPreset preset = ResolutionPreset.high,
+  }) => _operations.run(() => _start(deviceId: deviceId, preset: preset));
+
+  Future<void> _start({
+    String? deviceId,
+    required ResolutionPreset preset,
   }) async {
     if (_texture != null) throw StateError('Camera already started');
     final camera = _getCamera();
@@ -82,13 +95,23 @@ class UvcFrameSource implements FrameSource, FrameSourceDiagnostics {
       final modes =
           camera
               .supportedModes()
-              .where((m) => m.width <= maxWidth && m.fps >= 10)
+              .where(
+                (m) =>
+                    m.width <= maxWidth &&
+                    m.width * m.height <= 9000000 &&
+                    m.fps >= 10,
+              )
               .toList()
             ..sort(
               (a, b) => (b.width * b.height).compareTo(a.width * a.height),
             );
+      if (modes.isEmpty) {
+        throw StateError(
+          'Không có chế độ camera phù hợp với giới hạn độ phân giải/FPS.',
+        );
+      }
       final result = await camera.startPreviewAuto(
-        candidates: modes.isEmpty ? null : modes,
+        candidates: modes,
         maxCandidates: 6,
       );
       if (!result.success || result.mode == null) {
@@ -109,7 +132,7 @@ class UvcFrameSource implements FrameSource, FrameSourceDiagnostics {
         (_) => _poll(),
       );
     } catch (_) {
-      await stop();
+      await _stop();
       rethrow;
     }
   }
@@ -128,6 +151,11 @@ class UvcFrameSource implements FrameSource, FrameSourceDiagnostics {
         }
         return;
       }
+      _liveness
+        ..reset()
+        ..start();
+      _sequence = sequence;
+      if (!(_analysisWanted?.call() ?? true)) return;
       final raw = camera.copyLatestFrame();
       if (raw == null) return;
       _sequence = raw.sequence;
@@ -136,8 +164,15 @@ class UvcFrameSource implements FrameSource, FrameSourceDiagnostics {
         ..start();
       // Analysis only. Native Texture never reads this Dart buffer. This
       // backend copies full RGBA before this downsample: profile that cost.
-      final width = math.min(640, raw.width),
-          height = math.max(2, (raw.height * width / raw.width).round());
+      final width = math.max(
+            2,
+            (raw.width * math.min(1, 640 / math.max(raw.width, raw.height)))
+                .round(),
+          ),
+          height = math.max(
+            2,
+            math.min(640, (raw.height * width / raw.width).round()),
+          );
       final rgba = Uint8List(width * height * 4);
       for (var y = 0; y < height; y++) {
         for (var x = 0; x < width; x++) {
@@ -146,7 +181,10 @@ class UvcFrameSource implements FrameSource, FrameSourceDiagnostics {
                   x * raw.width ~/ width) *
               4;
           final to = (y * width + x) * 4;
-          rgba.setRange(to, to + 4, raw.rgbaBytes, from);
+          rgba[to] = raw.rgbaBytes[from];
+          rgba[to + 1] = raw.rgbaBytes[from + 1];
+          rgba[to + 2] = raw.rgbaBytes[from + 2];
+          rgba[to + 3] = 255;
         }
       }
       _frames.add(
@@ -167,7 +205,10 @@ class UvcFrameSource implements FrameSource, FrameSourceDiagnostics {
   }
 
   @override
-  Future<FrameBuffer?> latestFullResolutionFrame() async {
+  Future<FrameBuffer?> latestFullResolutionFrame() =>
+      _operations.run(_snapshot);
+
+  Future<FrameBuffer?> _snapshot() async {
     if (_liveness.elapsed > const Duration(milliseconds: 500)) return null;
     final raw = _camera?.copyLatestFrame();
     if (raw == null) return null;
@@ -185,7 +226,9 @@ class UvcFrameSource implements FrameSource, FrameSourceDiagnostics {
       ? const SizedBox.shrink()
       : Texture(textureId: _texture!);
   @override
-  Future<void> stop() async {
+  Future<void> stop() => _operations.run(_stop);
+
+  Future<void> _stop() async {
     _timer?.cancel();
     _timer = null;
     await _errors?.cancel();

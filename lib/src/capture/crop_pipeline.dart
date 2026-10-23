@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'dart:isolate';
 import 'dart:math' as math;
-import 'dart:typed_data';
 import 'dart:ui';
 import 'package:image/image.dart' as img;
 import '../camera/frame_source.dart';
@@ -9,6 +8,7 @@ import '../detection/detector_facade.dart';
 import '../detection/geometry.dart';
 import '../warnings/preview_warning.dart';
 import 'captured_document.dart';
+import 'capture_cancellation.dart';
 
 class CropPipeline {
   const CropPipeline({this.jpegQuality = 90, this.analysisWidth = 640});
@@ -20,17 +20,19 @@ class CropPipeline {
     QualityThresholds? requiredQuality,
     List<Offset>? expectedNormalizedQuad,
     double maximumMotion = .015,
+    CaptureCancellation? cancellation,
   }) async {
     if (jpegQuality < 1 || jpegQuality > 100) {
       throw ArgumentError.value(jpegQuality, 'jpegQuality');
     }
+    if (cancellation?.isCancelled ?? false) return null;
     final transfer = TransferableTypedData.fromList([frame.rgba]);
     final width = frame.width,
         height = frame.height,
         sequence = frame.sequence,
         at = frame.capturedAt;
     final quality = jpegQuality, maxWidth = analysisWidth;
-    return Isolate.run(() async {
+    final captured = await runCaptureWorker<CapturedDocument?>(() async {
       final watch = Stopwatch()..start();
       final full = FrameBuffer(
         width: width,
@@ -68,35 +70,8 @@ class CropPipeline {
         order: img.ChannelOrder.rgba,
       );
       final cropped = warpPerspective(source, detection.quad!);
-      final original = Uint8List.fromList(
-        img.encodeJpg(source, quality: quality),
-      );
-      final encoded = Uint8List.fromList(
-        img.encodeJpg(cropped, quality: quality),
-      );
-      String? saved;
-      if (saveDirectory != null) {
-        final directory = await Directory(
-          saveDirectory,
-        ).create(recursive: true);
-        // Random opaque filename, exclusive creation; do not overwrite captures.
-        final random = math.Random.secure();
-        final name = List.generate(
-          16,
-          (_) => random.nextInt(256).toRadixString(16).padLeft(2, '0'),
-        ).join();
-        final file = File(
-          '${directory.path}${Platform.pathSeparator}$name.jpg',
-        );
-        await file.create(exclusive: true);
-        try {
-          await file.writeAsBytes(encoded, flush: true);
-        } catch (_) {
-          await file.delete();
-          rethrow;
-        }
-        saved = file.path;
-      }
+      final original = img.encodeJpg(source, quality: quality);
+      final encoded = img.encodeJpg(cropped, quality: quality);
       return CapturedDocument(
         originalJpeg: original,
         croppedJpeg: encoded,
@@ -104,10 +79,48 @@ class CropPipeline {
         blurScore: detection.blurScore,
         coverageRatio: detection.coverageRatio,
         capturedAt: at,
-        savedPath: saved,
+        savedPath: null,
         processingTime: watch.elapsed,
       );
-    });
+    }, cancellation: cancellation);
+    if (captured == null || (cancellation?.isCancelled ?? false)) return null;
+    if (saveDirectory == null) return captured;
+    final saveClock = Stopwatch()..start();
+    final directory = await Directory(saveDirectory).create(recursive: true);
+    if (cancellation?.isCancelled ?? false) return null;
+    final random = math.Random.secure();
+    final name = List.generate(
+      16,
+      (_) => random.nextInt(256).toRadixString(16).padLeft(2, '0'),
+    ).join();
+    final file = File('${directory.path}${Platform.pathSeparator}$name.part');
+    final finalPath = '${directory.path}${Platform.pathSeparator}$name.jpg';
+    await file.create(exclusive: true);
+    try {
+      await file.writeAsBytes(captured.croppedJpeg, flush: true);
+      if (cancellation?.isCancelled ?? false) {
+        await file.delete();
+        return null;
+      }
+      await file.rename(finalPath);
+      if (cancellation?.isCancelled ?? false) {
+        await File(finalPath).delete();
+        return null;
+      }
+    } catch (_) {
+      if (await file.exists()) await file.delete();
+      rethrow;
+    }
+    return CapturedDocument(
+      originalJpeg: captured.originalJpeg,
+      croppedJpeg: captured.croppedJpeg,
+      quad: captured.quad,
+      blurScore: captured.blurScore,
+      coverageRatio: captured.coverageRatio,
+      capturedAt: captured.capturedAt,
+      savedPath: finalPath,
+      processingTime: captured.processingTime + saveClock.elapsed,
+    );
   }
 }
 

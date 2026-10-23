@@ -18,6 +18,7 @@ try {
   $benchmark = @('test', 'tool/detection_benchmark.dart', '--reporter', 'expanded')
   if ($EnforceKioskFps) { $benchmark += '--dart-define=ENFORCE_TARGET_FPS=true' }
   Run-Flutter 'detection-benchmark' $benchmark
+  Run-Flutter 'endurance' @('test', 'tool/endurance_test.dart', '--dart-define=SOAK_SECONDS=60', '--reporter', 'expanded')
   Push-Location (Join-Path $repo 'adapters/windows_doc_capture_uvc')
   try {
     Run-Flutter 'uvc-pub-get' @('pub', 'get')

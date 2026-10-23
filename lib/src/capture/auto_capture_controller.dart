@@ -93,6 +93,19 @@ class AutoCaptureController {
     state = AutoCaptureState.cooldown;
   }
 
+  /// Missing/stale analysis must not rearm a captured document still in view.
+  void invalidateFrames() {
+    _lastFrame = null;
+    stableFrames = 0;
+    _stableSince = null;
+    _anchor = null;
+    feedbackProgress = 0;
+    if (state != AutoCaptureState.capturing &&
+        state != AutoCaptureState.cooldown) {
+      state = AutoCaptureState.detecting;
+    }
+  }
+
   void reset() {
     _cooldownUntil = null;
     _needsRemoval = false;

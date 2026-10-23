@@ -85,7 +85,10 @@ double tiltOf(List<Offset> q) {
 
 bool insideQuad(double x, double y, List<Offset> q) {
   for (var i = 0; i < 4; i++) {
-    if (cross(q[i], q[(i + 1) % 4], Offset(x, y)) < 0) return false;
+    final a = q[i], b = q[(i + 1) % 4];
+    if ((b.dx - a.dx) * (y - a.dy) - (b.dy - a.dy) * (x - a.dx) < 0) {
+      return false;
+    }
   }
   return true;
 }

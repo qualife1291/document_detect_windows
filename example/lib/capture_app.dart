@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ui' show AppExitResponse;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -56,12 +57,23 @@ class _CapturePageState extends State<CapturePage> {
       _debug = false,
       _started = false,
       _save = false;
+  AppLifecycleListener? _lifecycle;
   final _saveDirectory = TextEditingController();
   final _captureFocus = FocusNode();
   final _resultFocus = FocusNode();
   @override
   void initState() {
     super.initState();
+    _lifecycle = AppLifecycleListener(
+      onExitRequested: () async {
+        try {
+          await capture.dispose();
+        } catch (_) {
+          /* Native cleanup attempted. */
+        }
+        return AppExitResponse.exit;
+      },
+    );
     _statusSub = capture.statuses.listen((status) {
       if (mounted) setState(() => _status = status);
     });
@@ -182,9 +194,14 @@ class _CapturePageState extends State<CapturePage> {
 
   @override
   void dispose() {
+    _lifecycle?.dispose();
     unawaited(_statusSub?.cancel());
     unawaited(_errorSub?.cancel());
-    unawaited(capture.dispose());
+    unawaited(
+      capture.dispose().catchError((Object _) {
+        // Widget is already gone. Native cleanup was attempted; never setState.
+      }),
+    );
     _saveDirectory.dispose();
     _captureFocus.dispose();
     _resultFocus.dispose();

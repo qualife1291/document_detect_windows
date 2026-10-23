@@ -19,7 +19,17 @@ Future<DocumentPreviewStatus> analyzeFrame(
 
   capture.previewStatus.addListener(listener);
   try {
-    source.stream.add(frame);
+    // Production analysis is deliberately throttled; submit a fresh sample.
+    await Future<void>.delayed(capture.analysisInterval);
+    source.stream.add(
+      FrameBuffer(
+        width: frame.width,
+        height: frame.height,
+        rgba: frame.rgba,
+        capturedAt: DateTime.now(),
+        sequence: frame.sequence,
+      ),
+    );
     return await done.future.timeout(const Duration(seconds: 10));
   } finally {
     capture.previewStatus.removeListener(listener);

@@ -39,3 +39,11 @@ callback dedup, capture lifecycle, restart/error và xóa marker quá hạn.
 Pub get/analyze, 38 package tests, 2 example tests, benchmark và release build
 Windows đã đạt trên Flutter 3.32.8, 3.41.9, 3.47.7 tại commit `5588f6d`.
 Linux cũng đạt ba SDK. Camera thật và accessibility gates vẫn chưa hoàn thành.
+
+## Hardening — 2026-10-23
+
+Đã sửa backpressure, hủy crop worker, quyền sở hữu camera, serialize adapter,
+startup/dispose và stale cooldown; thêm document/light/5–8 MP/lifecycle tests.
+Linux đã đạt cả ba SDK: 66 package tests, 3 example tests, benchmark và
+endurance 30 s. Adapter desktop analyze đạt 3.41.9/3.47.7. Lượt tải phát triển
+300 s có log riêng; chưa xác nhận 24/7 trên thiết bị thật. Windows CI đang chờ.

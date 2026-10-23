@@ -4,6 +4,18 @@ This changelog follows Keep a Changelog. No production release has been made.
 
 ## [Unreleased]
 
+### Reliability and continuous operation
+
+- Bound analysis load and portrait dimensions; skip unwanted native samples and
+  remove per-pixel allocations and redundant JPEG copies.
+- Cancel crop/JPEG on stop/dispose, consume late snapshots, serialize native
+  operations, guard competing controllers and share concurrent disposal.
+- Keep paper-removal gating through stale frames; detect failed/stalled workers.
+- Write completed captures through a same-directory partial file and handle
+  graceful example exit. Document abrupt-exit and 24/7 hardware limits.
+- Cover additional rectangular document ratios, lighting, 5/8 MP processing and
+  lifecycle failures; add a configurable synthetic endurance tool.
+
 ### Added
 
 - Built-in live four-corner document overlay with matching contain/cover/fill

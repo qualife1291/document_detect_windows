@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart' show ValueListenable;
 import '../capture/auto_capture_controller.dart';
 import '../capture/captured_document.dart';
 import '../capture/crop_pipeline.dart';
+import '../capture/capture_cancellation.dart';
 import '../detection/quality_analyzer.dart';
 import '../platform/windows_ffi/platform_guard.dart';
 import '../preview/document_camera_preview.dart';
@@ -31,6 +32,7 @@ class WindowsDocCapture {
     FrameSource? frameSource,
     AutoCaptureController? autoCapture,
     this.cropPipeline = const CropPipeline(),
+    this.analysisInterval = const Duration(milliseconds: 100),
   }) : _source = CameraBackend.requireSelected(frameSource),
        _auto = autoCapture ?? AutoCaptureController(),
        _verifyPlatform = verifyWindowsX64;
@@ -41,6 +43,7 @@ class WindowsDocCapture {
     required FrameSource frameSource,
     AutoCaptureController? autoCapture,
     this.cropPipeline = const CropPipeline(),
+    this.analysisInterval = const Duration(milliseconds: 100),
   }) : _source = frameSource,
        _auto = autoCapture ?? AutoCaptureController(),
        _verifyPlatform = _testPlatform;
@@ -48,6 +51,30 @@ class WindowsDocCapture {
   final FrameSource _source;
   final AutoCaptureController _auto;
   final CropPipeline cropPipeline;
+
+  /// Upper bound on analysis frequency, independent of native preview FPS.
+  final Duration analysisInterval;
+  static WindowsDocCapture? _cameraOwner;
+  Future<List<CameraDevice>>? _listing;
+  Future<void>? _disposing;
+  CaptureCancellation? _captureCancellation;
+  Duration? _lastAnalysis;
+
+  void _claimCamera() {
+    if (_cameraOwner != null && _cameraOwner != this) {
+      throw StateError('Another document camera session is active');
+    }
+    _cameraOwner = this;
+  }
+
+  bool _wantsAnalysis(DocumentQualityAnalyzer analyzer) =>
+      !_disposed &&
+      _stopping == null &&
+      _capture == null &&
+      analyzer.canAcceptFrame &&
+      (_lastAnalysis == null ||
+          _clock.elapsed - _lastAnalysis! >= analysisInterval);
+
   final Future<void> Function() _verifyPlatform;
   final _warnings = StreamController<PreviewWarning>.broadcast();
   final _statuses = StreamController<CaptureStatus>.broadcast();
@@ -94,7 +121,27 @@ class WindowsDocCapture {
   }
 
   Future<List<CameraDevice>> listDevices() async {
+    if (_disposed) throw StateError('Capture disposed');
+    if (_running ||
+        _starting != null ||
+        _stopping != null ||
+        _listing != null) {
+      throw StateError('Stop the camera before enumerating devices');
+    }
+    _claimCamera();
+    final future = _listDevices();
+    _listing = future;
+    try {
+      return await future;
+    } finally {
+      _listing = null;
+      if (_cameraOwner == this) _cameraOwner = null;
+    }
+  }
+
+  Future<List<CameraDevice>> _listDevices() async {
     await _verifyPlatform();
+    if (_disposed) throw StateError('Capture disposed');
     return _source.listDevices();
   }
 
@@ -129,9 +176,13 @@ class WindowsDocCapture {
     if (_disposed) throw StateError('Capture disposed');
     if (_stopping != null) await _stopping;
     if (_disposed) throw StateError('Capture disposed');
-    if (_running || _starting != null) {
+    if (_running || _starting != null || _listing != null) {
       throw StateError('Camera already starting or running');
     }
+    if (analysisInterval < Duration.zero) {
+      throw ArgumentError.value(analysisInterval, 'analysisInterval');
+    }
+    _claimCamera();
     _onDocumentStateChanged = onDocumentStateChanged;
     final future = _start(
       deviceId,
@@ -168,23 +219,42 @@ class WindowsDocCapture {
     _reportsCount = 0;
     _fpsStart = _clock.elapsed;
     final epoch = ++_epoch;
-    final analyzer = DocumentQualityAnalyzer(
-      maxWidth: cropPipeline.analysisWidth,
-    );
-    _analyzer = analyzer;
     try {
+      final analyzer = DocumentQualityAnalyzer(
+        maxWidth: cropPipeline.analysisWidth,
+      );
+      _analyzer = analyzer;
+      _lastAnalysis = null;
+      final source = _source;
+      if (source is AnalysisDemandSource) {
+        (source as AnalysisDemandSource).analysisWanted = () =>
+            _wantsAnalysis(analyzer);
+      }
       await _verifyPlatform();
+      if (_disposed || _stopping != null) {
+        throw StateError('Camera start cancelled');
+      }
       await analyzer.start();
+      if (_disposed || _stopping != null) {
+        throw StateError('Camera start cancelled');
+      }
       _reports = analyzer.reports.listen(
         (report) => _onReport(report, epoch),
         onError: _onStreamError,
       );
       _frames = _source.frames.listen(
-        analyzer.add,
+        (frame) {
+          if (!_wantsAnalysis(analyzer)) return;
+          _lastAnalysis = _clock.elapsed;
+          analyzer.add(frame);
+        },
         onError: _onStreamError,
         onDone: () => _onStreamError(StateError('Camera stream closed')),
       );
       await _source.start(deviceId: device, preset: preset);
+      if (_disposed || _stopping != null) {
+        throw StateError('Camera start cancelled');
+      }
       if (_startupError != null) throw _startupError!;
       _running = true;
       // Rebuild a preview mounted before start() with the negotiated dimensions.
@@ -192,7 +262,13 @@ class WindowsDocCapture {
         DocumentPreviewStatus(state: DocumentPreviewState.processing),
       );
     } catch (_) {
-      _publishPreview(DocumentPreviewStatus(state: DocumentPreviewState.error));
+      _publishPreview(
+        DocumentPreviewStatus(
+          state: _disposed || _stopping != null
+              ? DocumentPreviewState.idle
+              : DocumentPreviewState.error,
+        ),
+      );
       await _cleanup();
       rethrow;
     }
@@ -219,7 +295,7 @@ class WindowsDocCapture {
     if (!_running || epoch != _epoch) return;
     final age = DateTime.now().difference(report.capturedAt);
     if (age > _previewMaxAge || age < const Duration(seconds: -1)) {
-      _auto.reset();
+      _auto.invalidateFrames();
       _expirePreview(epoch);
       return;
     }
@@ -272,7 +348,7 @@ class WindowsDocCapture {
 
   void _expirePreview(int epoch) {
     if (!_running || epoch != _epoch) return;
-    _auto.reset();
+    _auto.invalidateFrames();
     _previewExpiry?.cancel();
     _publishPreview(
       DocumentPreviewStatus(
@@ -331,14 +407,20 @@ class WindowsDocCapture {
     required bool auto,
     List<Offset>? expectedQuad,
   }) async {
-    if (!_running || _disposed || _capture != null) return null;
+    if (!_running || _disposed || _stopping != null || _capture != null) {
+      return null;
+    }
     final epoch = _epoch;
-    final future = _captureFrame(auto, expectedQuad);
+    final cancellation = CaptureCancellation();
+    _captureCancellation = cancellation;
+    final future = _captureFrame(auto, expectedQuad, cancellation);
     _capture = future;
     _publishCapturePhase(DocumentPreviewState.capturing);
     try {
-      return await future;
+      final result = await future;
+      return _running && !_disposed && epoch == _epoch ? result : null;
     } finally {
+      _captureCancellation = null;
       _capture = null;
       _auto.captureCompleted(_clock.elapsed);
       if (_running && epoch == _epoch && !_disposed) {
@@ -350,11 +432,18 @@ class WindowsDocCapture {
   Future<CapturedDocument?> _captureFrame(
     bool auto,
     List<Offset>? expectedQuad,
+    CaptureCancellation cancellation,
   ) async {
-    final frame = await _source.latestFullResolutionFrame();
+    final frame = await cancellation.wait(
+      _source.latestFullResolutionFrame().timeout(const Duration(seconds: 15)),
+    );
+    if (cancellation.isCancelled) return null;
+    final age = frame == null
+        ? Duration.zero
+        : DateTime.now().difference(frame.capturedAt);
     if (frame == null ||
-        DateTime.now().difference(frame.capturedAt) >
-            const Duration(milliseconds: 500)) {
+        age > const Duration(milliseconds: 500) ||
+        age < const Duration(seconds: -1)) {
       return null;
     }
     return cropPipeline.capture(
@@ -363,11 +452,12 @@ class WindowsDocCapture {
       requiredQuality: auto ? _auto.thresholds : null,
       expectedNormalizedQuad: expectedQuad,
       maximumMotion: _auto.maximumMotion,
+      cancellation: cancellation,
     );
   }
 
   Future<void> stop() => _disposed
-      ? Future<void>.value()
+      ? (_disposing ?? Future<void>.value())
       : _stopSession(DocumentPreviewState.idle);
 
   Future<void> _stopSession(DocumentPreviewState finalState) {
@@ -404,6 +494,7 @@ class WindowsDocCapture {
     }
     _running = false;
     ++_epoch;
+    _captureCancellation?.cancel();
     _auto.reset();
     _previewExpiry?.cancel();
     _publishPreview(DocumentPreviewStatus(state: finalState));
@@ -420,19 +511,57 @@ class WindowsDocCapture {
 
   Future<void> _cleanup() async {
     _previewExpiry?.cancel();
-    await _frames?.cancel();
+    Object? failure;
+    StackTrace? failureStack;
+    Future<void> attempt(Future<void> Function() cleanup) async {
+      try {
+        await cleanup();
+      } catch (error, stack) {
+        failure ??= error;
+        failureStack ??= stack;
+      }
+    }
+
+    final frames = _frames, reports = _reports, analyzer = _analyzer;
     _frames = null;
-    await _reports?.cancel();
     _reports = null;
-    await _analyzer?.dispose();
     _analyzer = null;
-    await _source.stop();
+    if (frames != null) await attempt(frames.cancel);
+    if (reports != null) await attempt(reports.cancel);
+    if (analyzer != null) await attempt(analyzer.dispose);
+    if (_cameraOwner == this) {
+      final source = _source;
+      if (source is AnalysisDemandSource) {
+        (source as AnalysisDemandSource).analysisWanted = null;
+      }
+      await attempt(_source.stop);
+      if (_cameraOwner == this) _cameraOwner = null;
+    }
+    _callback = null;
+    _directory = null;
+    if (failure != null) Error.throwWithStackTrace(failure!, failureStack!);
   }
 
-  Future<void> dispose() async {
-    if (_disposed) return;
+  Future<void> dispose() {
+    if (_disposing != null) return _disposing!;
+    final completion = Completer<void>();
+    _disposing = completion.future;
+    unawaited(
+      _dispose().then(completion.complete, onError: completion.completeError),
+    );
+    return completion.future;
+  }
+
+  Future<void> _dispose() async {
     _disposed = true;
     try {
+      if (_listing != null) {
+        try {
+          await _listing;
+        } catch (_) {
+          /* enumeration caller receives error */
+        }
+      }
       await _stopSession(DocumentPreviewState.idle);
     } finally {
       await _warnings.close();

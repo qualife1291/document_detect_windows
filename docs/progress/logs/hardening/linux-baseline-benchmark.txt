@@ -1,0 +1,4 @@
+00:00 +0: loading /workspace/research/hardening-baseline/tool/detection_benchmark.dart
+00:00 +0: synthetic 640px detection benchmark (not native preview latency)
+BENCHMARK os=linux mode=flutter-test synthetic=30 size=640x480 mean_ms=72.16 p95_ms=84.90 fps=13.86
+00:02 +1: All tests passed!

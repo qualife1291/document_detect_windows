@@ -2,6 +2,11 @@ Handover: CHUA DAT
 
 # Bằng chứng bàn giao
 
+Cập nhật hardening 2026-10-23: các bảng CI bên dưới thuộc baseline preview
+`5588f6d`; chưa là bằng chứng cho thay đổi tối ưu/vòng đời đang kiểm tra.
+Phạm vi mới và kiểm tra 24/7 cần thiết: [continuous operation](../continuous_operation.md).
+
+
 Cập nhật preview 2026-10-23: đã thêm callback enum, previewStatus và overlay
 bốn góc. Windows/Linux đã kiểm chứng suite mới, gồm detection khi tắt auto-capture,
 quality enums, geometry contain/cover/fill/4K, expiry và callback lifecycle.

@@ -14,3 +14,5 @@ export 'src/warnings/preview_warning.dart';
 
 export 'src/preview/document_preview_status.dart';
 export 'src/preview/document_camera_preview.dart';
+
+export 'src/capture/capture_cancellation.dart' show CaptureCancellation;

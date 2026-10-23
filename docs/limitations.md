@@ -1,5 +1,8 @@
 # Known limitations
 
+- 24/7 and low-end 5/8 MP operation are not certified. See
+  [continuous operation](continuous_operation.md) for controls, synthetic
+  coverage and required physical soak/exit scenarios.
 - Experimental implementation. No physical Windows camera/backend comparison
   or final production backend selection has been made. Windows x64 native
   builds and synthetic tests have Windows CI evidence; physical camera/driver
