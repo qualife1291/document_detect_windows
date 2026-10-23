@@ -50,10 +50,12 @@ void main() {
         ))!;
         expect(img.decodeJpg(a.originalJpeg)!.width, 1280);
         final cropped = img.decodeJpg(a.croppedJpeg)!;
-        expect(cropped.width, inInclusiveRange(800, 840));
-        expect(cropped.height, inInclusiveRange(600, 640));
+        expect(cropped.width, closeTo(1280 * .64 + 2 * .02 * 960 * .64, 8));
+        expect(cropped.height, closeTo(960 * .64 * 1.04, 8));
         expect(a.quad.first.dx, closeTo(1280 * .18, 8));
         expect(a.savedPath, isNot(b.savedPath));
+        expect(a.cropQuad.first.dx, lessThan(a.quad.first.dx));
+        expect(a.cropQuad.last.dy, greaterThan(a.quad.last.dy));
         expect(
           await File(a.savedPath!).readAsBytes(),
           orderedEquals(a.croppedJpeg),

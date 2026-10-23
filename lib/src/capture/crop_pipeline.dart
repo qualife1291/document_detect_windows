@@ -11,6 +11,7 @@ import '../warnings/preview_warning.dart';
 import 'captured_document.dart';
 import 'capture_cancellation.dart';
 import 'document_image_filter.dart';
+import 'crop_geometry.dart';
 
 class CropPipeline {
   const CropPipeline({
@@ -18,6 +19,7 @@ class CropPipeline {
     this.analysisWidth = 640,
     this.maxOutputDimension,
     this.imageFilter = DocumentImageFilter.original,
+    this.cropPadding = .02,
   });
   final int jpegQuality, analysisWidth;
 
@@ -25,6 +27,12 @@ class CropPipeline {
   /// Null preserves full-resolution output. Original JPEG always remains full size.
   final int? maxOutputDimension;
   final DocumentImageFilter imageFilter;
+
+  /// Outward margin per edge, as a fraction of the shortest detected edge.
+  /// Defaults to 2% to retain content near approximate low-resolution corners.
+  /// Set 0 for an exact detected-quad crop; valid range is 0..0.1. The margin
+  /// shrinks uniformly if the source frame has insufficient space.
+  final double cropPadding;
 
   Future<CapturedDocument?> capture(
     FrameBuffer frame, {
@@ -42,6 +50,9 @@ class CropPipeline {
         (maxOutputDimension! < 2 || maxOutputDimension! > 8192)) {
       throw ArgumentError.value(maxOutputDimension, 'maxOutputDimension');
     }
+    if (!cropPadding.isFinite || cropPadding < 0 || cropPadding > .1) {
+      throw ArgumentError.value(cropPadding, 'cropPadding', 'Expected 0..0.1');
+    }
     if (cancellation?.isCancelled ?? false) return null;
     final transfer = TransferableTypedData.fromList([frame.rgba]);
     final width = frame.width,
@@ -50,6 +61,7 @@ class CropPipeline {
         at = frame.capturedAt;
     final quality = jpegQuality, maxWidth = analysisWidth;
     final limit = maxOutputDimension, filter = imageFilter;
+    final padding = cropPadding;
     final outcome = await runCaptureWorker<_CropOutcome>(() async {
       final watch = Stopwatch()..start();
       final full = FrameBuffer(
@@ -101,9 +113,15 @@ class CropPipeline {
         order: img.ChannelOrder.rgba,
       );
       var stage = watch.elapsedMilliseconds;
+      final geometry = CropGeometry.fromDetection(
+        detection.quad!,
+        width: width,
+        height: height,
+        padding: padding,
+      );
       final cropped = warpPerspective(
         source,
-        detection.quad!,
+        geometry.quad,
         maxOutputDimension: limit,
       );
       timings['warpMs'] = watch.elapsedMilliseconds - stage;
@@ -120,6 +138,7 @@ class CropPipeline {
         originalJpeg: original,
         croppedJpeg: encoded,
         quad: detection.quad!,
+        cropQuad: geometry.quad,
         blurScore: detection.blurScore,
         coverageRatio: detection.coverageRatio,
         capturedAt: at,
@@ -130,6 +149,13 @@ class CropPipeline {
         'decision': 'accepted',
         ..._detectionFields(detection, width, height),
         ...timings,
+        'cropQuad': geometry.quad
+            .map((p) => [p.dx / width, p.dy / height])
+            .toList(),
+        'cropPadding': padding,
+        'paddingRequestedPx': geometry.requestedPaddingPixels,
+        'paddingAppliedPx': geometry.appliedPaddingPixels,
+        'paddingLimited': geometry.paddingLimited,
         'outputSize': [cropped.width, cropped.height],
         'filter': filter.name,
       });
@@ -174,6 +200,7 @@ class CropPipeline {
       originalJpeg: captured.originalJpeg,
       croppedJpeg: captured.croppedJpeg,
       quad: captured.quad,
+      cropQuad: captured.cropQuad,
       blurScore: captured.blurScore,
       coverageRatio: captured.coverageRatio,
       capturedAt: captured.capturedAt,

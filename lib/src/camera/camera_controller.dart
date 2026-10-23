@@ -282,6 +282,7 @@ class WindowsDocCapture {
       'maximumMotion': _auto.maximumMotion,
       'outputMaxSide': cropPipeline.maxOutputDimension,
       'imageFilter': cropPipeline.imageFilter.name,
+      'cropPadding': cropPipeline.cropPadding,
     });
     _publishPreview(
       DocumentPreviewStatus(state: DocumentPreviewState.processing),

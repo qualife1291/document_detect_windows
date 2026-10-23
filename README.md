@@ -228,19 +228,30 @@ for cancellation/file behavior, document/light coverage and the physical soak ma
 final capture = WindowsDocCapture(
   frameSource: yourFrameSource,
   cropPipeline: const CropPipeline(
+    cropPadding: .02, // default: 2% of shortest detected edge per side; 0..0.1
     maxOutputDimension: 1600, // null (default) keeps full-resolution crop
     imageFilter: DocumentImageFilter.original, // or .enhance / .grayscale
   ),
 );
 ```
 
-Perspective correction always re-detects the captured snapshot. The optional
-longest-side limit applies during resampling to bound crop work and memory;
+Perspective correction always re-detects the captured snapshot. By default a
+small outward crop margin protects edge content from approximate analysis
+corners. `cropPadding` is per edge, relative to the shortest detected edge, and
+can be set to `0` for the exact detected-quad crop. The margin shrinks uniformly
+when the source frame has insufficient room; it can include a thin background
+border. It cannot recover content outside the camera frame or fix detection of
+an entirely wrong region. `CapturedDocument.quad` remains the detected quad;
+`cropQuad` contains the actual source-pixel corners used for the corrected JPEG.
+Quality and motion checks still use the detected quad, before the safety margin.
+
+The optional longest-side limit applies during resampling to bound crop work and memory;
 `originalJpeg` remains full resolution. `original` preserves colors and is the
 default for IDs. `enhance` applies capped contrast stretching; `grayscale` is an
 explicit presentation choice. Neither restores blur, performs OCR or guarantees
 readability. Filtering and JPEG encoding run in the cancellable capture worker.
-See the [physical-log review and reference comparison](docs/progress/PHYSICAL_LOG_REVIEW.md).
+See the [physical-log review and reference comparison](docs/progress/PHYSICAL_LOG_REVIEW.md)
+and [second-log crop review](docs/progress/CROP_LOG_REVIEW.md).
 
 ## Copy diagnostic logs from physical testing
 
@@ -302,7 +313,10 @@ Each `[windows_doc_capture]` line is a JSON object (`v: 1`). Events include:
   `motion`, `invalid_expected_quad`), snapshot geometry/quality, and accepted
   stage times (`detectionMs`, `warpMs`, `filterMs`, `encodeOriginalMs`,
   `encodeCropMs`), output dimensions and filter. Rejected images stop before
-  encoding. `health` also includes auto-enabled/state/stable-frame/progress values.
+  encoding. Accepted captures also record `cropQuad` (normalized actual crop
+  corners), `cropPadding`, `paddingRequestedPx`, `paddingAppliedPx` and
+  `paddingLimited`. Compare these with `quad` (detected corners) when checking
+  missing edge content. `health` also includes auto-enabled/state/stable-frame/progress values.
   `start` records quality/stability thresholds so test sessions can be compared.
 - `camera_conflict`, `*_rejected`, `error`: lifecycle conflicts and errors tagged
   by stage, exception type, safe platform/OS error code and package stack frames.

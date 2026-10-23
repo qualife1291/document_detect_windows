@@ -4,6 +4,16 @@ This changelog follows Keep a Changelog. No production release has been made.
 
 ## [Unreleased]
 
+### Crop edge preservation
+
+- Add a default outward crop margin of 2% of the shortest detected edge, with
+  configurable `CropPipeline.cropPadding` (0..0.1, zero for exact cropping).
+  Bound the margin uniformly to the source image while preserving edge directions.
+- Preserve detection/motion/quality geometry and original JPEG. Expose actual
+  warp corners as `CapturedDocument.cropQuad`, including saved-file results.
+- Add crop-corner and applied/limited-padding diagnostics and regressions for
+  edge glyphs, perspective/portrait geometry, sensor bounds and 5/8 MP scaling.
+
 ### Physical test follow-up
 
 - Fix pull-adapter analysis cadence by reserving demand before frame copying;

@@ -169,7 +169,7 @@ void main() {
         expect(original.width, size.$1);
         expect(original.height, size.$2);
         final crop = img.decodeJpg(result.croppedJpeg)!;
-        expect(crop.width, closeTo(size.$1 * .76, 20));
+        expect(crop.width, closeTo(size.$1 * .76 * (1 + .04 / 1.586), 20));
         expect(crop.width / crop.height, closeTo(1.586, .03));
         expect(result.quad.first.dx, closeTo(size.$1 * .12, 15));
       },
