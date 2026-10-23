@@ -1,9 +1,10 @@
 # Camera / continuous-operation review — 2026-10-23
 
-Linux validation passed on Flutter 3.32.8, 3.41.9 and 3.47.7: 66 package
+Linux validation passed on Flutter 3.32.8, 3.41.9 and 3.47.7: 76 package
 tests, 3 example tests, benchmark and 30 s endurance per SDK. Both optional
-desktop SDK analyzers also passed. Windows validation also passed on the same three SDKs, including release builds
-and 60 s synthetic endurance per SDK at source `de48bba`. Physical 24/7 acceptance remains
+desktop SDK analyzers also passed. Windows validation also passed on the same
+three SDKs, including release builds and 60 s synthetic endurance per SDK at
+source `bbf00d4`. Physical 24/7 acceptance remains
 pending. This report distinguishes deterministic regression coverage from
 camera/driver and document-dataset evidence that is not available in cloud CI.
 
@@ -81,19 +82,23 @@ Raw [baseline](logs/hardening/linux-baseline-benchmark.txt) and
 
 ## Windows endurance on the committed source
 
-[Workflow](https://github.com/qualife1291/document_detect_windows/actions/runs/39890972282)
-validated `de48bba957e3d3646ee8537b32728959f803739b`. Each job also passed
-66 package tests, 3 example tests, benchmark and release build. Endurance logs
+[Workflow](https://github.com/qualife1291/document_detect_windows/actions/runs/39894147221)
+validated `bbf00d44d8b18707887f0a4c1651a353231b38b0`. Each job also passed
+76 package tests, 3 example tests, benchmark and release build. Endurance logs
 are in the corresponding `logs/windows-*/endurance.txt` and artifact provenance
 is in `logs/ci-provenance.json`.
 
 | Flutter | Duration | Offered frames | Reports | Dropped pending frames | Peak process RSS bytes |
 | --- | --- | --- | --- | --- | --- |
-| 3.32.8 | 60 s | 19920 | 1328 | 18592 | 146079744 |
-| 3.41.9 | 60 s | 21750 | 1450 | 20300 | 154292224 |
-| 3.47.7 | 60 s | 21660 | 1444 | 20216 | 158543872 |
+| 3.32.8 | 60 s | 23790 | 1586 | 22204 | 146771968 |
+| 3.41.9 | 60 s | 21660 | 1444 | 20216 | 154079232 |
+| 3.47.7 | 60 s | 21780 | 1452 | 20328 | 157962240 |
 
 These Windows tests use synthetic RGBA under flutter-test, without a camera,
 USB transport, native Texture or a kiosk's background workload. They verify
 bounded pending-frame behavior and record memory; they are not a physical-camera
 soak, a leak-free certificate or a Windows memory limit.
+
+Diagnostics update: this source also includes 10 tests for JSON output,
+redaction, coalescing, disabled logging, failing sinks and heartbeat teardown.
+See [README](../../README.md#copy-diagnostic-logs-from-physical-testing).

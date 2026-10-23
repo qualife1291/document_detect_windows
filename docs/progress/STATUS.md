@@ -54,7 +54,8 @@ benchmark, endurance 60 s/SDK và release build. Camera thật/24–168 h vẫn 
 
 Đã thêm debugPrint JSON với lifecycle/state/capture/error và health mỗi 5 giây,
 coalesce trạng thái nhanh, redact dữ liệu/đường dẫn và hủy timer lúc đóng.
-Linux đã đạt ba SDK: analyze, 75 package tests, 3 example tests, benchmark
-và endurance. Có 10 test riêng cho diagnostics/redaction/timer/sink failure và phiên ngắn.
-Đang chạy lại suite cuối sau khi giữ log chất lượng đầu/cuối phiên.
-Windows SDK matrix cho thay đổi diagnostics đang chờ chạy.
+Linux đã đạt ba SDK: analyze, 76 package tests, 3 example tests, benchmark
+và endurance. Có 10 test riêng cho diagnostics/redaction/timer/sink failure
+và phiên ngắn.
+Windows CI cũng đã đạt ba SDK tại `bbf00d4`: analyze, 76/3 tests,
+benchmark, endurance 60 s và build release.

@@ -1,2 +1,2 @@
-Building Windows application...                                    74.1s
+Building Windows application...                                    74.2s
 √ Built build\windows\x64\runner\Release\windows_doc_capture_example.exe
