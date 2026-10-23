@@ -2,6 +2,10 @@ Handover: CHUA DAT
 
 # Bằng chứng bàn giao
 
+Cập nhật diagnostics 2026-10-23: log debugPrint đang được kiểm tra.
+Các bảng source/CI bên dưới vẫn là baseline hardening `de48bba`, chưa là
+bằng chứng của thay đổi diagnostics mới.
+
 Cập nhật hardening 2026-10-23: tối ưu/vòng đời đã đạt Windows SDK matrix
 và Linux supplemental. Có thêm 5/8 MP, document/light, cancellation/dispose tests
 và endurance ngắn trên đúng source. Chưa xác nhận camera thật hoặc 24/7.

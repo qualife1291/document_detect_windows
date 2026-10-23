@@ -218,6 +218,71 @@ API still copies full RGBA before sampling; full 8 MP low-end latency and 24/7
 stability require physical profiling. See [continuous operation](docs/continuous_operation.md)
 for cancellation/file behavior, document/light coverage and the physical soak matrix.
 
+## Copy diagnostic logs from physical testing
+
+`debugPrint` diagnostics are on by default in debug builds. Opt in explicitly
+for a profile/release test, or turn them off in any build:
+
+```dart
+final capture = WindowsDocCapture(
+  frameSource: UvcFrameSource(),
+  enableDebugLogging: true, // false disables all library diagnostic output
+);
+```
+
+The `DOC_CAPTURE_LOGS` define also enables the default in profile/release builds
+(an explicit constructor value takes precedence). From the integrating Flutter
+app or `example/`, run in Windows PowerShell:
+
+```powershell
+flutter run -d windows --profile --dart-define=DOC_CAPTURE_LOGS=true 2>&1 |
+  Tee-Object -FilePath camera-test.log
+```
+
+Reproduce the issue, stop the app, then copy the library's lines:
+
+```powershell
+Get-Content camera-test.log |
+  Select-String '\[windows_doc_capture\]' |
+  ForEach-Object { $_.Line } |
+  Set-Clipboard
+```
+
+Paste those lines with a description of the visible problem, camera's advertised
+5/8 MP, selected preset and lighting. Include lines from startup through the
+failure/stop so the controller ID, session number and UTC timestamps can be
+correlated. This file is created by the command above; the library only prints
+and does not create or upload a log file.
+
+Each `[windows_doc_capture]` line is a JSON object (`v: 1`). Events include:
+
+- `enumeration_*`, `start`, `started`, `stop`, `stopped`, `dispose`, `disposed`:
+  lifecycle, requested preset, actual preview dimensions and analysis settings.
+- `state`: document enum, warning enums, normalized quad, sharpness, exposure,
+  clipping, coverage, margin and tilt. Rapid quality transitions are coalesced
+  to at most one per 250 ms; lifecycle terminal/capture states print immediately.
+  `coalesced` counts omitted transitions. UI callbacks are unaffected.
+- `health`: every five seconds while running and once during stop; recent
+  analysis FPS, mean/max analysis time, received/submitted/skipped analysis-frame
+  counts, stale reports/expiries, last-frame age, RSS MiB and native delivered FPS
+  when provided by the backend. Counters are cumulative per session; FPS covers
+  the interval since the preceding health sample. Native delivered FPS is not
+  measured UI/composited FPS. Backend skips before Dart delivery are not included
+  in `skippedAtController`.
+- `capture_*`, `snapshot`, `snapshot_rejected`: capture outcome, source dimensions,
+  JPEG byte counts and processing time. `rejected` means the snapshot did not
+  pass detection/quality/movement checks; no result was produced.
+- `camera_conflict`, `*_rejected`, `error`: lifecycle conflicts and errors tagged
+  by stage, exception type, safe platform/OS error code and package stack frames.
+  Raw exception messages/details, paths, device IDs/names, pixel/JPEG bytes and
+  document text are deliberately omitted. Error details already raised to the
+  caller are unchanged.
+
+Use logging for a bounded test session; console IO still has a cost. Disable it
+for normal unattended production operation. The diagnostic timer is cancelled
+on stop/dispose, and a failing app replacement for `debugPrint` does not interrupt
+camera cleanup.
+
 ## Validation
 
 ```powershell

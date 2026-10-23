@@ -27,3 +27,14 @@ Report a vulnerability privately to the repository owner through GitHub's
 private reporting facility if enabled. Do not upload real identity documents,
 keys, filenames or customer frames to public issues or CI artifacts. Use
 synthetic images and redact identifying metadata in diagnostic evidence.
+
+## Diagnostic output
+
+Debug builds print bounded local metadata through `debugPrint`; profile/release
+builds require explicit opt-in (`enableDebugLogging` / `DOC_CAPTURE_LOGS`). Logs
+contain state/quality/geometry/performance metrics and safe error codes, not
+image bytes, document text, device identifiers/names, file paths or raw exception
+messages/details. No upload or file logging is performed by the package. The
+integrating application's other logs and stream error handlers are outside this
+redaction boundary. Disable diagnostics for normal unattended operation and
+apply the app's retention policy to any console output captured to disk.

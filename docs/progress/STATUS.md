@@ -49,3 +49,11 @@ endurance 30 s. Adapter desktop analyze đạt 3.41.9/3.47.7. Lượt tải phá
 300 s có log riêng; chưa xác nhận 24/7 trên thiết bị thật.
 Windows CI cũng đã đạt cả ba SDK tại `de48bba`: analyze, 66/3 tests,
 benchmark, endurance 60 s/SDK và release build. Camera thật/24–168 h vẫn chưa chạy.
+
+## Diagnostics — 2026-10-23
+
+Đã thêm debugPrint JSON với lifecycle/state/capture/error và health mỗi 5 giây,
+coalesce trạng thái nhanh, redact dữ liệu/đường dẫn và hủy timer lúc đóng.
+Linux đã đạt ba SDK: analyze, 75 package tests, 3 example tests, benchmark
+và endurance. Có 9 test riêng cho diagnostics/redaction/timer/sink failure.
+Windows SDK matrix cho thay đổi diagnostics đang chờ chạy.

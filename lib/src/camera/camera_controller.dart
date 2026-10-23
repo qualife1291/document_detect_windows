@@ -1,11 +1,13 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:flutter/widgets.dart';
-import 'package:flutter/foundation.dart' show ValueListenable;
+import 'package:flutter/foundation.dart' show ValueListenable, kDebugMode;
 import '../capture/auto_capture_controller.dart';
 import '../capture/captured_document.dart';
 import '../capture/crop_pipeline.dart';
 import '../capture/capture_cancellation.dart';
 import '../detection/quality_analyzer.dart';
+import '../diagnostics/capture_diagnostics.dart';
 import '../platform/windows_ffi/platform_guard.dart';
 import '../preview/document_camera_preview.dart';
 import '../preview/document_preview_status.dart';
@@ -32,6 +34,8 @@ class WindowsDocCapture {
     FrameSource? frameSource,
     AutoCaptureController? autoCapture,
     this.cropPipeline = const CropPipeline(),
+    this.enableDebugLogging =
+        kDebugMode || const bool.fromEnvironment('DOC_CAPTURE_LOGS'),
     this.analysisInterval = const Duration(milliseconds: 100),
   }) : _source = CameraBackend.requireSelected(frameSource),
        _auto = autoCapture ?? AutoCaptureController(),
@@ -43,6 +47,7 @@ class WindowsDocCapture {
     required FrameSource frameSource,
     AutoCaptureController? autoCapture,
     this.cropPipeline = const CropPipeline(),
+    this.enableDebugLogging = false,
     this.analysisInterval = const Duration(milliseconds: 100),
   }) : _source = frameSource,
        _auto = autoCapture ?? AutoCaptureController(),
@@ -51,6 +56,25 @@ class WindowsDocCapture {
   final FrameSource _source;
   final AutoCaptureController _auto;
   final CropPipeline cropPipeline;
+
+  /// Local JSON lines via debugPrint. Enabled by default in debug builds.
+  /// Set true (or --dart-define=DOC_CAPTURE_LOGS=true) for profile/release tests.
+  final bool enableDebugLogging;
+  late final _diagnostics = CaptureDiagnostics(enabled: enableDebugLogging);
+  Timer? _diagnosticTimer;
+
+  void _logHealth() {
+    if (!enableDebugLogging) return;
+    try {
+      _diagnostics.health(
+        currentPreviewStatus,
+        running: _running,
+        nativeFps: _running ? deliveredPreviewFps : null,
+      );
+    } catch (error, stack) {
+      _diagnostics.error('diagnostic_health', error, stack);
+    }
+  }
 
   /// Upper bound on analysis frequency, independent of native preview FPS.
   final Duration analysisInterval;
@@ -62,6 +86,7 @@ class WindowsDocCapture {
 
   void _claimCamera() {
     if (_cameraOwner != null && _cameraOwner != this) {
+      _diagnostics.event('camera_conflict');
       throw StateError('Another document camera session is active');
     }
     _cameraOwner = this;
@@ -118,6 +143,7 @@ class WindowsDocCapture {
   set autoCaptureEnabled(bool value) {
     _autoEnabled = value;
     _auto.reset();
+    _diagnostics.event('auto_capture', {'enabled': value});
   }
 
   Future<List<CameraDevice>> listDevices() async {
@@ -126,13 +152,20 @@ class WindowsDocCapture {
         _starting != null ||
         _stopping != null ||
         _listing != null) {
+      _diagnostics.event('enumeration_rejected', {'reason': 'session_busy'});
       throw StateError('Stop the camera before enumerating devices');
     }
     _claimCamera();
     final future = _listDevices();
     _listing = future;
+    _diagnostics.event('enumeration_start');
     try {
-      return await future;
+      final devices = await future;
+      _diagnostics.event('enumeration_complete', {'count': devices.length});
+      return devices;
+    } catch (error, stack) {
+      _diagnostics.error('enumeration', error, stack);
+      rethrow;
     } finally {
       _listing = null;
       if (_cameraOwner == this) _cameraOwner = null;
@@ -177,6 +210,7 @@ class WindowsDocCapture {
     if (_stopping != null) await _stopping;
     if (_disposed) throw StateError('Capture disposed');
     if (_running || _starting != null || _listing != null) {
+      _diagnostics.event('start_rejected', {'reason': 'session_busy'});
       throw StateError('Camera already starting or running');
     }
     if (analysisInterval < Duration.zero) {
@@ -208,6 +242,25 @@ class WindowsDocCapture {
   ) async {
     // Settle _starting before notifying consumer callbacks, which can stop().
     await Future<void>.value();
+    _diagnostics.resetSession();
+    _diagnostics.event('start', {
+      'backend': _source.runtimeType.toString(),
+      'os': Platform.operatingSystem,
+      'processors': Platform.numberOfProcessors,
+      'preset': preset.name,
+      'specificDeviceRequested': device != null,
+      'auto': auto,
+      'saving': directory != null,
+      'analysisIntervalMs': analysisInterval.inMilliseconds,
+      'analysisMaxSide': cropPipeline.analysisWidth,
+      'jpegQuality': cropPipeline.jpegQuality,
+      'blurThreshold': _auto.thresholds.blurThreshold,
+      'brightnessRange': [
+        _auto.thresholds.minimumBrightness,
+        _auto.thresholds.maximumBrightness,
+      ],
+      'maxClipping': _auto.thresholds.maximumClipping,
+    });
     _publishPreview(
       DocumentPreviewStatus(state: DocumentPreviewState.processing),
     );
@@ -240,15 +293,19 @@ class WindowsDocCapture {
       }
       _reports = analyzer.reports.listen(
         (report) => _onReport(report, epoch),
-        onError: _onStreamError,
+        onError: (Object error, StackTrace stack) =>
+            _onStreamError(error, stack, 'analyzer_stream'),
       );
       _frames = _source.frames.listen(
         (frame) {
-          if (!_wantsAnalysis(analyzer)) return;
+          final wanted = _wantsAnalysis(analyzer);
+          _diagnostics.frame(submitted: wanted);
+          if (!wanted) return;
           _lastAnalysis = _clock.elapsed;
           analyzer.add(frame);
         },
-        onError: _onStreamError,
+        onError: (Object error, StackTrace stack) =>
+            _onStreamError(error, stack),
         onDone: () => _onStreamError(StateError('Camera stream closed')),
       );
       await _source.start(deviceId: device, preset: preset);
@@ -257,11 +314,21 @@ class WindowsDocCapture {
       }
       if (_startupError != null) throw _startupError!;
       _running = true;
+      _diagnostics.event('started', {
+        'previewSize': [previewSize.width, previewSize.height],
+      });
+      if (enableDebugLogging) {
+        _diagnosticTimer = Timer.periodic(
+          const Duration(seconds: 5),
+          (_) => _logHealth(),
+        );
+      }
       // Rebuild a preview mounted before start() with the negotiated dimensions.
       _publishPreview(
         DocumentPreviewStatus(state: DocumentPreviewState.processing),
       );
-    } catch (_) {
+    } catch (error, stack) {
+      _diagnostics.error('start', error, stack);
       _publishPreview(
         DocumentPreviewStatus(
           state: _disposed || _stopping != null
@@ -274,7 +341,12 @@ class WindowsDocCapture {
     }
   }
 
-  void _onStreamError(Object error) {
+  void _onStreamError(
+    Object error, [
+    StackTrace? stack,
+    String stage = 'camera_stream',
+  ]) {
+    _diagnostics.error(stage, error, stack);
     if (!_running) {
       if (_starting != null) _startupError = error;
       return;
@@ -286,6 +358,7 @@ class WindowsDocCapture {
     // Fail closed after device loss; discard stale frames and restart explicitly.
     unawaited(
       _stopSession(DocumentPreviewState.error).catchError((Object e) {
+        _diagnostics.error('stream_cleanup', e);
         if (!_disposed) _errors.add(e);
       }),
     );
@@ -295,10 +368,12 @@ class WindowsDocCapture {
     if (!_running || epoch != _epoch) return;
     final age = DateTime.now().difference(report.capturedAt);
     if (age > _previewMaxAge || age < const Duration(seconds: -1)) {
+      if (enableDebugLogging) _diagnostics.stale++;
       _auto.invalidateFrames();
       _expirePreview(epoch);
       return;
     }
+    _diagnostics.report(report);
     final result = report.result;
     final warnings = _auto.thresholds.warningsFor(result);
     for (final warning in warnings) {
@@ -348,6 +423,7 @@ class WindowsDocCapture {
 
   void _expirePreview(int epoch) {
     if (!_running || epoch != _epoch) return;
+    if (enableDebugLogging) _diagnostics.expired++;
     _auto.invalidateFrames();
     _previewExpiry?.cancel();
     _publishPreview(
@@ -360,12 +436,17 @@ class WindowsDocCapture {
   }
 
   void _publishPreview(DocumentPreviewStatus value) {
-    final changed = _previewStatus.value.state != value.state;
+    final previous = _previewStatus.value;
+    final changed = previous.state != value.state;
     _previewStatus.value = value;
+    if (identical(_previewStatus.value, value)) {
+      _diagnostics.state(previous, value);
+    }
     if (changed && !_disposed && identical(_previewStatus.value, value)) {
       try {
         _onDocumentStateChanged?.call(value.state);
-      } catch (error) {
+      } catch (error, stack) {
+        _diagnostics.error('preview_callback', error, stack);
         // An integration callback must not interrupt camera/detection cleanup.
         _errors.add(error);
       }
@@ -395,7 +476,12 @@ class WindowsDocCapture {
         expectedQuad: expectedQuad,
       );
       if (captured != null && _running && epoch == _epoch) {
-        _callback?.call(captured);
+        try {
+          _callback?.call(captured);
+        } catch (error, stack) {
+          _diagnostics.error('auto_capture_callback', error, stack);
+          rethrow;
+        }
       }
     } catch (e) {
       if (!_disposed) _errors.add(e);
@@ -408,8 +494,12 @@ class WindowsDocCapture {
     List<Offset>? expectedQuad,
   }) async {
     if (!_running || _disposed || _stopping != null || _capture != null) {
+      _diagnostics.event('capture_skipped', {
+        'reason': _capture != null ? 'busy' : 'session_inactive',
+      });
       return null;
     }
+    _diagnostics.event('capture_start', {'auto': auto});
     final epoch = _epoch;
     final cancellation = CaptureCancellation();
     _captureCancellation = cancellation;
@@ -418,7 +508,24 @@ class WindowsDocCapture {
     _publishCapturePhase(DocumentPreviewState.capturing);
     try {
       final result = await future;
-      return _running && !_disposed && epoch == _epoch ? result : null;
+      final active = _running && !_disposed && epoch == _epoch;
+      _diagnostics.event('capture_complete', {
+        'outcome': !active || cancellation.isCancelled
+            ? 'cancelled'
+            : result == null
+            ? 'rejected'
+            : 'success',
+        if (result != null && active) ...{
+          'processingMs': result.processingTime.inMilliseconds,
+          'originalBytes': result.originalJpeg.length,
+          'croppedBytes': result.croppedJpeg.length,
+          'saved': result.savedPath != null,
+        },
+      });
+      return active ? result : null;
+    } catch (error, stack) {
+      _diagnostics.error('capture', error, stack);
+      rethrow;
     } finally {
       _captureCancellation = null;
       _capture = null;
@@ -438,12 +545,21 @@ class WindowsDocCapture {
       _source.latestFullResolutionFrame().timeout(const Duration(seconds: 15)),
     );
     if (cancellation.isCancelled) return null;
+    if (frame != null) {
+      _diagnostics.event('snapshot', {
+        'size': [frame.width, frame.height],
+      });
+    }
     final age = frame == null
         ? Duration.zero
         : DateTime.now().difference(frame.capturedAt);
     if (frame == null ||
         age > const Duration(milliseconds: 500) ||
         age < const Duration(seconds: -1)) {
+      _diagnostics.event('snapshot_rejected', {
+        'reason': frame == null ? 'missing' : 'timestamp',
+        'ageMs': age.inMilliseconds,
+      });
       return null;
     }
     return cropPipeline.capture(
@@ -485,6 +601,12 @@ class WindowsDocCapture {
   }
 
   Future<void> _stop(DocumentPreviewState finalState) async {
+    _diagnostics.event('stop', {
+      'starting': _starting != null,
+      'capturing': _capture != null,
+    });
+    _diagnosticTimer?.cancel();
+    _diagnosticTimer = null;
     if (_starting != null) {
       try {
         await _starting;
@@ -506,17 +628,20 @@ class WindowsDocCapture {
         /* capture caller receives errors */
       }
     }
+    _logHealth();
     await _cleanup();
+    _diagnostics.event('stopped');
   }
 
   Future<void> _cleanup() async {
     _previewExpiry?.cancel();
     Object? failure;
     StackTrace? failureStack;
-    Future<void> attempt(Future<void> Function() cleanup) async {
+    Future<void> attempt(String stage, Future<void> Function() cleanup) async {
       try {
         await cleanup();
       } catch (error, stack) {
+        _diagnostics.error(stage, error, stack);
         failure ??= error;
         failureStack ??= stack;
       }
@@ -526,15 +651,15 @@ class WindowsDocCapture {
     _frames = null;
     _reports = null;
     _analyzer = null;
-    if (frames != null) await attempt(frames.cancel);
-    if (reports != null) await attempt(reports.cancel);
-    if (analyzer != null) await attempt(analyzer.dispose);
+    if (frames != null) await attempt('frames_cancel', frames.cancel);
+    if (reports != null) await attempt('reports_cancel', reports.cancel);
+    if (analyzer != null) await attempt('analyzer_dispose', analyzer.dispose);
     if (_cameraOwner == this) {
       final source = _source;
       if (source is AnalysisDemandSource) {
         (source as AnalysisDemandSource).analysisWanted = null;
       }
-      await attempt(_source.stop);
+      await attempt('camera_stop', _source.stop);
       if (_cameraOwner == this) _cameraOwner = null;
     }
     _callback = null;
@@ -554,6 +679,7 @@ class WindowsDocCapture {
 
   Future<void> _dispose() async {
     _disposed = true;
+    _diagnostics.event('dispose');
     try {
       if (_listing != null) {
         try {
@@ -569,6 +695,7 @@ class WindowsDocCapture {
       await _errors.close();
       _onDocumentStateChanged = null;
       _previewStatus.dispose();
+      _diagnostics.event('disposed');
     }
   }
 }

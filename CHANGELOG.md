@@ -18,6 +18,11 @@ This changelog follows Keep a Changelog. No production release has been made.
 
 ### Added
 
+- Opt-in profile/release and default-debug `debugPrint` JSON diagnostics for
+  camera lifecycle, document state, capture/errors and five-second performance
+  summaries. Redact image content, identifiers, paths and raw exception details;
+  coalesce noisy state changes and cancel heartbeat timers on teardown.
+
 - Built-in live four-corner document overlay with matching contain/cover/fill
   coordinates, perspective-following corner markers and configurable styling.
 - `DocumentPreviewState` enum callback (`onDocumentStateChanged`) and
