@@ -14,7 +14,11 @@ URI của debugger. Không có ảnh/video gốc để đo recall hoặc độ l
   max 301 ms; stale reports 0, expiry 3.
 - Các **state events được in**, không phải số frame: noDocument 119, outOfFrame
   117, tilted 9, clear 8, blurry 1; các state khác là lifecycle/capture.
-  Coalescing làm số lần xuất hiện khác số frame thực tế.
+  Coalescing làm số lần xuất hiện khác số frame thực tế. Trong cùng các state
+  events, warning phụ xuất hiện 109 lần tilt và 38 lần blur; enum chính ưu tiên
+  framing nên chỉ đếm `tilted`/`blurry` sẽ bỏ sót các vấn đề đồng thời.
+  Start ghi blurThreshold 100, brightness .2–.85, maxClipping .25; các clear events
+  có blur 404–701. Log này chưa chứng minh cần nới ngưỡng rõ nét.
 - Trong 117 outOfFrame events, 98 có margin dưới .02; 19 còn lại không đủ coverage.
   Có quad lớn chạm ba/bốn cạnh sensor, phù hợp giả thuyết chọn nhầm nền.
   Log không đủ để khẳng định nền đó là gì hay giấy nằm ở đâu.
@@ -97,3 +101,22 @@ Giữ giấy rồi lấy ra để kiểm tra cooldown, thử mép sensor, phản
 đổi preset, rút camera và đóng cửa sổ khi đang chụp. Cần log từ startup đến stop;
 đối chiếu `capture_processing.decision`, stage times, health FPS/stableFrames.
 Đo native alignment/CPU/RSS và chạy soak 24–168 giờ vẫn là gate thiết bị thật.
+
+## Validation bản đã commit
+
+Nguồn `ca13fd45e6bc96d37b2f551a86ccd68431de7232`; [Windows CI](https://github.com/qualife1291/document_detect_windows/actions/runs/39909113059)
+đạt Flutter 3.32.8, 3.41.9, 3.47.7: 89 package tests, 3 example tests, hai
+benchmark, endurance 60 s/SDK và build release Windows x64. Linux cũng đạt
+analyze/suite tương ứng với endurance 30 s/SDK; adapter desktop analyze đạt
+trên hai SDK hỗ trợ. Không skip/disable test.
+
+Windows hosted VM, synthetic 1280×720, flutter-test; không phải latency camera:
+
+| Flutter | Warp mean | Snapshot processing mean |
+| --- | --- | --- |
+| 3.32.8 | 46.27 ms | 282.46 ms |
+| 3.41.9 | 27.04 ms | 183.88 ms |
+| 3.47.7 | 47.60 ms | 290.11 ms |
+
+Xem `logs/windows-*/processing-benchmark.txt` và [provenance](logs/ci-provenance.json).
+Chưa chạy camera người dùng với bản mới và chưa xác nhận 24/7.

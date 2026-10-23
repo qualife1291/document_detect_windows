@@ -1,5 +1,5 @@
 00:00 +0: loading D:/a/document_detect_windows/document_detect_windows/example/test/kiosk_test.dart
 00:00 +0: graceful window exit awaits camera cleanup
-00:00 +1: Vietnamese kiosk supports start, manual result, retake and Esc
+00:01 +1: Vietnamese kiosk supports start, manual result, retake and Esc
 00:02 +2: all quality warnings remain readable on a reduced-motion kiosk
-00:02 +3: All tests passed!
+00:03 +3: All tests passed!

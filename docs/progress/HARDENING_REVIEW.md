@@ -1,10 +1,10 @@
 # Camera / continuous-operation review — 2026-10-23
 
-Linux validation passed on Flutter 3.32.8, 3.41.9 and 3.47.7: 76 package
+Linux validation passed on Flutter 3.32.8, 3.41.9 and 3.47.7: 89 package
 tests, 3 example tests, benchmark and 30 s endurance per SDK. Both optional
 desktop SDK analyzers also passed. Windows validation also passed on the same
 three SDKs, including release builds and 60 s synthetic endurance per SDK at
-source `bbf00d4`. Physical 24/7 acceptance remains
+source `ca13fd4`. Physical 24/7 acceptance remains
 pending. This report distinguishes deterministic regression coverage from
 camera/driver and document-dataset evidence that is not available in cloud CI.
 
@@ -82,17 +82,17 @@ Raw [baseline](logs/hardening/linux-baseline-benchmark.txt) and
 
 ## Windows endurance on the committed source
 
-[Workflow](https://github.com/qualife1291/document_detect_windows/actions/runs/39894147221)
-validated `bbf00d44d8b18707887f0a4c1651a353231b38b0`. Each job also passed
-76 package tests, 3 example tests, benchmark and release build. Endurance logs
+[Workflow](https://github.com/qualife1291/document_detect_windows/actions/runs/39909113059)
+validated `ca13fd45e6bc96d37b2f551a86ccd68431de7232`. Each job also passed
+89 package tests, 3 example tests, benchmark and release build. Endurance logs
 are in the corresponding `logs/windows-*/endurance.txt` and artifact provenance
 is in `logs/ci-provenance.json`.
 
 | Flutter | Duration | Offered frames | Reports | Dropped pending frames | Peak process RSS bytes |
 | --- | --- | --- | --- | --- | --- |
-| 3.32.8 | 60 s | 23790 | 1586 | 22204 | 146771968 |
-| 3.41.9 | 60 s | 21660 | 1444 | 20216 | 154079232 |
-| 3.47.7 | 60 s | 21780 | 1452 | 20328 | 157962240 |
+| 3.32.8 | 60 s | 19950 | 1330 | 18620 | 147017728 |
+| 3.41.9 | 60 s | 26160 | 1744 | 24416 | 153059328 |
+| 3.47.7 | 60 s | 21780 | 1452 | 20328 | 157982720 |
 
 These Windows tests use synthetic RGBA under flutter-test, without a camera,
 USB transport, native Texture or a kiosk's background workload. They verify
@@ -102,3 +102,7 @@ soak, a leak-free certificate or a Windows memory limit.
 Diagnostics update: this source also includes 10 tests for JSON output,
 redaction, coalescing, disabled logging, failing sinks and heartbeat teardown.
 See [README](../../README.md#copy-diagnostic-logs-from-physical-testing).
+
+Physical-test follow-up: cadence, clipped-background selection, weak-edge fallback,
+white/custom frame styling, faster warp and opt-in filters are covered by 13
+additional tests. See [physical log review](PHYSICAL_LOG_REVIEW.md).

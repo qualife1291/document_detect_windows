@@ -1,2 +1,2 @@
 Analyzing example...                                            
-No issues found! (ran in 15.9s)
+No issues found! (ran in 11.6s)

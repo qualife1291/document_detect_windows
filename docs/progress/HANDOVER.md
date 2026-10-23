@@ -2,6 +2,10 @@ Handover: CHUA DAT
 
 # Bằng chứng bàn giao
 
+Cập nhật theo log thực tế: đã đạt 89 package tests, 3 example tests, hai benchmark
+và endurance trên Windows/Linux ba SDK. Đã sửa cadence, lựa chọn contour, khung
+trắng/custom, crop và diagnostics; xem [review log](PHYSICAL_LOG_REVIEW.md).
+
 Cập nhật diagnostics 2026-10-23: đã đạt Windows/Linux ba SDK với 76 package
 tests (gồm 10 diagnostics tests), 3 example tests, benchmark và endurance.
 Log bật trong debug, opt-in profile/release; timer/sink/redaction có regression tests.
@@ -30,18 +34,18 @@ từ CI/synthetic tests.
 
 ## Windows x64 SDK matrix đã chạy
 
-Nguồn được kiểm tra: commit `bbf00d44d8b18707887f0a4c1651a353231b38b0`.
-[Workflow xác nhận cuối](https://github.com/qualife1291/document_detect_windows/actions/runs/39894147221)
-đã chạy package/example thành công trên cả ba SDK. Mỗi SDK có 76 package tests,
-3 example widget tests và 1 benchmark test (30 ảnh synthetic + 5 warmup). Không skip,
+Nguồn được kiểm tra: commit `ca13fd45e6bc96d37b2f551a86ccd68431de7232`.
+[Workflow xác nhận cuối](https://github.com/qualife1291/document_detect_windows/actions/runs/39909113059)
+đã chạy package/example thành công trên cả ba SDK. Mỗi SDK có 89 package tests,
+3 example widget tests và 2 benchmark tests (detector và snapshot processing). Không skip,
 disable hoặc expected-failure trong các suite này. Các artifact logs được tải
 qua GitHub API và giữ nguyên nội dung.
 
 | Flutter | pub get package/example | analyze package/example | Package / example / benchmark | Build example | Synthetic mean / FPS | Log |
 | --- | --- | --- | --- | --- | --- | --- |
-| 3.32.8 | Đạt / Đạt | Đạt / Đạt | 76 / 3 / 1 đạt | Đạt x64 release | 34.57 ms / 28.93 FPS | [logs](logs/windows-3.32.8/) |
-| 3.41.9 | Đạt / Đạt | Đạt / Đạt | 76 / 3 / 1 đạt | Đạt x64 release | 58.18 ms / 17.19 FPS | [logs](logs/windows-3.41.9/) |
-| 3.47.7 | Đạt / Đạt | Đạt / Đạt | 76 / 3 / 1 đạt | Đạt x64 release | 59.72 ms / 16.75 FPS | [logs](logs/windows-3.47.7/) |
+| 3.32.8 | Đạt / Đạt | Đạt / Đạt | 89 / 3 / 2 đạt | Đạt x64 release | 58.73 ms / 17.03 FPS | [logs](logs/windows-3.32.8/) |
+| 3.41.9 | Đạt / Đạt | Đạt / Đạt | 89 / 3 / 2 đạt | Đạt x64 release | 32.97 ms / 30.33 FPS | [logs](logs/windows-3.41.9/) |
+| 3.47.7 | Đạt / Đạt | Đạt / Đạt | 89 / 3 / 2 đạt | Đạt x64 release | 58.55 ms / 17.08 FPS | [logs](logs/windows-3.47.7/) |
 
 UVC adapter cũng pub get/analyze đạt cả ba SDK trong cùng Windows jobs.
 Toàn bộ ba Windows jobs đã đạt, gồm cả adapter camera_desktop trên 3.41.9
@@ -57,15 +61,15 @@ hoặc hạ analyzer severity để làm CI xanh.
 
 Benchmark Windows dùng `flutter test` trên hosted VM, không phải release kiosk.
 Nó không đo camera-to-texture latency, CPU, physical preview/composited FPS hoặc
-end-to-end <=300 ms. Counter native delivered FPS trong example chưa được kiểm
-chứng với camera thật. `CapturedDocument.processingTime` không bao gồm thời
+end-to-end <=300 ms. Log camera do người dùng cung cấp đã ghi native delivered FPS gần 30;
+chưa đối chiếu bằng profiler/camera-to-texture measurements. `CapturedDocument.processingTime` không bao gồm thời
 gian chờ stable feedback.
 
 ## Linux supplemental
 
 `tool/validate_linux.sh` đã chạy pub get/analyze/test cho package/adapter UVC/
-example trên Flutter 3.32.8, 3.41.9, 3.47.7. Mỗi SDK đạt 76 package tests, 3 widget
-tests, 1 benchmark test. Log và version thật ở [3.32.8](logs/linux-3.32.8/),
+example trên Flutter 3.32.8, 3.41.9, 3.47.7. Mỗi SDK đạt 89 package tests, 3 widget
+tests, 2 benchmark tests. Log và version thật ở [3.32.8](logs/linux-3.32.8/),
 [3.41.9](logs/linux-3.41.9/), [3.47.7](logs/linux-3.47.7/).
 Không dùng các kết quả Linux để chứng minh native Windows runtime.
 
@@ -81,7 +85,7 @@ Bootstrap đã chạy và chạy lại đạt, log
 
 | Hạng mục | Trạng thái | Bằng chứng cần bổ sung |
 | --- | --- | --- |
-| Real camera integration | Chưa chạy | example/integration_test/real_camera_test.dart: operator đặt/bỏ giấy, callback/result/file, unplug/restart/permission |
+| Real camera integration | Có log người dùng; chưa đủ case | example/integration_test/real_camera_test.dart: operator đặt/bỏ giấy, callback/result/file, unplug/restart/permission |
 | Candidate comparison | Chưa đo | camera_desktop vs flutter_ffi_uvc cùng máy/camera/resolution: latency/stability/CPU/memory |
 | Detection FPS kiosk target | Chưa đo | >=10 FPS trên kiosk; hosted VM synthetic không thay thế target |
 | Preview latency / CPU / capture latency | Chưa đo | <=100 ms / <=25% một core / <=300 ms; timestamp và profiler evidence |

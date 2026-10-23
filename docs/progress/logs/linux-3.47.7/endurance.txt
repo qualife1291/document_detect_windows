@@ -1,4 +1,4 @@
 00:00 +0: loading /workspace/document_detect_windows/tool/endurance_test.dart
 00:00 +0: bounded analysis under continuous burst load
-ENDURANCE {"platform":"linux","seconds":30,"offered":11010,"reports":734,"dropped":10276,"peak_rss_bytes":156667904,"rss_samples":[145285120,147017728,150044672,151568384,154271744,155754496,153251840]}
+ENDURANCE {"platform":"linux","seconds":30,"offered":11220,"reports":748,"dropped":10472,"peak_rss_bytes":157704192,"rss_samples":[146808832,150757376,149692416,152301568,151654400,155332608]}
 00:30 +1: All tests passed!

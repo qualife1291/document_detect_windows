@@ -59,3 +59,12 @@ và endurance. Có 10 test riêng cho diagnostics/redaction/timer/sink failure
 và phiên ngắn.
 Windows CI cũng đã đạt ba SDK tại `bbf00d4`: analyze, 76/3 tests,
 benchmark, endurance 60 s và build release.
+
+## Theo log thực tế — 2026-10-23
+
+Đã review 450 s log, sửa cadence pull adapter, ưu tiên quad đầy đủ, fallback
+viền yếu, frame trắng/custom/outline, warp byte-buffer, filter opt-in và lý do
+capture rejection. Linux/Windows đạt cả ba SDK: 89 package tests, 3 example
+tests, hai benchmark, endurance 30 s Linux / 60 s Windows và Windows release build.
+Windows source `ca13fd4`, [workflow](https://github.com/qualife1291/document_detect_windows/actions/runs/39909113059).
+Số đo synthetic không thay camera thật/24–168 h; xem [review](PHYSICAL_LOG_REVIEW.md).
