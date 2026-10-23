@@ -38,7 +38,11 @@ required. Synthetic tests contain no real identity or medical information.
   the captured document. A frozen stream cannot rearm repeated auto-captures.
 
 Cancel app-owned stream subscriptions before disposing, especially subscriptions
-that the app paused. Dart stream close waits for paused listeners. Await cleanup
+that the app paused. Dart stream close waits for paused listeners. Standard Dart
+subscriptions can buffer events without a fixed limit while paused: unsubscribe
+from `statuses`, `warnings` or adapter `frames` when a screen is inactive rather
+than leaving a paused listener for hours. Prefer `previewStatus` for UI that only
+needs the current snapshot; it has no per-listener event backlog. Await cleanup
 when leaving the camera route. The example handles a graceful Windows exit
 request and also attempts cleanup on widget disposal; don't setState in cleanup.
 
@@ -80,7 +84,10 @@ geometry and quality gating. They do not prove all holograms, laminated cards,
 small glare patches, folds, severe shadows, occlusions or patterned backgrounds
 are rejected. Some of these can still produce a plausible rectangle/clear state.
 Use a contrasting matte background, diffuse lighting and physical calibration;
-validate downstream field readability on the intended documents.
+validate downstream field readability on the intended documents. Brightness and
+clipping are aggregate ROI checks: a white medical form can be conservatively
+rejected as too bright. Calibrate thresholds against actual cameras/forms rather
+than treating the defaults as a document-independent readability score.
 
 ## Abrupt exit and files
 

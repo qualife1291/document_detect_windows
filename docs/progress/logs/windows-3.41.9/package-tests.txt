@@ -17,24 +17,52 @@
 00:03 +15: D:/a/document_detect_windows/document_detect_windows/test/crop_test.dart: no document and automatic poor quality never produce an output
 00:03 +16: D:/a/document_detect_windows/document_detect_windows/test/crop_test.dart: file IO failures propagate instead of returning a nonexistent savedPath
 00:03 +17: D:/a/document_detect_windows/document_detect_windows/test/crop_test.dart: moving full-resolution snapshot is rejected against the stable quad
-00:04 +18: D:/a/document_detect_windows/document_detect_windows/test/detector_test.dart: detects A4 geometry, exposure and sharpness inside ROI
-00:04 +19: D:/a/document_detect_windows/document_detect_windows/test/detector_test.dart: rejects blank frame and small objects
-00:04 +20: D:/a/document_detect_windows/document_detect_windows/test/detector_test.dart: perspective quadrilateral retains distinct corners and detects tilt
-00:04 +21: D:/a/document_detect_windows/document_detect_windows/test/detector_test.dart: maps downsampled detector coordinates back to full pixels
+00:03 +18: D:/a/document_detect_windows/document_detect_windows/test/detector_test.dart: detects A4 geometry, exposure and sharpness inside ROI
+00:03 +19: D:/a/document_detect_windows/document_detect_windows/test/detector_test.dart: rejects blank frame and small objects
+00:03 +20: D:/a/document_detect_windows/document_detect_windows/test/detector_test.dart: perspective quadrilateral retains distinct corners and detects tilt
+00:03 +21: D:/a/document_detect_windows/document_detect_windows/test/detector_test.dart: maps downsampled detector coordinates back to full pixels
 00:04 +22: D:/a/document_detect_windows/document_detect_windows/test/detector_test.dart: textureless paper does not inherit sharpness from its outside border
 00:04 +23: D:/a/document_detect_windows/document_detect_windows/test/detector_test.dart: too dark, glare and incomplete paper produce warnings
 00:04 +24: D:/a/document_detect_windows/document_detect_windows/test/detector_test.dart: disposal is enforced
-00:05 +25: D:/a/document_detect_windows/document_detect_windows/test/preview_status_test.dart: live detection and enum callbacks work with auto capture disabled
-00:05 +26: D:/a/document_detect_windows/document_detect_windows/test/preview_status_test.dart: real synthetic analysis reports missing, blurry, outside, lighting and tilt enums
-00:05 +27: D:/a/document_detect_windows/document_detect_windows/test/preview_status_test.dart: expired detection clears corners and returns processing without another camera frame
-00:05 +28: D:/a/document_detect_windows/document_detect_windows/test/preview_status_test.dart: expired detection clears corners and returns processing without another camera frame
-00:05 +29: D:/a/document_detect_windows/document_detect_windows/test/preview_status_test.dart: expired detection clears corners and returns processing without another camera frame
-00:05 +30: D:/a/document_detect_windows/document_detect_windows/test/preview_status_test.dart: expired detection clears corners and returns processing without another camera frame
-00:05 +31: D:/a/document_detect_windows/document_detect_windows/test/preview_status_test.dart: expired detection clears corners and returns processing without another camera frame
-00:06 +32: D:/a/document_detect_windows/document_detect_windows/test/preview_status_test.dart: manual capture publishes capturing and cooldown without needing more analysis frames
-00:06 +33: D:/a/document_detect_windows/document_detect_windows/test/preview_status_test.dart: start errors, stream errors and restart do not retain stale corners or callbacks
-00:06 +34: D:/a/document_detect_windows/document_detect_windows/test/preview_status_test.dart: throwing enum callback is surfaced on errors and does not interrupt camera operation
-00:06 +35: D:/a/document_detect_windows/document_detect_windows/test/preview_status_test.dart: preview snapshots retain all warnings, prioritize framing and protect corner lists
-00:06 +36: D:/a/document_detect_windows/document_detect_windows/test/preview_status_test.dart: enum callback can reenter stop without closing the native source twice
-00:06 +37: D:/a/document_detect_windows/document_detect_windows/test/preview_status_test.dart: a preview listener stopping on a frame cannot receive a stale clear enum afterward
-00:06 +38: All tests passed!
+00:04 +25: D:/a/document_detect_windows/document_detect_windows/test/document_conditions_test.dart: ID / driver card landscape: geometry under diffuse light and a mild shadow
+00:04 +26: D:/a/document_detect_windows/document_detect_windows/test/document_conditions_test.dart: legacy driver card: geometry under diffuse light and a mild shadow
+00:04 +27: D:/a/document_detect_windows/document_detect_windows/test/document_conditions_test.dart: portrait ID: geometry under diffuse light and a mild shadow
+00:04 +28: D:/a/document_detect_windows/document_detect_windows/test/document_conditions_test.dart: A4 medical form: geometry under diffuse light and a mild shadow
+00:04 +29: D:/a/document_detect_windows/document_detect_windows/test/document_conditions_test.dart: square medical card: geometry under diffuse light and a mild shadow
+00:04 +30: D:/a/document_detect_windows/document_detect_windows/test/document_conditions_test.dart: wide medical slip: geometry under diffuse light and a mild shadow
+00:05 +31: D:/a/document_detect_windows/document_detect_windows/test/document_conditions_test.dart: underexposure blocks automatic capture for ID and medical form
+00:05 +32: D:/a/document_detect_windows/document_detect_windows/test/document_conditions_test.dart: underexposure blocks automatic capture for ID and medical form
+00:05 +33: D:/a/document_detect_windows/document_detect_windows/test/hardening_test.dart: another controller cannot enumerate or open an owned camera, nor stop it by disposing
+00:05 +34: D:/a/document_detect_windows/document_detect_windows/test/document_conditions_test.dart: overexposure blocks automatic capture for ID and medical form
+00:05 +35: D:/a/document_detect_windows/document_detect_windows/test/document_conditions_test.dart: overexposure blocks automatic capture for ID and medical form
+00:05 +36: D:/a/document_detect_windows/document_detect_windows/test/document_conditions_test.dart: overexposure blocks automatic capture for ID and medical form
+00:05 +37: D:/a/document_detect_windows/document_detect_windows/test/document_conditions_test.dart: overexposure blocks automatic capture for ID and medical form
+00:05 +38: D:/a/document_detect_windows/document_detect_windows/test/hardening_test.dart: concurrent dispose callers await the same teardown
+00:05 +39: D:/a/document_detect_windows/document_detect_windows/test/document_conditions_test.dart: localized glare blocks automatic capture for ID and medical form
+00:05 +40: D:/a/document_detect_windows/document_detect_windows/test/document_conditions_test.dart: localized glare blocks automatic capture for ID and medical form
+00:05 +41: D:/a/document_detect_windows/document_detect_windows/test/document_conditions_test.dart: localized glare blocks automatic capture for ID and medical form
+00:05 +42: D:/a/document_detect_windows/document_detect_windows/test/hardening_test.dart: pre-cancelled crop cannot create files or begin processing
+00:05 +43: D:/a/document_detect_windows/document_detect_windows/test/document_conditions_test.dart: defocused / no interior detail blocks automatic capture for ID and medical form
+00:05 +44: D:/a/document_detect_windows/document_detect_windows/test/hardening_test.dart: closing during an 8MP crop cancels worker and leaves no output file
+00:05 +45: D:/a/document_detect_windows/document_detect_windows/test/hardening_test.dart: closing during an 8MP crop cancels worker and leaves no output file
+00:05 +46: D:/a/document_detect_windows/document_detect_windows/test/document_conditions_test.dart: 2592x1944: full resolution JPEG/crop and mapped corners
+00:05 +47: D:/a/document_detect_windows/document_detect_windows/test/document_conditions_test.dart: 2592x1944: full resolution JPEG/crop and mapped corners
+00:05 +48: D:/a/document_detect_windows/document_detect_windows/test/document_conditions_test.dart: 2592x1944: full resolution JPEG/crop and mapped corners
+00:05 +49: D:/a/document_detect_windows/document_detect_windows/test/document_conditions_test.dart: 2592x1944: full resolution JPEG/crop and mapped corners
+00:05 +50: D:/a/document_detect_windows/document_detect_windows/test/document_conditions_test.dart: 2592x1944: full resolution JPEG/crop and mapped corners
+00:07 +51: D:/a/document_detect_windows/document_detect_windows/test/document_conditions_test.dart: 2592x1944: full resolution JPEG/crop and mapped corners
+00:07 +52: D:/a/document_detect_windows/document_detect_windows/test/document_conditions_test.dart: 2592x1944: full resolution JPEG/crop and mapped corners
+00:08 +53: D:/a/document_detect_windows/document_detect_windows/test/preview_status_test.dart: expired detection clears corners and returns processing without another camera frame
+00:08 +54: D:/a/document_detect_windows/document_detect_windows/test/document_conditions_test.dart: 3264x2448: full resolution JPEG/crop and mapped corners
+00:08 +55: D:/a/document_detect_windows/document_detect_windows/test/document_conditions_test.dart: 3264x2448: full resolution JPEG/crop and mapped corners
+00:08 +56: D:/a/document_detect_windows/document_detect_windows/test/document_conditions_test.dart: 3264x2448: full resolution JPEG/crop and mapped corners
+00:09 +57: D:/a/document_detect_windows/document_detect_windows/test/document_conditions_test.dart: 3264x2448: full resolution JPEG/crop and mapped corners
+00:09 +58: D:/a/document_detect_windows/document_detect_windows/test/document_conditions_test.dart: 3264x2448: full resolution JPEG/crop and mapped corners
+00:09 +59: D:/a/document_detect_windows/document_detect_windows/test/document_conditions_test.dart: 3264x2448: full resolution JPEG/crop and mapped corners
+00:09 +60: D:/a/document_detect_windows/document_detect_windows/test/document_conditions_test.dart: 3264x2448: full resolution JPEG/crop and mapped corners
+00:10 +61: D:/a/document_detect_windows/document_detect_windows/test/document_conditions_test.dart: 3264x2448: full resolution JPEG/crop and mapped corners
+00:10 +62: D:/a/document_detect_windows/document_detect_windows/test/document_conditions_test.dart: 3264x2448: full resolution JPEG/crop and mapped corners
+00:10 +63: D:/a/document_detect_windows/document_detect_windows/test/document_conditions_test.dart: 3264x2448: full resolution JPEG/crop and mapped corners
+00:10 +64: D:/a/document_detect_windows/document_detect_windows/test/document_conditions_test.dart: 3264x2448: full resolution JPEG/crop and mapped corners
+00:11 +65: D:/a/document_detect_windows/document_detect_windows/test/document_conditions_test.dart: 8MP portrait frame is bounded by analysis longest dimension
+00:11 +66: All tests passed!

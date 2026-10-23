@@ -46,4 +46,6 @@ Linux cũng đạt ba SDK. Camera thật và accessibility gates vẫn chưa ho�
 startup/dispose và stale cooldown; thêm document/light/5–8 MP/lifecycle tests.
 Linux đã đạt cả ba SDK: 66 package tests, 3 example tests, benchmark và
 endurance 30 s. Adapter desktop analyze đạt 3.41.9/3.47.7. Lượt tải phát triển
-300 s có log riêng; chưa xác nhận 24/7 trên thiết bị thật. Windows CI đang chờ.
+300 s có log riêng; chưa xác nhận 24/7 trên thiết bị thật.
+Windows CI cũng đã đạt cả ba SDK tại `de48bba`: analyze, 66/3 tests,
+benchmark, endurance 60 s/SDK và release build. Camera thật/24–168 h vẫn chưa chạy.

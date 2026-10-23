@@ -2,10 +2,10 @@ Handover: CHUA DAT
 
 # Bằng chứng bàn giao
 
-Cập nhật hardening 2026-10-23: các bảng CI bên dưới thuộc baseline preview
-`5588f6d`; chưa là bằng chứng cho thay đổi tối ưu/vòng đời đang kiểm tra.
-Phạm vi mới và kiểm tra 24/7 cần thiết: [continuous operation](../continuous_operation.md).
-
+Cập nhật hardening 2026-10-23: tối ưu/vòng đời đã đạt Windows SDK matrix
+và Linux supplemental. Có thêm 5/8 MP, document/light, cancellation/dispose tests
+và endurance ngắn trên đúng source. Chưa xác nhận camera thật hoặc 24/7.
+Chi tiết: [review](HARDENING_REVIEW.md), [continuous operation](../continuous_operation.md).
 
 Cập nhật preview 2026-10-23: đã thêm callback enum, previewStatus và overlay
 bốn góc. Windows/Linux đã kiểm chứng suite mới, gồm detection khi tắt auto-capture,
@@ -26,18 +26,18 @@ từ CI/synthetic tests.
 
 ## Windows x64 SDK matrix đã chạy
 
-Nguồn được kiểm tra: commit `5588f6d8f23eba62dab9b2d30208dfd8a0cdc5f1`.
-[Workflow xác nhận cuối](https://github.com/qualife1291/document_detect_windows/actions/runs/39881545766)
-đã chạy package/example thành công trên cả ba SDK. Mỗi SDK có 38 package tests,
-2 example widget tests và 1 benchmark test (30 ảnh synthetic + 5 warmup). Không skip,
+Nguồn được kiểm tra: commit `de48bba957e3d3646ee8537b32728959f803739b`.
+[Workflow xác nhận cuối](https://github.com/qualife1291/document_detect_windows/actions/runs/39890972282)
+đã chạy package/example thành công trên cả ba SDK. Mỗi SDK có 66 package tests,
+3 example widget tests và 1 benchmark test (30 ảnh synthetic + 5 warmup). Không skip,
 disable hoặc expected-failure trong các suite này. Các artifact logs được tải
 qua GitHub API và giữ nguyên nội dung.
 
-| Flutter | pub get package/example | analyze package/example | Core / widget / benchmark | Build example | Synthetic mean / FPS | Log |
+| Flutter | pub get package/example | analyze package/example | Package / example / benchmark | Build example | Synthetic mean / FPS | Log |
 | --- | --- | --- | --- | --- | --- | --- |
-| 3.32.8 | Đạt / Đạt | Đạt / Đạt | 38 / 2 / 1 đạt | Đạt x64 release | 76.71 ms / 13.04 FPS | [logs](logs/windows-3.32.8/) |
-| 3.41.9 | Đạt / Đạt | Đạt / Đạt | 38 / 2 / 1 đạt | Đạt x64 release | 79.75 ms / 12.54 FPS | [logs](logs/windows-3.41.9/) |
-| 3.47.7 | Đạt / Đạt | Đạt / Đạt | 38 / 2 / 1 đạt | Đạt x64 release | 79.82 ms / 12.53 FPS | [logs](logs/windows-3.47.7/) |
+| 3.32.8 | Đạt / Đạt | Đạt / Đạt | 66 / 3 / 1 đạt | Đạt x64 release | 56.54 ms / 17.69 FPS | [logs](logs/windows-3.32.8/) |
+| 3.41.9 | Đạt / Đạt | Đạt / Đạt | 66 / 3 / 1 đạt | Đạt x64 release | 58.28 ms / 17.16 FPS | [logs](logs/windows-3.41.9/) |
+| 3.47.7 | Đạt / Đạt | Đạt / Đạt | 66 / 3 / 1 đạt | Đạt x64 release | 57.73 ms / 17.32 FPS | [logs](logs/windows-3.47.7/) |
 
 UVC adapter cũng pub get/analyze đạt cả ba SDK trong cùng Windows jobs.
 Toàn bộ ba Windows jobs đã đạt, gồm cả adapter camera_desktop trên 3.41.9
@@ -60,7 +60,7 @@ gian chờ stable feedback.
 ## Linux supplemental
 
 `tool/validate_linux.sh` đã chạy pub get/analyze/test cho package/adapter UVC/
-example trên Flutter 3.32.8, 3.41.9, 3.47.7. Mỗi SDK đạt 38 package tests, 2 widget
+example trên Flutter 3.32.8, 3.41.9, 3.47.7. Mỗi SDK đạt 66 package tests, 3 widget
 tests, 1 benchmark test. Log và version thật ở [3.32.8](logs/linux-3.32.8/),
 [3.41.9](logs/linux-3.41.9/), [3.47.7](logs/linux-3.47.7/).
 Không dùng các kết quả Linux để chứng minh native Windows runtime.
