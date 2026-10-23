@@ -78,3 +78,16 @@ geometry và cropQuad riêng, giữ detect/quality/motion và JPEG gốc. Linux/
 và Windows x64 release build. Source `b83c42c`, [workflow](https://github.com/qualife1291/document_detect_windows/actions/runs/39915232027).
 Preview thêm cornerRadius mặc định 0, example chọn 6 px.
 Chưa đo mất chữ trên pixel người dùng; xem [review crop](CROP_LOG_REVIEW.md).
+
+## Treo GPU theo log thứ ba — 2026-10-23
+
+Log có 0x887A0006 / EGL Context Lost trong khi Dart analyzer tiếp tục chạy,
+5/7 lần chụp thành công, hai motion rejection; chưa chứng minh leak/cạn RAM.
+Đã thêm UVC bitmap preview, dispose ảnh thay thế/ảnh đến trễ, cấu hình example
+medium/200 ms/≤640 px, dừng camera trước result, giới hạn display decode và
+evict provider đúng chủ sở hữu. Crop pipeline giữ nguyên; medium có thể chọn
+stream nhỏ hơn high, display cap không resize JPEG.
+Windows/Linux đạt ba SDK: 108 package, 4 UVC adapter, 6 example tests, hai
+benchmark, endurance 30/60 s và Windows x64 release build. Source `65948cf`,
+[workflow](https://github.com/qualife1291/document_detect_windows/actions/runs/39944214256). Chưa retest GPU/driver trên máy người dùng, chưa
+xác nhận 24–168 h. Xem [review](GPU_LOG_REVIEW.md).

@@ -95,3 +95,7 @@ trên 3.41.9/3.47.7. Không skip/disable test. Source cuối chỉ thêm tài li
 [Provenance và artifact hashes](logs/ci-provenance.json), [bảng SDK](HANDOVER.md).
 Bản margin này chưa được người dùng chụp lại trên camera; synthetic regression
 không thay thế việc đối chiếu ảnh thật hoặc kiểm chứng 24/7.
+
+Evidence update: `logs/windows-*`, `logs/linux-*` và provenance hiện được cập
+nhật theo lượt [GPU/performance follow-up](GPU_LOG_REVIEW.md); các số đo/source
+lịch sử trong bài này thuộc workflow được liên kết tại thời điểm review.

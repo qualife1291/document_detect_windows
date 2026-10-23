@@ -122,3 +122,7 @@ Artifact gốc của các số đo này nằm trong workflow ca13fd4 ở trên. 
 người dùng đã gửi debug_log_2; xem [review crop](CROP_LOG_REVIEW.md). Các file
 `logs/windows-*` và provenance hiện tại được cập nhật theo lượt crop-margin mới.
 Chưa xác nhận 24/7.
+
+Evidence update: `logs/windows-*`, `logs/linux-*` và provenance hiện được cập
+nhật theo lượt [GPU/performance follow-up](GPU_LOG_REVIEW.md); các số đo/source
+lịch sử trong bài này thuộc workflow được liên kết tại thời điểm review.

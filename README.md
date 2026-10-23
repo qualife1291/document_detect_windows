@@ -73,7 +73,10 @@ native texture preview; integrating apps can select `UvcPreviewMode.bitmap`,
 `pollInterval: Duration(milliseconds: 200)` and `preferredNativeFps: 15` explicitly,
 with the same interval in `WindowsDocCapture`. Native FPS is a preference, not a
 hard cap when the camera has no matching mode. A 5 FPS analysis rate also takes
-longer to accumulate eight stable frames before automatic capture.
+longer to accumulate eight stable frames before automatic capture. The medium
+preset can negotiate a smaller capture resolution than high; JPEGs still use
+the negotiated stream resolution. The result display cap does not resize saved
+JPEG bytes.
 
 ## Integration
 

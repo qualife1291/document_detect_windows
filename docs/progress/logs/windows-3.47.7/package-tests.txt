@@ -22,22 +22,22 @@
 00:03 +20: D:/a/document_detect_windows/document_detect_windows/test/controller_test.dart: automatic callback uses fresh snapshot and stops on stream errors
 00:03 +21: D:/a/document_detect_windows/document_detect_windows/test/controller_test.dart: automatic callback uses fresh snapshot and stops on stream errors
 00:04 +22: D:/a/document_detect_windows/document_detect_windows/test/controller_test.dart: production guard rejects unsupported OS or architecture before opening hardware
-[windows_doc_capture] {"v":1,"time":"2026-10-23T07:08:16.016985Z","id":"hnh129oykx-1","session":1,"uptimeMs":6,"event":"start","backend":"FakeSource","os":"windows","processors":4,"preset":"high","specificDeviceRequested":false,"auto":true,"saving":false,"analysisIntervalMs":100,"analysisMaxSide":640,"jpegQuality":90,"blurThreshold":100.0,"brightnessRange":[0.2,0.85],"maxClipping":0.25,"minimumCoverage":0.15,"minimumMargin":0.02,"maximumTilt":15.0,"stableFrameCount":8,"feedbackMs":500,"maxFrameGapMs":400,"maximumMotion":0.015,"outputMaxSide":null,"imageFilter":"original","cropPadding":0.02}
-[windows_doc_capture] {"v":1,"time":"2026-10-23T07:08:16.026982Z","id":"hnh129oykx-1","session":1,"uptimeMs":13,"event":"state","from":"idle","state":"processing","warnings":[],"quad":null,"coalesced":0}
-[windows_doc_capture] {"v":1,"time":"2026-10-23T07:08:16.030993Z","id":"hnh129oykx-1","session":1,"uptimeMs":17,"event":"error","stage":"start","type":"UnsupportedError","frames":["package:windows_doc_capture/src/platform/windows_ffi/platform_guard.dart:11:5","package:windows_doc_capture/src/camera/camera_controller.dart:311:7","package:windows_doc_capture/src/camera/camera_controller.dart:245:7"]}
-[windows_doc_capture] {"v":1,"time":"2026-10-23T07:08:16.031993Z","id":"hnh129oykx-1","session":1,"uptimeMs":18,"event":"state","from":"processing","state":"error","warnings":[],"quad":null,"coalesced":0}
-[windows_doc_capture] {"v":1,"time":"2026-10-23T07:08:16.031993Z","id":"hnh129oykx-1","session":2,"uptimeMs":18,"event":"start","backend":"FakeSource","os":"windows","processors":4,"preset":"high","specificDeviceRequested":false,"auto":true,"saving":false,"analysisIntervalMs":100,"analysisMaxSide":640,"jpegQuality":90,"blurThreshold":100.0,"brightnessRange":[0.2,0.85],"maxClipping":0.25,"minimumCoverage":0.15,"minimumMargin":0.02,"maximumTilt":15.0,"stableFrameCount":8,"feedbackMs":500,"maxFrameGapMs":400,"maximumMotion":0.015,"outputMaxSide":null,"imageFilter":"original","cropPadding":0.02}
-[windows_doc_capture] {"v":1,"time":"2026-10-23T07:08:16.032991Z","id":"hnh129oykx-1","session":2,"uptimeMs":19,"event":"state","from":"error","state":"processing","warnings":[],"quad":null,"coalesced":0}
-[windows_doc_capture] {"v":1,"time":"2026-10-23T07:08:16.034986Z","id":"hnh129oykx-1","session":2,"uptimeMs":21,"event":"started","previewSize":[320.0,240.0]}
-[windows_doc_capture] {"v":1,"time":"2026-10-23T07:08:16.034986Z","id":"hnh129oykx-1","session":2,"uptimeMs":21,"event":"stop","starting":false,"capturing":false}
-[windows_doc_capture] {"v":1,"time":"2026-10-23T07:08:16.036992Z","id":"hnh129oykx-1","session":2,"uptimeMs":23,"event":"health","state":"processing","warnings":[],"quad":null,"running":true,"autoEnabled":true,"autoState":"idle","stableFrames":0,"feedbackProgress":0.0,"receivedAnalysisFrames":0,"submitted":0,"skippedAtController":0,"reports":0,"recentAnalysisFps":0.0,"staleReports":0,"expiries":0,"meanAnalysisMs":null,"maxAnalysisMs":0,"lastFrameAgeMs":null,"nativeDeliveredFps":null,"rssMiB":156}
-[windows_doc_capture] {"v":1,"time":"2026-10-23T07:08:16.036992Z","id":"hnh129oykx-1","session":2,"uptimeMs":23,"event":"state","from":"processing","state":"idle","warnings":[],"quad":null,"coalesced":0}
-[windows_doc_capture] {"v":1,"time":"2026-10-23T07:08:16.037989Z","id":"hnh129oykx-1","session":2,"uptimeMs":24,"event":"stopped"}
-[windows_doc_capture] {"v":1,"time":"2026-10-23T07:08:16.037989Z","id":"hnh129oykx-1","session":2,"uptimeMs":24,"event":"dispose"}
-[windows_doc_capture] {"v":1,"time":"2026-10-23T07:08:16.037989Z","id":"hnh129oykx-1","session":2,"uptimeMs":24,"event":"stop","starting":false,"capturing":false}
-[windows_doc_capture] {"v":1,"time":"2026-10-23T07:08:16.037989Z","id":"hnh129oykx-1","session":2,"uptimeMs":24,"event":"health","state":"idle","warnings":[],"quad":null,"running":false,"autoEnabled":true,"autoState":"idle","stableFrames":0,"feedbackProgress":0.0,"receivedAnalysisFrames":0,"submitted":0,"skippedAtController":0,"reports":0,"recentAnalysisFps":0.0,"staleReports":0,"expiries":0,"meanAnalysisMs":null,"maxAnalysisMs":0,"lastFrameAgeMs":null,"nativeDeliveredFps":null,"rssMiB":156}
-[windows_doc_capture] {"v":1,"time":"2026-10-23T07:08:16.037989Z","id":"hnh129oykx-1","session":2,"uptimeMs":24,"event":"stopped"}
-[windows_doc_capture] {"v":1,"time":"2026-10-23T07:08:16.037989Z","id":"hnh129oykx-1","session":2,"uptimeMs":24,"event":"disposed"}
+[windows_doc_capture] {"v":1,"time":"2026-10-23T11:14:03.167472Z","id":"hnh7u5rjxx-1","session":1,"uptimeMs":2,"event":"start","backend":"FakeSource","os":"windows","processors":4,"preset":"high","specificDeviceRequested":false,"auto":true,"saving":false,"analysisIntervalMs":100,"analysisMaxSide":640,"jpegQuality":90,"blurThreshold":100.0,"brightnessRange":[0.2,0.85],"maxClipping":0.25,"minimumCoverage":0.15,"minimumMargin":0.02,"maximumTilt":15.0,"stableFrameCount":8,"feedbackMs":500,"maxFrameGapMs":400,"maximumMotion":0.015,"outputMaxSide":null,"imageFilter":"original","cropPadding":0.02}
+[windows_doc_capture] {"v":1,"time":"2026-10-23T11:14:03.174464Z","id":"hnh7u5rjxx-1","session":1,"uptimeMs":7,"event":"state","from":"idle","state":"processing","warnings":[],"quad":null,"coalesced":0}
+[windows_doc_capture] {"v":1,"time":"2026-10-23T11:14:03.178456Z","id":"hnh7u5rjxx-1","session":1,"uptimeMs":11,"event":"error","stage":"start","type":"UnsupportedError","frames":["package:windows_doc_capture/src/platform/windows_ffi/platform_guard.dart:11:5","package:windows_doc_capture/src/camera/camera_controller.dart:311:7","package:windows_doc_capture/src/camera/camera_controller.dart:245:7"]}
+[windows_doc_capture] {"v":1,"time":"2026-10-23T11:14:03.178456Z","id":"hnh7u5rjxx-1","session":1,"uptimeMs":11,"event":"state","from":"processing","state":"error","warnings":[],"quad":null,"coalesced":0}
+[windows_doc_capture] {"v":1,"time":"2026-10-23T11:14:03.179465Z","id":"hnh7u5rjxx-1","session":2,"uptimeMs":12,"event":"start","backend":"FakeSource","os":"windows","processors":4,"preset":"high","specificDeviceRequested":false,"auto":true,"saving":false,"analysisIntervalMs":100,"analysisMaxSide":640,"jpegQuality":90,"blurThreshold":100.0,"brightnessRange":[0.2,0.85],"maxClipping":0.25,"minimumCoverage":0.15,"minimumMargin":0.02,"maximumTilt":15.0,"stableFrameCount":8,"feedbackMs":500,"maxFrameGapMs":400,"maximumMotion":0.015,"outputMaxSide":null,"imageFilter":"original","cropPadding":0.02}
+[windows_doc_capture] {"v":1,"time":"2026-10-23T11:14:03.179465Z","id":"hnh7u5rjxx-1","session":2,"uptimeMs":12,"event":"state","from":"error","state":"processing","warnings":[],"quad":null,"coalesced":0}
+[windows_doc_capture] {"v":1,"time":"2026-10-23T11:14:03.181459Z","id":"hnh7u5rjxx-1","session":2,"uptimeMs":14,"event":"started","previewSize":[320.0,240.0]}
+[windows_doc_capture] {"v":1,"time":"2026-10-23T11:14:03.181459Z","id":"hnh7u5rjxx-1","session":2,"uptimeMs":14,"event":"stop","starting":false,"capturing":false}
+[windows_doc_capture] {"v":1,"time":"2026-10-23T11:14:03.184462Z","id":"hnh7u5rjxx-1","session":2,"uptimeMs":17,"event":"health","state":"processing","warnings":[],"quad":null,"running":true,"autoEnabled":true,"autoState":"idle","stableFrames":0,"feedbackProgress":0.0,"receivedAnalysisFrames":0,"submitted":0,"skippedAtController":0,"reports":0,"recentAnalysisFps":0.0,"staleReports":0,"expiries":0,"meanAnalysisMs":null,"maxAnalysisMs":0,"lastFrameAgeMs":null,"nativeDeliveredFps":null,"rssMiB":174}
+[windows_doc_capture] {"v":1,"time":"2026-10-23T11:14:03.184462Z","id":"hnh7u5rjxx-1","session":2,"uptimeMs":17,"event":"state","from":"processing","state":"idle","warnings":[],"quad":null,"coalesced":0}
+[windows_doc_capture] {"v":1,"time":"2026-10-23T11:14:03.185464Z","id":"hnh7u5rjxx-1","session":2,"uptimeMs":18,"event":"stopped"}
+[windows_doc_capture] {"v":1,"time":"2026-10-23T11:14:03.185464Z","id":"hnh7u5rjxx-1","session":2,"uptimeMs":18,"event":"dispose"}
+[windows_doc_capture] {"v":1,"time":"2026-10-23T11:14:03.185464Z","id":"hnh7u5rjxx-1","session":2,"uptimeMs":18,"event":"stop","starting":false,"capturing":false}
+[windows_doc_capture] {"v":1,"time":"2026-10-23T11:14:03.185464Z","id":"hnh7u5rjxx-1","session":2,"uptimeMs":18,"event":"health","state":"idle","warnings":[],"quad":null,"running":false,"autoEnabled":true,"autoState":"idle","stableFrames":0,"feedbackProgress":0.0,"receivedAnalysisFrames":0,"submitted":0,"skippedAtController":0,"reports":0,"recentAnalysisFps":0.0,"staleReports":0,"expiries":0,"meanAnalysisMs":null,"maxAnalysisMs":0,"lastFrameAgeMs":null,"nativeDeliveredFps":null,"rssMiB":174}
+[windows_doc_capture] {"v":1,"time":"2026-10-23T11:14:03.185464Z","id":"hnh7u5rjxx-1","session":2,"uptimeMs":18,"event":"stopped"}
+[windows_doc_capture] {"v":1,"time":"2026-10-23T11:14:03.185464Z","id":"hnh7u5rjxx-1","session":2,"uptimeMs":19,"event":"disposed"}
 00:04 +23: D:/a/document_detect_windows/document_detect_windows/test/controller_test.dart: dispose closes public streams even when native stop reports an error
 00:04 +24: D:/a/document_detect_windows/document_detect_windows/test/crop_test.dart: perspective inverse mapping preserves all four colored corners
 00:04 +25: D:/a/document_detect_windows/document_detect_windows/test/crop_test.dart: fresh full resolution crop encodes JPEG and saves exact bytes to unique files
@@ -51,8 +51,8 @@
 00:06 +33: D:/a/document_detect_windows/document_detect_windows/test/crop_test.dart: no document and automatic poor quality never produce an output
 00:06 +34: D:/a/document_detect_windows/document_detect_windows/test/crop_test.dart: file IO failures propagate instead of returning a nonexistent savedPath
 00:06 +35: D:/a/document_detect_windows/document_detect_windows/test/crop_test.dart: moving full-resolution snapshot is rejected against the stable quad
-00:06 +36: D:/a/document_detect_windows/document_detect_windows/test/diagnostics_test.dart: debug builds enable production diagnostics by default
-00:06 +37: D:/a/document_detect_windows/document_detect_windows/test/diagnostics_test.dart: logging disabled leaves the camera flow silent
+00:07 +36: D:/a/document_detect_windows/document_detect_windows/test/diagnostics_test.dart: debug builds enable production diagnostics by default
+00:07 +37: D:/a/document_detect_windows/document_detect_windows/test/diagnostics_test.dart: logging disabled leaves the camera flow silent
 00:07 +38: D:/a/document_detect_windows/document_detect_windows/test/diagnostics_test.dart: session, quality and capture logs are copyable JSON without identifiers or image data
 00:07 +39: D:/a/document_detect_windows/document_detect_windows/test/diagnostics_test.dart: short sessions log the first analysis and final quality before idle clears it
 00:07 +40: D:/a/document_detect_windows/document_detect_windows/test/document_conditions_test.dart: ID / driver card landscape: geometry under diffuse light and a mild shadow
@@ -90,7 +90,7 @@
 00:14 +72: D:/a/document_detect_windows/document_detect_windows/test/diagnostics_test.dart: health heartbeat reports metrics and stops after dispose
 00:14 +73: D:/a/document_detect_windows/document_detect_windows/test/diagnostics_test.dart: health heartbeat reports metrics and stops after dispose
 00:16 +74: D:/a/document_detect_windows/document_detect_windows/test/diagnostics_test.dart: health heartbeat reports metrics and stops after dispose
-00:16 +75: D:/a/document_detect_windows/document_detect_windows/test/diagnostics_test.dart: health heartbeat reports metrics and stops after dispose
+00:17 +75: D:/a/document_detect_windows/document_detect_windows/test/diagnostics_test.dart: health heartbeat reports metrics and stops after dispose
 00:17 +76: D:/a/document_detect_windows/document_detect_windows/test/diagnostics_test.dart: health heartbeat reports metrics and stops after dispose
 00:17 +77: D:/a/document_detect_windows/document_detect_windows/test/diagnostics_test.dart: health heartbeat reports metrics and stops after dispose
 00:17 +78: D:/a/document_detect_windows/document_detect_windows/test/diagnostics_test.dart: health heartbeat reports metrics and stops after dispose
@@ -102,19 +102,25 @@
 00:19 +84: D:/a/document_detect_windows/document_detect_windows/test/preview_widget_test.dart: normalized analysis corners match 4K frame rendered at different logical DPI sizes
 00:19 +85: D:/a/document_detect_windows/document_detect_windows/test/preview_widget_test.dart: outline is closed and app colors follow quality changes
 00:19 +86: D:/a/document_detect_windows/document_detect_windows/test/preview_widget_test.dart: cornerRadius passes through buildPreview and rounds DocumentFrameStyle.corners
-00:19 +87: D:/a/document_detect_windows/document_detect_windows/test/scan_refinement_test.dart: complete document wins over a large clipped background
-00:19 +88: D:/a/document_detect_windows/document_detect_windows/test/scan_refinement_test.dart: complete document wins over a large clipped background
-00:19 +89: D:/a/document_detect_windows/document_detect_windows/test/scan_refinement_test.dart: complete document wins over a large clipped background
-00:19 +90: D:/a/document_detect_windows/document_detect_windows/test/scan_refinement_test.dart: complete document wins over a large clipped background
-00:19 +91: D:/a/document_detect_windows/document_detect_windows/test/scan_refinement_test.dart: complete document wins over a large clipped background
-00:19 +92: D:/a/document_detect_windows/document_detect_windows/test/scan_refinement_test.dart: complete document wins over a large clipped background
-00:19 +93: D:/a/document_detect_windows/document_detect_windows/test/scan_refinement_test.dart: complete document wins over a large clipped background
-00:19 +94: D:/a/document_detect_windows/document_detect_windows/test/scan_refinement_test.dart: low contrast with distracting high contrast scene edge is detected
-00:19 +95: D:/a/document_detect_windows/document_detect_windows/test/scan_refinement_test.dart: blank and unstructured low-level noise never acquire a document
-00:19 +96: D:/a/document_detect_windows/document_detect_windows/test/scan_refinement_test.dart: fast warp agrees with library bilinear sampling for RGB and RGBA
-00:19 +97: D:/a/document_detect_windows/document_detect_windows/test/scan_refinement_test.dart: warp limits output before sampling and supports single-channel fallback
-00:19 +98: D:/a/document_detect_windows/document_detect_windows/test/scan_refinement_test.dart: original preserves color, grayscale is explicit, blank enhancement is safe
-00:19 +99: D:/a/document_detect_windows/document_detect_windows/test/scan_refinement_test.dart: enhance expands printed contrast and caps gain
-00:19 +100: D:/a/document_detect_windows/document_detect_windows/test/scan_refinement_test.dart: UI diagnostic callback is never sent to the capture worker
-00:20 +101: D:/a/document_detect_windows/document_detect_windows/test/scan_refinement_test.dart: capture diagnostic identifies rejection and accepted processing stages
-00:20 +102: All tests passed!
+00:19 +87: D:/a/document_detect_windows/document_detect_windows/test/preview_widget_test.dart: cornerRadius passes through buildPreview and rounds DocumentFrameStyle.outline
+00:19 +88: D:/a/document_detect_windows/document_detect_windows/test/preview_widget_test.dart: rounded outline avoids sharp vertices and remains closed and aligned
+00:19 +89: D:/a/document_detect_windows/document_detect_windows/test/preview_widget_test.dart: large radius is bounded on small perspective edges and repeated vertices
+00:19 +90: D:/a/document_detect_windows/document_detect_windows/test/preview_widget_test.dart: cornerRadius rejects negative and non-finite configuration
+00:19 +91: D:/a/document_detect_windows/document_detect_windows/test/preview_widget_test.dart: native preview and four painted corners share the BoxFit.contain transform
+00:19 +92: D:/a/document_detect_windows/document_detect_windows/test/preview_widget_test.dart: native preview and four painted corners share the BoxFit.cover transform
+00:19 +93: D:/a/document_detect_windows/document_detect_windows/test/rgba_preview_test.dart: bitmap preview drops busy frames and disposes replaced/closed images
+00:19 +94: D:/a/document_detect_windows/document_detect_windows/test/rgba_preview_test.dart: repeated decode without painting releases every superseded image
+00:19 +95: D:/a/document_detect_windows/document_detect_windows/test/rgba_preview_test.dart: unmount during decode disposes the late result without setState
+00:20 +96: D:/a/document_detect_windows/document_detect_windows/test/rgba_preview_test.dart: stream change discards old decode and releases old subscription
+00:20 +97: D:/a/document_detect_windows/document_detect_windows/test/rgba_preview_test.dart: decode errors recover, source errors are not fed back into source
+00:20 +98: D:/a/document_detect_windows/document_detect_windows/test/rgba_preview_test.dart: real RGBA decode is bounded and does not use the image cache
+00:20 +99: D:/a/document_detect_windows/document_detect_windows/test/scan_refinement_test.dart: complete document wins over a large clipped background
+00:20 +100: D:/a/document_detect_windows/document_detect_windows/test/scan_refinement_test.dart: low contrast with distracting high contrast scene edge is detected
+00:20 +101: D:/a/document_detect_windows/document_detect_windows/test/scan_refinement_test.dart: blank and unstructured low-level noise never acquire a document
+00:20 +102: D:/a/document_detect_windows/document_detect_windows/test/scan_refinement_test.dart: fast warp agrees with library bilinear sampling for RGB and RGBA
+00:20 +103: D:/a/document_detect_windows/document_detect_windows/test/scan_refinement_test.dart: warp limits output before sampling and supports single-channel fallback
+00:20 +104: D:/a/document_detect_windows/document_detect_windows/test/scan_refinement_test.dart: original preserves color, grayscale is explicit, blank enhancement is safe
+00:20 +105: D:/a/document_detect_windows/document_detect_windows/test/scan_refinement_test.dart: enhance expands printed contrast and caps gain
+00:20 +106: D:/a/document_detect_windows/document_detect_windows/test/scan_refinement_test.dart: UI diagnostic callback is never sent to the capture worker
+00:21 +107: D:/a/document_detect_windows/document_detect_windows/test/scan_refinement_test.dart: capture diagnostic identifies rejection and accepted processing stages
+00:21 +108: All tests passed!

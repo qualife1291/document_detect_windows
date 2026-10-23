@@ -39,7 +39,8 @@ analysis khi chụp, không tự nó chứng minh deadlock.
   ở phía sau màn hình kết quả.
 - Result decode chỉ phục vụ hiển thị, tối đa 1280 px. Evict đúng provider của
   kết quả khi thay/đóng; không clear cache toàn ứng dụng, không xóa file đã lưu.
-  JPEG đầu ra/crop margin/radius không đổi.
+  Pipeline JPEG/crop margin/radius không đổi. Preset medium có thể chọn stream
+  nhỏ hơn high; JPEG dùng kích thước stream đã chọn, không bị resize theo display cap.
 - Thêm UVC bitmap preview tùy chọn: không tạo/attach external texture; dùng
   frame downsample ≤640 px, một decode đang chạy, bỏ frame khi bận, không queue
   lịch sử. Dispose image cũ ngay khi thay, kể cả không có frame được vẽ tiếp;
@@ -72,3 +73,21 @@ minh khả năng chạy 24/7. Cần retest camera thật với cấu hình mặc
 nhiều vòng, unplug/đóng cửa sổ khi đang capture và soak dài theo
 [continuous operation](../continuous_operation.md). Log UI-frame age khi app đứng
 im có thể lớn bình thường; cần đối chiếu lỗi engine và thao tác người dùng.
+
+## Validation trên source đã commit
+
+Nguồn `65948cf7a0332f858b4b578afb6375f0de92a931`; [Windows CI](https://github.com/qualife1291/document_detect_windows/actions/runs/39944214256)
+đạt Flutter 3.32.8, 3.41.9, 3.47.7: analyze, 108 package tests, 4 UVC adapter
+tests, 6 example tests, hai benchmark, endurance 60 s/SDK và release build
+Windows x64. Linux cùng ba SDK đạt analyze/tests/benchmark, endurance 30 s/SDK;
+optional desktop adapter analyze đạt trên 3.41.9/3.47.7. Không skip/disable test.
+Source cuối chỉ thêm tài liệu/bằng chứng sau CI. [Provenance](logs/ci-provenance.json).
+
+| Flutter / Windows hosted flutter-test | Warp mean | Full snapshot processing mean |
+| --- | --- | --- |
+| 3.32.8 | 36.18 ms | 240.70 ms |
+| 3.41.9 | 48.10 ms | 301.53 ms |
+| 3.47.7 | 47.40 ms | 299.26 ms |
+
+Số đo synthetic không bao gồm camera/native transport, render latency hoặc
+so sánh CPU trước/sau trên máy yếu. Không dùng chúng để xác nhận hết GPU hang.
