@@ -365,7 +365,10 @@ class _CapturePageState extends State<CapturePage> {
                             fit: StackFit.expand,
                             children: [
                               const ColoredBox(color: Colors.black),
-                              if (_started) capture.buildPreview(),
+                              if (_started)
+                                capture.buildPreview(
+                                  frameStyle: DocumentFrameStyle.outline,
+                                ),
                               Align(
                                 alignment: Alignment.topCenter,
                                 child: Container(

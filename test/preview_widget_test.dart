@@ -142,6 +142,54 @@ void main() {
       );
     },
   );
+  testWidgets('outline is closed and app colors follow quality changes', (
+    tester,
+  ) async {
+    final source = _PreviewSource();
+    final value = ValueNotifier(
+      DocumentPreviewStatus(
+        state: DocumentPreviewState.blurry,
+        normalizedQuad: corners,
+      ),
+    );
+    await tester.pumpWidget(
+      Directionality(
+        textDirection: TextDirection.ltr,
+        child: DocumentCameraPreview(
+          frameSource: source,
+          status: value,
+          frameStyle: DocumentFrameStyle.outline,
+          warningColor: Colors.purple,
+          validColor: Colors.green,
+        ),
+      ),
+    );
+    final finder = find.byWidgetPredicate(
+      (w) => w is CustomPaint && w.painter is DocumentCornersPainter,
+    );
+    _Canvas paint() {
+      final canvas = _Canvas();
+      tester
+          .widget<CustomPaint>(finder)
+          .painter!
+          .paint(canvas, tester.getSize(finder));
+      return canvas;
+    }
+
+    final canvas = paint();
+    expect(canvas.paths, hasLength(1));
+    expect(canvas.paths.single.computeMetrics().single.isClosed, isTrue);
+    expect(canvas.colors, [Colors.purple.toARGB32()]);
+    value.value = DocumentPreviewStatus(
+      state: DocumentPreviewState.clear,
+      normalizedQuad: corners,
+    );
+    await tester.pump();
+    expect(paint().colors, [Colors.green.toARGB32()]);
+    await tester.pumpWidget(const SizedBox.shrink());
+    value.dispose();
+    await source.stream.close();
+  });
   for (final fit in [BoxFit.contain, BoxFit.cover]) {
     testWidgets(
       'native preview and four painted corners share the $fit transform',
@@ -210,7 +258,7 @@ void main() {
           normalizedQuad: corners.map((p) => p + const Offset(.02, 0)).toList(),
         );
         await tester.pump();
-        expect(paint().colors, everyElement(0xffffcc80));
+        expect(paint().colors, everyElement(0xffffffff));
         value.value = DocumentPreviewStatus(
           state: DocumentPreviewState.noDocument,
         );

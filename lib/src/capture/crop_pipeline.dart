@@ -5,14 +5,26 @@ import 'dart:ui';
 import 'package:image/image.dart' as img;
 import '../camera/frame_source.dart';
 import '../detection/detector_facade.dart';
+import '../detection/detection_result.dart';
 import '../detection/geometry.dart';
 import '../warnings/preview_warning.dart';
 import 'captured_document.dart';
 import 'capture_cancellation.dart';
+import 'document_image_filter.dart';
 
 class CropPipeline {
-  const CropPipeline({this.jpegQuality = 90, this.analysisWidth = 640});
+  const CropPipeline({
+    this.jpegQuality = 90,
+    this.analysisWidth = 640,
+    this.maxOutputDimension,
+    this.imageFilter = DocumentImageFilter.original,
+  });
   final int jpegQuality, analysisWidth;
+
+  /// Limit the corrected crop during resampling, not after a full-size warp.
+  /// Null preserves full-resolution output. Original JPEG always remains full size.
+  final int? maxOutputDimension;
+  final DocumentImageFilter imageFilter;
 
   Future<CapturedDocument?> capture(
     FrameBuffer frame, {
@@ -21,9 +33,14 @@ class CropPipeline {
     List<Offset>? expectedNormalizedQuad,
     double maximumMotion = .015,
     CaptureCancellation? cancellation,
+    void Function(String event, Map<String, Object?> fields)? onDiagnostic,
   }) async {
     if (jpegQuality < 1 || jpegQuality > 100) {
       throw ArgumentError.value(jpegQuality, 'jpegQuality');
+    }
+    if (maxOutputDimension != null &&
+        (maxOutputDimension! < 2 || maxOutputDimension! > 8192)) {
+      throw ArgumentError.value(maxOutputDimension, 'maxOutputDimension');
     }
     if (cancellation?.isCancelled ?? false) return null;
     final transfer = TransferableTypedData.fromList([frame.rgba]);
@@ -32,7 +49,8 @@ class CropPipeline {
         sequence = frame.sequence,
         at = frame.capturedAt;
     final quality = jpegQuality, maxWidth = analysisWidth;
-    final captured = await runCaptureWorker<CapturedDocument?>(() async {
+    final limit = maxOutputDimension, filter = imageFilter;
+    final outcome = await runCaptureWorker<_CropOutcome>(() async {
       final watch = Stopwatch()..start();
       final full = FrameBuffer(
         width: width,
@@ -45,21 +63,34 @@ class CropPipeline {
       // Re-detect the snapshot itself: never warp new pixels with stale corners.
       final detection = await detector.detect(full);
       detector.dispose();
-      if (!detection.hasDocument ||
-          (requiredQuality != null &&
-              requiredQuality.warningsFor(detection).isNotEmpty)) {
-        return null;
-      }
+      final timings = <String, int>{'detectionMs': watch.elapsedMilliseconds};
+      final warnings =
+          requiredQuality?.warningsFor(detection) ?? const <PreviewWarning>[];
+      _CropOutcome rejected(String reason, {double? motion}) =>
+          _CropOutcome(null, {
+            'decision': reason,
+            ..._detectionFields(detection, width, height),
+            ...timings,
+            'qualityWarnings': warnings.map((w) => w.type.name).toList(),
+            if (motion != null) 'maxCornerMotion': motion,
+            if (motion != null) 'maximumMotion': maximumMotion,
+          });
+      if (!detection.hasDocument) return rejected('no_document');
+      if (warnings.isNotEmpty) return rejected('quality');
       if (expectedNormalizedQuad != null) {
-        if (expectedNormalizedQuad.length != 4) return null;
+        if (expectedNormalizedQuad.length != 4) {
+          return rejected('invalid_expected_quad');
+        }
+        var motion = 0.0;
         for (var i = 0; i < 4; i++) {
           final p = detection.quad![i];
-          if ((Offset(p.dx / width, p.dy / height) - expectedNormalizedQuad[i])
-                  .distance >
-              maximumMotion) {
-            return null;
-          }
+          motion = math.max(
+            motion,
+            (Offset(p.dx / width, p.dy / height) - expectedNormalizedQuad[i])
+                .distance,
+          );
         }
+        if (motion > maximumMotion) return rejected('motion', motion: motion);
       }
       final source = img.Image.fromBytes(
         width: width,
@@ -69,10 +100,23 @@ class CropPipeline {
         numChannels: 4,
         order: img.ChannelOrder.rgba,
       );
-      final cropped = warpPerspective(source, detection.quad!);
+      var stage = watch.elapsedMilliseconds;
+      final cropped = warpPerspective(
+        source,
+        detection.quad!,
+        maxOutputDimension: limit,
+      );
+      timings['warpMs'] = watch.elapsedMilliseconds - stage;
+      stage = watch.elapsedMilliseconds;
+      filterDocument(cropped, filter);
+      timings['filterMs'] = watch.elapsedMilliseconds - stage;
+      stage = watch.elapsedMilliseconds;
       final original = img.encodeJpg(source, quality: quality);
+      timings['encodeOriginalMs'] = watch.elapsedMilliseconds - stage;
+      stage = watch.elapsedMilliseconds;
       final encoded = img.encodeJpg(cropped, quality: quality);
-      return CapturedDocument(
+      timings['encodeCropMs'] = watch.elapsedMilliseconds - stage;
+      final captured = CapturedDocument(
         originalJpeg: original,
         croppedJpeg: encoded,
         quad: detection.quad!,
@@ -82,7 +126,22 @@ class CropPipeline {
         savedPath: null,
         processingTime: watch.elapsed,
       );
+      return _CropOutcome(captured, {
+        'decision': 'accepted',
+        ..._detectionFields(detection, width, height),
+        ...timings,
+        'outputSize': [cropped.width, cropped.height],
+        'filter': filter.name,
+      });
     }, cancellation: cancellation);
+    if (outcome != null && !(cancellation?.isCancelled ?? false)) {
+      try {
+        onDiagnostic?.call('capture_processing', outcome.fields);
+      } catch (_) {
+        /* Diagnostic sink is optional. */
+      }
+    }
+    final captured = outcome?.captured;
     if (captured == null || (cancellation?.isCancelled ?? false)) return null;
     if (saveDirectory == null) return captured;
     final saveClock = Stopwatch()..start();
@@ -126,7 +185,15 @@ class CropPipeline {
 
 /// Inverse projective homography (unit rectangle -> quadrilateral), bilinear
 /// sampling. Output dimensions follow opposing-edge lengths in source pixels.
-img.Image warpPerspective(img.Image source, List<Offset> q) {
+img.Image warpPerspective(
+  img.Image source,
+  List<Offset> q, {
+  int? maxOutputDimension,
+}) {
+  if (maxOutputDimension != null &&
+      (maxOutputDimension < 2 || maxOutputDimension > 8192)) {
+    throw ArgumentError.value(maxOutputDimension, 'maxOutputDimension');
+  }
   if (q.length != 4 ||
       q.any(
         (p) =>
@@ -144,14 +211,19 @@ img.Image warpPerspective(img.Image source, List<Offset> q) {
       ).any((v) => v <= 0)) {
     throw ArgumentError('Expected a convex clockwise in-frame quadrilateral');
   }
-  final w = math.max(
+  var w = math.max(
     2,
     math.max((q[1] - q[0]).distance, (q[2] - q[3]).distance).round(),
   );
-  final h = math.max(
+  var h = math.max(
     2,
     math.max((q[3] - q[0]).distance, (q[2] - q[1]).distance).round(),
   );
+  if (maxOutputDimension != null && math.max(w, h) > maxOutputDimension) {
+    final scale = maxOutputDimension / math.max(w, h);
+    w = math.max(2, (w * scale).round());
+    h = math.max(2, (h * scale).round());
+  }
   if (w * h > 33554432) throw ArgumentError('Crop too large');
   final dx1 = q[1].dx - q[2].dx, dx2 = q[3].dx - q[2].dx;
   final dy1 = q[1].dy - q[2].dy, dy2 = q[3].dy - q[2].dy;
@@ -169,6 +241,14 @@ img.Image warpPerspective(img.Image source, List<Offset> q) {
   final d = q[1].dy - q[0].dy + g * q[1].dy,
       e = q[3].dy - q[0].dy + k * q[3].dy;
   final output = img.Image(width: w, height: h);
+  final data = source.data;
+  final fast =
+      data is img.ImageDataUint8 &&
+      !source.hasPalette &&
+      source.numChannels >= 3;
+  final input = fast ? data.data : null;
+  final bytes = (output.data! as img.ImageDataUint8).data;
+  final channels = source.numChannels, stride = source.rowStride;
   for (var y = 0; y < h; y++) {
     final v = y / (h - 1);
     for (var x = 0; x < w; x++) {
@@ -179,6 +259,24 @@ img.Image warpPerspective(img.Image source, List<Offset> q) {
       final sy = ((d * u + e * v + q[0].dy) / den)
           .clamp(0, source.height - 1)
           .toDouble();
+      if (input != null) {
+        final x0 = sx.toInt(), y0 = sy.toInt();
+        final x1 = math.min(x0 + 1, source.width - 1),
+            y1 = math.min(y0 + 1, source.height - 1);
+        final fx = sx - x0, fy = sy - y0;
+        final p00 = y0 * stride + x0 * channels,
+            p10 = y0 * stride + x1 * channels;
+        final p01 = y1 * stride + x0 * channels,
+            p11 = y1 * stride + x1 * channels;
+        final to = (y * w + x) * 3;
+        for (var c = 0; c < 3; c++) {
+          final top = input[p00 + c] + (input[p10 + c] - input[p00 + c]) * fx;
+          final bottom =
+              input[p01 + c] + (input[p11 + c] - input[p01 + c]) * fx;
+          bytes[to + c] = (top + (bottom - top) * fy).round().clamp(0, 255);
+        }
+        continue;
+      }
       final pixel = source.getPixelInterpolate(
         sx,
         sy,
@@ -189,3 +287,23 @@ img.Image warpPerspective(img.Image source, List<Offset> q) {
   }
   return output;
 }
+
+class _CropOutcome {
+  const _CropOutcome(this.captured, this.fields);
+  final CapturedDocument? captured;
+  final Map<String, Object?> fields;
+}
+
+Map<String, Object?> _detectionFields(
+  DetectionResult result,
+  int width,
+  int height,
+) => {
+  'hasDocument': result.hasDocument,
+  'blur': result.blurScore.round(),
+  'brightness': result.brightnessScore,
+  'coverage': result.coverageRatio,
+  'margin': result.edgeMargin,
+  'tiltDeg': result.tiltAngle,
+  'quad': result.quad?.map((p) => [p.dx / width, p.dy / height]).toList(),
+};

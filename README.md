@@ -120,7 +120,8 @@ Widget buildDocumentPreview() => SizedBox(
     fit: BoxFit.contain,
     showDocumentCorners: true, // default
     validColor: const Color(0xff69f0ae),
-    warningColor: const Color(0xffffcc80),
+    warningColor: const Color(0xffffffff), // default white until quality is clear
+    frameStyle: DocumentFrameStyle.outline, // or .corners (API default)
     cornerLength: 24,
     strokeWidth: 3,
   ),
@@ -130,7 +131,10 @@ Widget buildDocumentPreview() => SizedBox(
 `buildPreview()` keeps the native camera texture and four L-shaped corner markers
 in the same coordinate space. `BoxFit.contain` shows the complete camera frame;
 `BoxFit.cover` crops it while keeping marker coordinates aligned. Markers follow
-the detected quadrilateral edges, including perspective. Turning
+the detected quadrilateral edges, including perspective. `DocumentFrameStyle.outline`
+draws a closed frame; the example uses it. The API defaults to four corner markers.
+White is the default warning color, green indicates clear quality (motion stability
+is checked separately before auto-capture). Both colors are customizable. Turning
 `showDocumentCorners` off keeps the same preview fit. Avoid separately mirroring
 or rotating only the texture; apply app transforms to the whole preview widget.
 
@@ -218,6 +222,26 @@ API still copies full RGBA before sampling; full 8 MP low-end latency and 24/7
 stability require physical profiling. See [continuous operation](docs/continuous_operation.md)
 for cancellation/file behavior, document/light coverage and the physical soak matrix.
 
+## Optional scan presentation
+
+```dart
+final capture = WindowsDocCapture(
+  frameSource: yourFrameSource,
+  cropPipeline: const CropPipeline(
+    maxOutputDimension: 1600, // null (default) keeps full-resolution crop
+    imageFilter: DocumentImageFilter.original, // or .enhance / .grayscale
+  ),
+);
+```
+
+Perspective correction always re-detects the captured snapshot. The optional
+longest-side limit applies during resampling to bound crop work and memory;
+`originalJpeg` remains full resolution. `original` preserves colors and is the
+default for IDs. `enhance` applies capped contrast stretching; `grayscale` is an
+explicit presentation choice. Neither restores blur, performs OCR or guarantees
+readability. Filtering and JPEG encoding run in the cancellable capture worker.
+See the [physical-log review and reference comparison](docs/progress/PHYSICAL_LOG_REVIEW.md).
+
 ## Copy diagnostic logs from physical testing
 
 `debugPrint` diagnostics are on by default in debug builds. Opt in explicitly
@@ -274,6 +298,12 @@ Each `[windows_doc_capture]` line is a JSON object (`v: 1`). Events include:
 - `capture_*`, `snapshot`, `snapshot_rejected`: capture outcome, source dimensions,
   JPEG byte counts and processing time. `rejected` means the snapshot did not
   pass detection/quality/movement checks; no result was produced.
+- `capture_processing`: exact decision (`accepted`, `no_document`, `quality`,
+  `motion`, `invalid_expected_quad`), snapshot geometry/quality, and accepted
+  stage times (`detectionMs`, `warpMs`, `filterMs`, `encodeOriginalMs`,
+  `encodeCropMs`), output dimensions and filter. Rejected images stop before
+  encoding. `health` also includes auto-enabled/state/stable-frame/progress values.
+  `start` records quality/stability thresholds so test sessions can be compared.
 - `camera_conflict`, `*_rejected`, `error`: lifecycle conflicts and errors tagged
   by stage, exception type, safe platform/OS error code and package stack frames.
   Raw exception messages/details, paths, device IDs/names, pixel/JPEG bytes and

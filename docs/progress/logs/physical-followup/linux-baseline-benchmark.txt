@@ -1,0 +1,7 @@
+00:00 +0: loading /workspace/research/log-review-baseline/tool/scan_processing_benchmark.dart
+00:00 +0: /workspace/research/log-review-baseline/tool/scan_processing_benchmark.dart: synthetic warp and full snapshot processing (not camera latency)
+PROCESSING_BENCHMARK os=linux mode=flutter-test size=1280x720 warp_mean_ms=94.04 capture_mean_ms=290.05
+00:03 +1: loading /workspace/research/log-review-baseline/tool/detection_benchmark.dart
+00:04 +1: /workspace/research/log-review-baseline/tool/detection_benchmark.dart: synthetic 640px detection benchmark (not native preview latency)
+BENCHMARK os=linux mode=flutter-test synthetic=30 size=640x480 mean_ms=56.45 p95_ms=68.16 fps=17.71
+00:06 +2: All tests passed!

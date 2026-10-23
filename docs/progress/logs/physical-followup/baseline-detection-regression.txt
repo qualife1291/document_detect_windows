@@ -1,0 +1,27 @@
+00:00 +0: loading /workspace/research/log-review-baseline/test/refinement_detection_test.dart
+00:00 +0: complete document wins over a large clipped background
+00:00 +0 -1: complete document wins over a large clipped background [E]
+  Expected: a value greater than <0.12>
+    Actual: <0.0>
+     Which: is not a value greater than <0.12>
+  
+  package:matcher                                     expect
+  package:flutter_test/src/widget_tester.dart 473:18  expect
+  test/refinement_detection_test.dart 17:5            main.<fn>
+  
+00:00 +0 -1: low contrast with distracting high contrast scene edge is detected
+00:00 +0 -2: low contrast with distracting high contrast scene edge is detected [E]
+  Expected: a numeric value within <0.04> of <0.4096>
+    Actual: <0.90275390625>
+     Which:  differs by <0.49315390624999994>
+  
+  package:matcher                                     expect
+  package:flutter_test/src/widget_tester.dart 473:18  expect
+  test/refinement_detection_test.dart 49:7            main.<fn>
+  
+00:00 +0 -2: blank and unstructured low-level noise never acquire a document
+00:00 +1 -2: Some tests failed.
+
+Failing tests:
+  /workspace/research/log-review-baseline/test/refinement_detection_test.dart: complete document wins over a large clipped background
+  /workspace/research/log-review-baseline/test/refinement_detection_test.dart: low contrast with distracting high contrast scene edge is detected

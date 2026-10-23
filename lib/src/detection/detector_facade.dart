@@ -56,9 +56,19 @@ class PureDartDocumentDetector implements DocumentDetector {
     final canny = _canny(smooth, w, h);
     // Closed Canny contours plus both intensity polarities. Intensity fallback
     // handles an edge cut off by the sensor boundary (outOfFrame warning).
-    for (var mode = 0; mode < 3; mode++) {
-      bool foreground(int p) =>
-          mode == 0 ? canny[p] != 0 : (smooth[p] > threshold) == (mode == 1);
+    Uint8List? repaired;
+    for (var mode = 0; mode < 4; mode++) {
+      if (mode == 3) {
+        if (best != null && _borderCount(best, w, h) == 0) break;
+        // Only pay for the sensitive/closed contour when the regular passes
+        // fail or produce clipped geometry. Close small breaks, never invent a
+        // quad from a stale preview frame.
+        repaired = _closeEdges(_canny(smooth, w, h, sensitive: true), w, h);
+      }
+      final edgeMode = mode == 0 || mode == 3;
+      bool foreground(int p) => edgeMode
+          ? (mode == 0 ? canny[p] : repaired![p]) != 0
+          : (smooth[p] > threshold) == (mode == 1);
       final visited = Uint8List(w * h);
       final queue = Int32List(w * h);
       for (var seed = 0; seed < smooth.length; seed++) {
@@ -90,7 +100,7 @@ class PureDartDocumentDetector implements DocumentDetector {
             1,
             1,
           ];
-          final neighborCount = mode == 0 ? 16 : 8;
+          final neighborCount = edgeMode ? 16 : 8;
           for (var j = 0; j < neighborCount; j += 2) {
             final nx = x + neighbors[j], ny = y + neighbors[j + 1];
             final n = nx < 0 || nx >= w || ny < 0 || ny >= h ? -1 : ny * w + nx;
@@ -107,7 +117,7 @@ class PureDartDocumentDetector implements DocumentDetector {
           // Keep pixel indices first; avoid Offset objects for tiny text/noise.
           if (border) boundary.add(p);
         }
-        if ((mode != 0 && tail < w * h * .05) || boundary.length < 20) continue;
+        if ((!edgeMode && tail < w * h * .05) || boundary.length < 20) continue;
         final quad = fitQuad(
           convexHull(
             boundary
@@ -119,9 +129,13 @@ class PureDartDocumentDetector implements DocumentDetector {
         final area = polygonArea(quad);
         if (area < w * h * .05 ||
             area > w * h * .97 ||
-            (mode != 0 && tail / area < .75)) {
+            (!edgeMode && tail / area < .75)) {
           continue;
         }
+        final borders = _borderCount(quad, w, h);
+        // A region enclosing three/four sensor borders is usually the desk or
+        // background. It must not suppress a smaller complete document.
+        if (borders >= 3) continue;
         final a =
             ((quad[1] - quad[0]).distance + (quad[2] - quad[3]).distance) / 2;
         final b =
@@ -130,8 +144,14 @@ class PureDartDocumentDetector implements DocumentDetector {
         if (ratio < 1 || ratio > 3.0 || tiltOf(quad) > 45) continue;
         // A background enclosing a dark document has low contour fill and/or
         // occupies the complete border; do not mistake it for the document.
-        final score = area * (mode == 0 ? 1 : (tail / area).clamp(0, 1));
-        if (score > bestScore) {
+        final score = area * (edgeMode ? 1 : (tail / area).clamp(0, 1));
+        final complete = borders == 0;
+        final bestComplete = best != null && _borderCount(best, w, h) == 0;
+        final preferComplete = complete && !bestComplete && area >= w * h * .15;
+        final canReplace = !bestComplete || complete || bestScore < w * h * .15;
+        if (best == null ||
+            preferComplete ||
+            (canReplace && score > bestScore)) {
           best = quad;
           bestScore = score;
         }
@@ -244,7 +264,7 @@ int _otsu(List<int> hist, int total) {
 
 // Sobel gradients, direction-aware non-maximum suppression, double threshold,
 // and 8-connected hysteresis on the Gaussian-smoothed image.
-Uint8List _canny(Uint8List gray, int w, int h) {
+Uint8List _canny(Uint8List gray, int w, int h, {bool sensitive = false}) {
   final magnitude = Uint16List(w * h), direction = Uint8List(w * h);
   var maximum = 0;
   for (var y = 1; y < h - 1; y++) {
@@ -276,7 +296,10 @@ Uint8List _canny(Uint8List gray, int w, int h) {
           : 3;
     }
   }
-  final high = (maximum * .25).clamp(30, 100), low = high * .4;
+  final high = sensitive
+      ? (maximum * .12).clamp(12, 40)
+      : (maximum * .25).clamp(30, 100);
+  final low = high * .4;
   final edges = Uint8List(w * h), queue = Int32List(w * h);
   var head = 0, tail = 0;
   for (var y = 1; y < h - 1; y++) {
@@ -315,4 +338,45 @@ Uint8List _canny(Uint8List gray, int w, int h) {
     edges[i] = edges[i] == 2 ? 1 : 0;
   }
   return edges;
+}
+
+int _borderCount(List<Offset> quad, int w, int h) =>
+    (quad.any((p) => p.dx <= 1) ? 1 : 0) +
+    (quad.any((p) => p.dy <= 1) ? 1 : 0) +
+    (quad.any((p) => p.dx >= w - 2) ? 1 : 0) +
+    (quad.any((p) => p.dy >= h - 2) ? 1 : 0);
+
+// 3x3 binary closing. Dilation then erosion bridges <=2 px contour gaps.
+Uint8List _closeEdges(Uint8List input, int w, int h) {
+  final dilated = Uint8List(w * h), result = Uint8List(w * h);
+  for (var y = 1; y < h - 1; y++) {
+    for (var x = 1; x < w - 1; x++) {
+      final p = y * w + x;
+      for (var dy = -1; dy <= 1; dy++) {
+        for (var dx = -1; dx <= 1; dx++) {
+          if (input[p + dy * w + dx] != 0) {
+            dilated[p] = 1;
+            break;
+          }
+        }
+        if (dilated[p] != 0) break;
+      }
+    }
+  }
+  for (var y = 1; y < h - 1; y++) {
+    for (var x = 1; x < w - 1; x++) {
+      final p = y * w + x;
+      var all = true;
+      for (var dy = -1; dy <= 1 && all; dy++) {
+        for (var dx = -1; dx <= 1; dx++) {
+          if (dilated[p + dy * w + dx] == 0) {
+            all = false;
+            break;
+          }
+        }
+      }
+      if (all) result[p] = 1;
+    }
+  }
+  return result;
 }

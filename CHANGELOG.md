@@ -4,6 +4,20 @@ This changelog follows Keep a Changelog. No production release has been made.
 
 ## [Unreleased]
 
+### Physical test follow-up
+
+- Fix pull-adapter analysis cadence by reserving demand before frame copying;
+  keep worker backpressure and bounded timer jitter.
+- Prefer complete document contours over clipped backgrounds and retry weak
+  edges with sensitive Canny/closing only when the regular passes fail.
+- Default warning frame to white; keep configurable green clear state and add
+  a closed-outline style, selected in the example.
+- Accelerate perspective resampling with byte-buffer bilinear interpolation;
+  add optional crop-size limit and explicit grayscale/capped-contrast filters.
+  Keep full-color/full-resolution defaults and full-resolution original JPEG.
+- Log snapshot rejection decisions, per-stage processing times and auto-capture
+  stability/threshold details for physical debugging.
+
 ### Reliability and continuous operation
 
 - Bound analysis load and portrait dimensions; skip unwanted native samples and

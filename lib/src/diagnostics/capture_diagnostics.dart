@@ -139,6 +139,10 @@ class CaptureDiagnostics {
     DocumentPreviewStatus status, {
     required bool running,
     double? nativeFps,
+    required bool autoEnabled,
+    required String autoState,
+    required int stableFrames,
+    required double feedbackProgress,
   }) {
     if (!enabled) return;
     final now = _clock.elapsed;
@@ -149,6 +153,10 @@ class CaptureDiagnostics {
     event('health', {
       ...snapshot(status),
       'running': running,
+      'autoEnabled': autoEnabled,
+      'autoState': autoState,
+      'stableFrames': stableFrames,
+      'feedbackProgress': feedbackProgress,
       'receivedAnalysisFrames': received,
       'submitted': accepted,
       'skippedAtController': received - accepted,

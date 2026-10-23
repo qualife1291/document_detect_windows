@@ -43,7 +43,9 @@ List<Offset> projectDocumentQuad({
       .toList(growable: false);
 }
 
-/// Native camera texture and four document corner markers in one coordinate
+enum DocumentFrameStyle { corners, outline }
+
+/// Native camera texture and document markers in one coordinate
 /// space. This widget never reads or renders analysis-frame pixel bytes.
 class DocumentCameraPreview extends StatelessWidget {
   const DocumentCameraPreview({
@@ -54,9 +56,10 @@ class DocumentCameraPreview extends StatelessWidget {
     this.fit = BoxFit.contain,
     this.alignment = Alignment.center,
     this.validColor = const Color(0xff69f0ae),
-    this.warningColor = const Color(0xffffcc80),
+    this.warningColor = const Color(0xffffffff),
     this.strokeWidth = 3,
     this.cornerLength = 24,
+    this.frameStyle = DocumentFrameStyle.corners,
   }) : assert(strokeWidth > 0),
        assert(cornerLength > 0);
 
@@ -67,6 +70,7 @@ class DocumentCameraPreview extends StatelessWidget {
   final Alignment alignment;
   final Color validColor, warningColor;
   final double strokeWidth, cornerLength;
+  final DocumentFrameStyle frameStyle;
 
   @override
   Widget build(BuildContext context) =>
@@ -128,6 +132,7 @@ class DocumentCameraPreview extends StatelessWidget {
                             color: value.isClear ? validColor : warningColor,
                             strokeWidth: strokeWidth,
                             cornerLength: cornerLength,
+                            frameStyle: frameStyle,
                           ),
                         ),
                       ),
@@ -140,7 +145,7 @@ class DocumentCameraPreview extends StatelessWidget {
       );
 }
 
-/// Draws L-shaped markers along adjacent document edges, including perspective.
+/// Draws corner markers or a closed outline along document edges.
 class DocumentCornersPainter extends CustomPainter {
   DocumentCornersPainter({
     required List<Offset>? normalizedQuad,
@@ -150,6 +155,7 @@ class DocumentCornersPainter extends CustomPainter {
     this.color = const Color(0xff69f0ae),
     this.strokeWidth = 3,
     this.cornerLength = 24,
+    this.frameStyle = DocumentFrameStyle.corners,
   }) : normalizedQuad = normalizedQuad == null
            ? null
            : List.unmodifiable(normalizedQuad),
@@ -162,6 +168,7 @@ class DocumentCornersPainter extends CustomPainter {
   final Alignment alignment;
   final Color color;
   final double strokeWidth, cornerLength;
+  final DocumentFrameStyle frameStyle;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -184,6 +191,10 @@ class DocumentCornersPainter extends CustomPainter {
       ..strokeWidth = strokeWidth
       ..strokeCap = StrokeCap.round
       ..strokeJoin = StrokeJoin.round;
+    if (frameStyle == DocumentFrameStyle.outline) {
+      canvas.drawPath(Path()..addPolygon(points, true), paint);
+      return;
+    }
     for (var i = 0; i < 4; i++) {
       final corner = points[i];
       final previous = points[(i + 3) % 4] - corner;
@@ -214,6 +225,7 @@ class DocumentCornersPainter extends CustomPainter {
       fit != oldDelegate.fit ||
       alignment != oldDelegate.alignment ||
       color != oldDelegate.color ||
+      frameStyle != oldDelegate.frameStyle ||
       strokeWidth != oldDelegate.strokeWidth ||
       cornerLength != oldDelegate.cornerLength;
 }

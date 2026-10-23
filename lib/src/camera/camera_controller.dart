@@ -14,6 +14,7 @@ import '../preview/document_preview_status.dart';
 import '../warnings/preview_warning.dart';
 import 'camera_backend.dart';
 import 'frame_source.dart';
+import 'analysis_gate.dart';
 
 class CaptureStatus {
   const CaptureStatus({
@@ -70,6 +71,10 @@ class WindowsDocCapture {
         currentPreviewStatus,
         running: _running,
         nativeFps: _running ? deliveredPreviewFps : null,
+        autoEnabled: _autoEnabled,
+        autoState: _auto.state.name,
+        stableFrames: _auto.stableFrames,
+        feedbackProgress: _auto.feedbackProgress,
       );
     } catch (error, stack) {
       _diagnostics.error('diagnostic_health', error, stack);
@@ -82,7 +87,7 @@ class WindowsDocCapture {
   Future<List<CameraDevice>>? _listing;
   Future<void>? _disposing;
   CaptureCancellation? _captureCancellation;
-  Duration? _lastAnalysis;
+  late final _analysisGate = AnalysisGate(analysisInterval);
 
   void _claimCamera() {
     if (_cameraOwner != null && _cameraOwner != this) {
@@ -92,13 +97,19 @@ class WindowsDocCapture {
     _cameraOwner = this;
   }
 
-  bool _wantsAnalysis(DocumentQualityAnalyzer analyzer) =>
+  bool _canAnalyze(DocumentQualityAnalyzer analyzer) =>
       !_disposed &&
       _stopping == null &&
       _capture == null &&
-      analyzer.canAcceptFrame &&
-      (_lastAnalysis == null ||
-          _clock.elapsed - _lastAnalysis! >= analysisInterval);
+      analyzer.canAcceptFrame;
+
+  bool _requestAnalysis(DocumentQualityAnalyzer analyzer) {
+    if (!_canAnalyze(analyzer)) {
+      _analysisGate.discardRequest();
+      return false;
+    }
+    return _analysisGate.request(_clock.elapsed);
+  }
 
   final Future<void> Function() _verifyPlatform;
   final _warnings = StreamController<PreviewWarning>.broadcast();
@@ -183,9 +194,10 @@ class WindowsDocCapture {
     BoxFit fit = BoxFit.contain,
     Alignment alignment = Alignment.center,
     Color validColor = const Color(0xff69f0ae),
-    Color warningColor = const Color(0xffffcc80),
+    Color warningColor = const Color(0xffffffff),
     double strokeWidth = 3,
     double cornerLength = 24,
+    DocumentFrameStyle frameStyle = DocumentFrameStyle.corners,
   }) => DocumentCameraPreview(
     frameSource: _source,
     status: previewStatus,
@@ -196,6 +208,7 @@ class WindowsDocCapture {
     warningColor: warningColor,
     strokeWidth: strokeWidth,
     cornerLength: cornerLength,
+    frameStyle: frameStyle,
   );
 
   Future<void> start({
@@ -260,6 +273,15 @@ class WindowsDocCapture {
         _auto.thresholds.maximumBrightness,
       ],
       'maxClipping': _auto.thresholds.maximumClipping,
+      'minimumCoverage': _auto.thresholds.minimumCoverage,
+      'minimumMargin': _auto.thresholds.minimumMargin,
+      'maximumTilt': _auto.thresholds.maximumTilt,
+      'stableFrameCount': _auto.stableFrameCount,
+      'feedbackMs': _auto.feedbackDuration.inMilliseconds,
+      'maxFrameGapMs': _auto.maxFrameGap.inMilliseconds,
+      'maximumMotion': _auto.maximumMotion,
+      'outputMaxSide': cropPipeline.maxOutputDimension,
+      'imageFilter': cropPipeline.imageFilter.name,
     });
     _publishPreview(
       DocumentPreviewStatus(state: DocumentPreviewState.processing),
@@ -277,11 +299,11 @@ class WindowsDocCapture {
         maxWidth: cropPipeline.analysisWidth,
       );
       _analyzer = analyzer;
-      _lastAnalysis = null;
+      _analysisGate.reset();
       final source = _source;
       if (source is AnalysisDemandSource) {
         (source as AnalysisDemandSource).analysisWanted = () =>
-            _wantsAnalysis(analyzer);
+            _requestAnalysis(analyzer);
       }
       await _verifyPlatform();
       if (_disposed || _stopping != null) {
@@ -298,10 +320,14 @@ class WindowsDocCapture {
       );
       _frames = _source.frames.listen(
         (frame) {
-          final wanted = _wantsAnalysis(analyzer);
+          final wanted =
+              _canAnalyze(analyzer) && _analysisGate.canSubmit(_clock.elapsed);
           _diagnostics.frame(submitted: wanted);
-          if (!wanted) return;
-          _lastAnalysis = _clock.elapsed;
+          if (!wanted) {
+            _analysisGate.discardRequest();
+            return;
+          }
+          _analysisGate.submitted(_clock.elapsed);
           analyzer.add(frame);
         },
         onError: (Object error, StackTrace stack) =>
@@ -569,6 +595,7 @@ class WindowsDocCapture {
       expectedNormalizedQuad: expectedQuad,
       maximumMotion: _auto.maximumMotion,
       cancellation: cancellation,
+      onDiagnostic: enableDebugLogging ? _diagnostics.event : null,
     );
   }
 
