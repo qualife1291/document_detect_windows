@@ -36,5 +36,6 @@ khai từ đầu theo đặc tả người dùng cung cấp.
 overlay bốn góc trong API dùng chung. Detection vẫn chạy khi tắt auto-capture.
 Có kiểm thử ảnh synthetic cho quality enums, geometry khi letterbox/crop/4K,
 callback dedup, capture lifecycle, restart/error và xóa marker quá hạn.
-Kiểm tra SDK/Windows cho thay đổi này đang được chạy; camera thật và
-accessibility gates vẫn chưa hoàn thành.
+Pub get/analyze, 38 package tests, 2 example tests, benchmark và release build
+Windows đã đạt trên Flutter 3.32.8, 3.41.9, 3.47.7 tại commit `5588f6d`.
+Linux cũng đạt ba SDK. Camera thật và accessibility gates vẫn chưa hoàn thành.
