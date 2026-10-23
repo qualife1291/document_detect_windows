@@ -45,7 +45,8 @@ abstract class FrameSource {
   /// A fresh full-resolution snapshot, never the downsampled analysis buffer.
   Future<FrameBuffer?> latestFullResolutionFrame();
 
-  /// Native texture only; this must never render streamed Dart frame bytes.
+  /// Native texture by default. A documented opt-in fallback may display
+  /// bounded, downsampled bitmap frames on devices with texture/driver issues.
   Widget buildPreview();
   Size get previewSize;
 }

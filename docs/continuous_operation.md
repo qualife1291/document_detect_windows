@@ -10,7 +10,8 @@ required. Synthetic tests contain no real identity or medical information.
 - `analysisInterval` defaults to 100 ms: a maximum requested analysis rate, not
   guaranteed detection FPS. Frames are skipped while analysis/capture is busy.
   Adapters implementing `AnalysisDemandSource` avoid copying/sampling those
-  frames. Native preview remains independent. A slow detector does not build an
+  frames. Native texture preview remains independent; opt-in bitmap preview shares
+  the bounded sampled stream. A slow detector does not build an
   unlimited work queue: the standalone analyzer retains at most one pending
   latest frame. Analysis is limited by the longest dimension, including portrait.
 - Detection avoids per-pixel neighbor-list and point-object allocation in its
@@ -69,6 +70,17 @@ threshold calibration. Prefer the lowest resolution that preserves the printed
 fields needed by the consuming app. Do not retain every `CapturedDocument` in
 memory; each contains both original and cropped JPEG. Dispose result screens and
 apply an explicit storage retention/quota policy for continuous use.
+
+The example defaults to medium/200 ms, preferred native 15 FPS and bitmap preview
+≤640 px after the third physical log showed D3D device loss. Bitmap mode creates
+no camera external texture, drops frames while a single decode is busy and
+releases superseded images even if no new UI frame presents. Flutter's renderer
+can still use the GPU: this is a load/path mitigation, not device-loss recovery.
+The result screen stops the camera first and decodes a display copy ≤1280 px;
+retake reopens the selected camera. Result disposal evicts only its own cache
+entry. Integrating apps must implement equivalent result/lifecycle ownership;
+retaining output JPEGs/files remains their responsibility. See
+[GPU-log review](progress/GPU_LOG_REVIEW.md) and README for mode toggles/log copy.
 
 ## Documents and lighting
 

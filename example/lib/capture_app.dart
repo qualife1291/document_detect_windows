@@ -1,13 +1,21 @@
 import 'dart:async';
-import 'dart:ui' show AppExitResponse;
+import 'dart:convert';
+import 'dart:ui' show AppExitResponse, FrameTiming;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:windows_doc_capture/windows_doc_capture.dart';
+import 'capture_result_image.dart';
 
 class CaptureApp extends StatelessWidget {
-  const CaptureApp({super.key, required this.capture});
+  const CaptureApp({
+    super.key,
+    required this.capture,
+    this.preset = ResolutionPreset.medium,
+  });
   final WindowsDocCapture capture;
+  final ResolutionPreset preset;
   @override
   Widget build(BuildContext context) => MaterialApp(
     title: 'Chụp giấy tờ',
@@ -32,12 +40,17 @@ class CaptureApp extends StatelessWidget {
         ),
       ),
     ),
-    home: CapturePage(capture: capture),
+    home: CapturePage(capture: capture, preset: preset),
   );
 }
 
 class CapturePage extends StatefulWidget {
-  const CapturePage({super.key, required this.capture});
+  final ResolutionPreset preset;
+  const CapturePage({
+    super.key,
+    required this.capture,
+    this.preset = ResolutionPreset.medium,
+  });
   final WindowsDocCapture capture;
   @override
   State<CapturePage> createState() => _CapturePageState();
@@ -52,18 +65,56 @@ class _CapturePageState extends State<CapturePage> {
   CapturedDocument? _result;
   List<CameraDevice> _devices = [];
   String? _device, _error;
+  bool _presenting = false;
   bool _busy = false,
       _auto = true,
       _debug = false,
       _started = false,
       _save = false;
   AppLifecycleListener? _lifecycle;
+  Timer? _uiHealthTimer;
+  bool _timingsRegistered = false;
+  final _uiClock = Stopwatch()..start();
+  Duration? _lastUiFrame;
+  int _maxBuildUs = 0, _maxRasterUs = 0;
+  void _onFrameTimings(List<FrameTiming> frames) {
+    _lastUiFrame = _uiClock.elapsed;
+    for (final frame in frames) {
+      if (frame.buildDuration.inMicroseconds > _maxBuildUs) {
+        _maxBuildUs = frame.buildDuration.inMicroseconds;
+      }
+      if (frame.rasterDuration.inMicroseconds > _maxRasterUs) {
+        _maxRasterUs = frame.rasterDuration.inMicroseconds;
+      }
+    }
+  }
+
+  void _logUiHealth() {
+    final cache = PaintingBinding.instance.imageCache;
+    try {
+      debugPrint(
+        '[capture_example] ${jsonEncode({'v': 1, 'time': DateTime.now().toUtc().toIso8601String(), 'event': 'ui_health', 'uiFrameAgeMs': _lastUiFrame == null ? null : (_uiClock.elapsed - _lastUiFrame!).inMilliseconds, 'maxBuildMs': _maxBuildUs / 1000, 'maxRasterMs': _maxRasterUs / 1000, 'imageCacheBytes': cache.currentSizeBytes, 'imageCacheEntries': cache.currentSize, 'liveImages': cache.liveImageCount, 'pendingImages': cache.pendingImageCount, 'resultBytes': (_result?.originalJpeg.length ?? 0) + (_result?.croppedJpeg.length ?? 0), 'showingResult': _result != null, 'cameraRunning': capture.isRunning})}',
+      );
+    } catch (_) {
+      // Diagnostics must not interrupt camera/UI cleanup if the app sink fails.
+    }
+    _maxBuildUs = _maxRasterUs = 0;
+  }
+
   final _saveDirectory = TextEditingController();
   final _captureFocus = FocusNode();
   final _resultFocus = FocusNode();
   @override
   void initState() {
     super.initState();
+    if (capture.enableDebugLogging) {
+      SchedulerBinding.instance.addTimingsCallback(_onFrameTimings);
+      _timingsRegistered = true;
+      _uiHealthTimer = Timer.periodic(
+        const Duration(seconds: 5),
+        (_) => _logUiHealth(),
+      );
+    }
     _lifecycle = AppLifecycleListener(
       onExitRequested: () async {
         try {
@@ -75,7 +126,9 @@ class _CapturePageState extends State<CapturePage> {
       },
     );
     _statusSub = capture.statuses.listen((status) {
-      if (mounted) setState(() => _status = status);
+      if (mounted && !_presenting && _result == null) {
+        setState(() => _status = status);
+      }
     });
     _errorSub = capture.errors.listen((_) {
       if (mounted) {
@@ -120,11 +173,12 @@ class _CapturePageState extends State<CapturePage> {
       await capture.stop();
       await capture.start(
         deviceId: _device,
+        preset: widget.preset,
         enableAutoCapture: _auto,
         saveDirectory: _save ? _saveDirectory.text.trim() : null,
         onAutoCapture: _showResult,
         onDocumentStateChanged: (state) {
-          if (mounted) {
+          if (mounted && !_presenting && _result == null) {
             setState(() {
               _documentState = state;
               if (state == DocumentPreviewState.processing ||
@@ -150,13 +204,38 @@ class _CapturePageState extends State<CapturePage> {
   }
 
   void _showResult(CapturedDocument result) {
+    if (!mounted || _presenting || _result != null) return;
     capture.autoCaptureEnabled = false;
-    if (mounted) {
-      setState(() => _result = result);
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted && _result != null) _resultFocus.requestFocus();
-      });
+    setState(() {
+      _presenting = true;
+      _busy = true;
+    });
+    unawaited(_presentResult(result));
+  }
+
+  Future<void> _presentResult(CapturedDocument result) async {
+    String? cleanupError;
+    try {
+      // Remove the native preview before decoding/uploading the result image.
+      // stop also releases native frame buffers, the analysis worker and timers.
+      await capture.stop();
+    } catch (_) {
+      cleanupError =
+          'Đã chụp ảnh nhưng chưa đóng camera hoàn toàn. Kiểm tra camera trước lần tiếp theo.';
     }
+    if (!mounted) return;
+    setState(() {
+      _started = false;
+      _presenting = false;
+      _busy = false;
+      _status = null;
+      _documentState = DocumentPreviewState.idle;
+      _result = result;
+      _error = cleanupError;
+    });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && _result != null) _resultFocus.requestFocus();
+    });
   }
 
   Future<void> _manual() async {
@@ -179,21 +258,28 @@ class _CapturePageState extends State<CapturePage> {
         );
       }
     } finally {
-      if (mounted) setState(() => _busy = false);
+      if (mounted && !_presenting) setState(() => _busy = false);
     }
   }
 
-  void _retake() {
+  Future<void> _retake() async {
+    if (_busy || _presenting) return;
     setState(() {
       _result = null;
       _error = null;
     });
-    capture.autoCaptureEnabled = _auto;
-    _captureFocus.requestFocus();
+    await _start();
+    if (mounted && _started) _captureFocus.requestFocus();
   }
 
   @override
   void dispose() {
+    _uiHealthTimer?.cancel();
+    if (_timingsRegistered) {
+      SchedulerBinding.instance.removeTimingsCallback(_onFrameTimings);
+    }
+    _result = null;
+    _status = null;
     _lifecycle?.dispose();
     unawaited(_statusSub?.cancel());
     unawaited(_errorSub?.cancel());
@@ -239,7 +325,7 @@ class _CapturePageState extends State<CapturePage> {
         actions: {
           _RetakeIntent: CallbackAction<_RetakeIntent>(
             onInvoke: (_) {
-              if (_result != null) _retake();
+              if (_result != null && !_busy) unawaited(_retake());
               return null;
             },
           ),
@@ -285,7 +371,7 @@ class _CapturePageState extends State<CapturePage> {
                               : (v) => setState(() => _device = v),
                         ),
                         FilledButton(
-                          onPressed: _busy ? null : _start,
+                          onPressed: _busy || _result != null ? null : _start,
                           child: Text(_started ? 'Khởi động lại' : 'Bắt đầu'),
                         ),
                         if (!_started)
@@ -318,7 +404,7 @@ class _CapturePageState extends State<CapturePage> {
                     ),
                   ),
                 ),
-                if (!_started)
+                if (!_started && _result == null && !_presenting)
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     child: Wrap(
@@ -365,7 +451,7 @@ class _CapturePageState extends State<CapturePage> {
                             fit: StackFit.expand,
                             children: [
                               const ColoredBox(color: Colors.black),
-                              if (_started)
+                              if (_started && !_presenting && _result == null)
                                 capture.buildPreview(
                                   frameStyle: DocumentFrameStyle.outline,
                                   cornerRadius: 6,
@@ -489,10 +575,8 @@ class _CapturePageState extends State<CapturePage> {
                               style: TextStyle(fontSize: 22),
                             ),
                             Expanded(
-                              child: Image.memory(
-                                _result!.croppedJpeg,
-                                semanticLabel:
-                                    'Ảnh giấy tờ đã cắt và chỉnh phối cảnh',
+                              child: CaptureResultImage(
+                                bytes: _result!.croppedJpeg,
                               ),
                             ),
                             Text(
@@ -501,7 +585,7 @@ class _CapturePageState extends State<CapturePage> {
                                   : 'Đã lưu ảnh vào thư mục được chọn',
                             ),
                             FilledButton(
-                              onPressed: _retake,
+                              onPressed: _busy ? null : _retake,
                               child: const Text('Chụp lại (Esc)'),
                             ),
                           ],

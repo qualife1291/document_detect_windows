@@ -53,7 +53,27 @@ Select a device and choose **Bắt đầu**. **Tự chụp** toggles automatic c
 capture bypasses quality gates. Check the warning before using it. Enable file
 saving and enter an operator-controlled directory before starting if needed.
 The result shows the corrected image; **Chụp lại** or **Esc** dismisses it.
+The example stops the camera before showing the result and reopens it on retake.
+It evicts only its own result image from Flutter's image cache and limits the
+**display decode** to 1280 px; output JPEG resolution is unchanged.
 There is no login or authentication layer in this local example.
+
+The example now defaults to a low-resource configuration: medium preset,
+200 ms sampling (at most 5 analysis/bitmap frames per second), a preferred native
+15 FPS mode where available, and a bitmap preview with longest side ≤640 px.
+This explicitly avoids registering a camera external texture. For comparison on
+a stable driver, opt back into the previous example configuration:
+
+```powershell
+flutter run -d windows --profile --dart-define=DOC_CAPTURE_LOW_RESOURCE=false --dart-define=DOC_CAPTURE_SAFE_PREVIEW=false --dart-define=DOC_CAPTURE_LOGS=true
+```
+
+These defines configure the example only. `UvcFrameSource()` still defaults to
+native texture preview; integrating apps can select `UvcPreviewMode.bitmap`,
+`pollInterval: Duration(milliseconds: 200)` and `preferredNativeFps: 15` explicitly,
+with the same interval in `WindowsDocCapture`. Native FPS is a preference, not a
+hard cap when the camera has no matching mode. A 5 FPS analysis rate also takes
+longer to accumulate eight stable frames before automatic capture.
 
 ## Integration
 
@@ -129,7 +149,7 @@ Widget buildDocumentPreview() => SizedBox(
 );
 ```
 
-`buildPreview()` keeps the native camera texture and four L-shaped corner markers
+`buildPreview()` keeps the camera preview and four L-shaped corner markers
 in the same coordinate space. `BoxFit.contain` shows the complete camera frame;
 `BoxFit.cover` crops it while keeping marker coordinates aligned. Markers follow
 the detected quadrilateral edges, including perspective. `DocumentFrameStyle.outline`
@@ -208,7 +228,7 @@ error ≤15°, acceptable sharpness/exposure, eight consecutive stable frames,
 normalized corner motion ≤0.015 and at least 500 ms of preparation feedback.
 Gaps above 400 ms reset stability. Reports/snapshots older than 500 ms are
 rejected. After capture, remove the document and wait for cooldown (2 seconds)
-before another automatic capture. Camera preview remains a native texture;
+before another automatic capture. The UVC adapter defaults to a native texture, with an explicit bitmap fallback;
 analysis and JPEG/perspective processing run off the UI isolate.
 
 ## Continuous operation and low-end devices
@@ -278,11 +298,11 @@ flutter run -d windows --profile --dart-define=DOC_CAPTURE_LOGS=true 2>&1 |
   Tee-Object -FilePath camera-test.log
 ```
 
-Reproduce the issue, stop the app, then copy the library's lines:
+Reproduce the issue, stop the app, then copy diagnostics including engine errors:
 
 ```powershell
 Get-Content camera-test.log |
-  Select-String '\[windows_doc_capture\]' |
+  Select-String '\[windows_doc_capture\]|\[capture_example\]|SwapChain|D3D11|0x887A|EGL|Context Lost|context current|acquire the frame' |
   ForEach-Object { $_.Line } |
   Set-Clipboard
 ```
@@ -292,6 +312,20 @@ Paste those lines with a description of the visible problem, camera's advertised
 failure/stop so the controller ID, session number and UTC timestamps can be
 correlated. This file is created by the command above; the library only prints
 and does not create or upload a log file.
+
+Do not filter to library lines alone: GPU/driver failures such as
+`DXGI_ERROR_DEVICE_HUNG` (`0x887A0006`), EGL `Context Lost` and frame-acquisition
+errors are emitted by the engine. In the third physical log the renderer failed
+while Dart analysis continued. Bitmap mode reduces external-texture work but
+Flutter itself may still use the GPU; it cannot guarantee recovery of a lost
+rendering context. Restart the app after device loss and compare GPU driver
+versions on the affected machine. See [third-log review](docs/progress/GPU_LOG_REVIEW.md).
+
+With logging enabled, the example also emits `[capture_example] ui_health` every
+five seconds: last UI-frame age, max build/raster times, image-cache counters,
+retained result byte counts and camera/result state. An idle UI need not render
+frames, so frame age alone does not prove a freeze. No pixel/document data is
+logged. Avoid sharing raw debugger/DevTools URLs from the full console log.
 
 Each `[windows_doc_capture]` line is a JSON object (`v: 1`). Events include:
 

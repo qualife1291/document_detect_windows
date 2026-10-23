@@ -20,8 +20,11 @@
 - The example explicitly uses an experimental UVC candidate. Its API copies
   full RGBA for analysis before Dart downsampling. This additional allocation
   and UI-isolate sampling cost require Windows profiling/native downsampling
-  before the performance targets can be accepted. Preview pixels themselves
-  stay in native Texture. Camera-desktop's isolated still-image decode also needs
+  before the performance targets can be accepted. The adapter defaults to native
+  Texture, while the example now selects a ≤640 px, low-rate bitmap fallback.
+  Bitmap mode avoids camera external-texture registration, but Flutter can still
+  use the GPU. Device loss (`0x887A0006` / EGL Context Lost) requires physical
+  driver validation and may require an app restart. Camera-desktop's isolated still-image decode also needs
   profiling. Neither adapter currently exposes hardware-to-texture timestamps.
 - Poll timestamps describe receipt in Dart, not sensor exposure time. Thus age
   checks cannot prove hardware capture latency. No preview latency or CPU

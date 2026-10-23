@@ -18,3 +18,5 @@ export 'src/preview/document_camera_preview.dart';
 export 'src/capture/capture_cancellation.dart' show CaptureCancellation;
 
 export 'src/capture/document_image_filter.dart' show DocumentImageFilter;
+
+export 'src/preview/rgba_camera_preview.dart';

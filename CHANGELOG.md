@@ -4,6 +4,20 @@ This changelog follows Keep a Changelog. No production release has been made.
 
 ## [Unreleased]
 
+### Repeated-capture performance and GPU failure follow-up
+
+- Add opt-in bounded UVC bitmap preview without external-texture registration;
+  keep one in-flight decoder, drop busy frames and dispose superseded/late images.
+  Expose polling interval/native FPS preference; preserve texture API default.
+- Default the example to medium preset, 200 ms analysis/polling and bitmap
+  preview. Stop camera before showing results; reopen on retake. Limit result
+  display decode and evict only the result's image-cache entry on close/replace.
+- Clear analyzer lifecycle references on dispose; add example UI/cache diagnostics
+  and include engine GPU errors in log-copy instructions.
+- Add regressions for decoder backpressure/unmount/no-paint disposal, adapter
+  texture/headless cleanup and repeated capture/retake result-cache ownership.
+  These mitigations do not certify recovery from GPU device loss or 24/7 uptime.
+
 ### Preview corner rounding
 
 - Add optional `cornerRadius` (logical pixels, default 0) to buildPreview,

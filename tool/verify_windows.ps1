@@ -24,6 +24,7 @@ try {
   try {
     Run-Flutter 'uvc-pub-get' @('pub', 'get')
     Run-Flutter 'uvc-analyze' @('analyze')
+    Run-Flutter 'uvc-tests' @('test', '--reporter', 'expanded')
   } finally { Pop-Location }
   Push-Location (Join-Path $repo 'example')
   try {

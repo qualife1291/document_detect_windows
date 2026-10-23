@@ -6,9 +6,43 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_ffi_uvc/flutter_ffi_uvc.dart';
 import 'package:windows_doc_capture/windows_doc_capture.dart';
 
-/// Experimental candidate, not a measured default. Preview stays in Texture.
+enum UvcPreviewMode { texture, bitmap }
+
+/// Experimental candidate. Texture is the default; bitmap is an explicit,
+/// bounded low-rate fallback that does not register a Flutter external texture.
 class UvcFrameSource
     implements FrameSource, FrameSourceDiagnostics, AnalysisDemandSource {
+  UvcFrameSource({
+    this.previewMode = UvcPreviewMode.texture,
+    this.pollInterval = const Duration(milliseconds: 100),
+    this.preferredNativeFps = 30,
+  }) : _testCamera = null {
+    _validateInterval();
+  }
+  @visibleForTesting
+  UvcFrameSource.testing({
+    required UvcCamera camera,
+    this.previewMode = UvcPreviewMode.texture,
+    this.pollInterval = const Duration(milliseconds: 100),
+    this.preferredNativeFps = 30,
+  }) : _testCamera = camera {
+    _validateInterval();
+  }
+  final UvcPreviewMode previewMode;
+  final Duration pollInterval;
+  final int preferredNativeFps;
+  final UvcCamera? _testCamera;
+  bool _streaming = false;
+  void _validateInterval() {
+    if (preferredNativeFps < 10 || preferredNativeFps > 120) {
+      throw ArgumentError.value(preferredNativeFps, 'preferredNativeFps');
+    }
+    if (pollInterval < const Duration(milliseconds: 50) ||
+        pollInterval > const Duration(seconds: 1)) {
+      throw ArgumentError.value(pollInterval, 'pollInterval');
+    }
+  }
+
   final _operations = CameraOperationQueue();
   bool Function()? _analysisWanted;
   @override
@@ -29,8 +63,10 @@ class UvcFrameSource
   @override
   Size get previewSize => _size;
   UvcCamera _getCamera() {
-    if (!Platform.isWindows) throw UnsupportedError('Windows x64 only');
-    return _camera ??= UvcCamera();
+    if (_testCamera == null && !Platform.isWindows) {
+      throw UnsupportedError('Windows x64 only');
+    }
+    return _camera ??= _testCamera ?? UvcCamera();
   }
 
   @override
@@ -42,7 +78,7 @@ class UvcFrameSource
           .map((d) => CameraDevice(id: '${d.deviceId}', name: d.displayName))
           .toList();
     } finally {
-      if (_texture == null) {
+      if (!_streaming) {
         final camera = _camera;
         _camera = null;
         await camera?.dispose();
@@ -60,7 +96,7 @@ class UvcFrameSource
     String? deviceId,
     required ResolutionPreset preset,
   }) async {
-    if (_texture != null) throw StateError('Camera already started');
+    if (_streaming) throw StateError('Camera already started');
     final camera = _getCamera();
     camera.setLogLevel(UvcLogLevel.error);
     try {
@@ -78,8 +114,10 @@ class UvcFrameSource
                   throw StateError('Camera đã chọn không còn kết nối.'),
             );
       await camera.openUsbDevice(selected.deviceId);
-      _texture = await camera.createPreviewTexture();
-      await camera.attachPreviewTexture(_texture!);
+      if (previewMode == UvcPreviewMode.texture) {
+        _texture = await camera.createPreviewTexture();
+        await camera.attachPreviewTexture(_texture!);
+      }
       _errors = camera.streamErrors.listen((_) {
         _frames.addError(
           StateError(
@@ -102,9 +140,13 @@ class UvcFrameSource
                     m.fps >= 10,
               )
               .toList()
-            ..sort(
-              (a, b) => (b.width * b.height).compareTo(a.width * a.height),
-            );
+            ..sort((a, b) {
+              final area = (b.width * b.height).compareTo(a.width * a.height);
+              if (area != 0) return area;
+              return (a.fps - preferredNativeFps).abs().compareTo(
+                (b.fps - preferredNativeFps).abs(),
+              );
+            });
       if (modes.isEmpty) {
         throw StateError(
           'Không có chế độ camera phù hợp với giới hạn độ phân giải/FPS.',
@@ -123,14 +165,12 @@ class UvcFrameSource
         result.mode!.width.toDouble(),
         result.mode!.height.toDouble(),
       );
+      _streaming = true;
       _sequence = -1;
       _liveness
         ..reset()
         ..start();
-      _timer = Timer.periodic(
-        const Duration(milliseconds: 100),
-        (_) => _poll(),
-      );
+      _timer = Timer.periodic(pollInterval, (_) => _poll());
     } catch (_) {
       await _stop();
       rethrow;
@@ -162,8 +202,8 @@ class UvcFrameSource
       _liveness
         ..reset()
         ..start();
-      // Analysis only. Native Texture never reads this Dart buffer. This
-      // backend copies full RGBA before this downsample: profile that cost.
+      // Analysis and optional bitmap preview share this bounded buffer. Native
+      // Texture does not read it. Full RGBA is copied first: profile that cost.
       final width = math.max(
             2,
             (raw.width * math.min(1, 640 / math.max(raw.width, raw.height)))
@@ -222,13 +262,32 @@ class UvcFrameSource
   }
 
   @override
-  Widget buildPreview() => _texture == null
-      ? const SizedBox.shrink()
-      : Texture(textureId: _texture!);
+  Widget buildPreview() {
+    if (!_streaming) return const SizedBox.shrink();
+    if (previewMode == UvcPreviewMode.bitmap) {
+      return RgbaCameraPreview(
+        frames: _frames.stream,
+        onDecodeError: (_, __) {
+          if (_streaming) {
+            _frames.addError(
+              StateError(
+                'Không hiển thị được preview bitmap. Khởi động lại camera.',
+              ),
+            );
+          }
+        },
+      );
+    }
+    return _texture == null
+        ? const SizedBox.shrink()
+        : Texture(textureId: _texture!);
+  }
+
   @override
   Future<void> stop() => _operations.run(_stop);
 
   Future<void> _stop() async {
+    _streaming = false;
     _timer?.cancel();
     _timer = null;
     await _errors?.cancel();

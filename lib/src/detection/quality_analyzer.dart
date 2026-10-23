@@ -151,6 +151,11 @@ class DocumentQualityAnalyzer {
     }
     _isolate?.kill(priority: Isolate.immediate);
     _receive?.close();
+    _receive = null;
+    _isolate = null;
+    _port = null;
+    _watchdog = null;
+    _busy = false;
     await _reports.close();
   }
 }
