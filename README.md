@@ -123,6 +123,7 @@ Widget buildDocumentPreview() => SizedBox(
     warningColor: const Color(0xffffffff), // default white until quality is clear
     frameStyle: DocumentFrameStyle.outline, // or .corners (API default)
     cornerLength: 24,
+    cornerRadius: 6, // logical pixels; API default 0 (sharp), also works with .corners
     strokeWidth: 3,
   ),
 );
@@ -134,7 +135,10 @@ in the same coordinate space. `BoxFit.contain` shows the complete camera frame;
 the detected quadrilateral edges, including perspective. `DocumentFrameStyle.outline`
 draws a closed frame; the example uses it. The API defaults to four corner markers.
 White is the default warning color, green indicates clear quality (motion stability
-is checked separately before auto-capture). Both colors are customizable. Turning
+is checked separately before auto-capture). Both colors are customizable. `cornerRadius` rounds the frame or L-shaped markers
+in logical pixels; the API default is `0`, and the example selects `6`. Large
+values are limited to the available edge/marker lengths. Rounding affects the
+preview drawing only; detected corners and crop geometry stay unchanged. Turning
 `showDocumentCorners` off keeps the same preview fit. Avoid separately mirroring
 or rotating only the texture; apply app transforms to the whole preview widget.
 

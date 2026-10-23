@@ -59,9 +59,11 @@ class DocumentCameraPreview extends StatelessWidget {
     this.warningColor = const Color(0xffffffff),
     this.strokeWidth = 3,
     this.cornerLength = 24,
+    this.cornerRadius = 0,
     this.frameStyle = DocumentFrameStyle.corners,
   }) : assert(strokeWidth > 0),
-       assert(cornerLength > 0);
+       assert(cornerLength > 0),
+       assert(cornerRadius >= 0 && cornerRadius < double.infinity);
 
   final FrameSource frameSource;
   final ValueListenable<DocumentPreviewStatus> status;
@@ -70,6 +72,10 @@ class DocumentCameraPreview extends StatelessWidget {
   final Alignment alignment;
   final Color validColor, warningColor;
   final double strokeWidth, cornerLength;
+
+  /// Visual rounding in logical pixels; 0 keeps sharp vertices. Clamped to
+  /// the available edge/marker lengths. Does not change detected/crop corners.
+  final double cornerRadius;
   final DocumentFrameStyle frameStyle;
 
   @override
@@ -132,6 +138,7 @@ class DocumentCameraPreview extends StatelessWidget {
                             color: value.isClear ? validColor : warningColor,
                             strokeWidth: strokeWidth,
                             cornerLength: cornerLength,
+                            cornerRadius: cornerRadius,
                             frameStyle: frameStyle,
                           ),
                         ),
@@ -155,12 +162,14 @@ class DocumentCornersPainter extends CustomPainter {
     this.color = const Color(0xff69f0ae),
     this.strokeWidth = 3,
     this.cornerLength = 24,
+    this.cornerRadius = 0,
     this.frameStyle = DocumentFrameStyle.corners,
   }) : normalizedQuad = normalizedQuad == null
            ? null
            : List.unmodifiable(normalizedQuad),
        assert(strokeWidth > 0),
-       assert(cornerLength > 0);
+       assert(cornerLength > 0),
+       assert(cornerRadius >= 0 && cornerRadius < double.infinity);
 
   final List<Offset>? normalizedQuad;
   final Size imageSize;
@@ -168,6 +177,10 @@ class DocumentCornersPainter extends CustomPainter {
   final Alignment alignment;
   final Color color;
   final double strokeWidth, cornerLength;
+
+  /// Visual rounding in logical pixels; 0 keeps sharp vertices. Clamped to
+  /// the available edge/marker lengths. Does not change detected/crop corners.
+  final double cornerRadius;
   final DocumentFrameStyle frameStyle;
 
   @override
@@ -191,8 +204,41 @@ class DocumentCornersPainter extends CustomPainter {
       ..strokeWidth = strokeWidth
       ..strokeCap = StrokeCap.round
       ..strokeJoin = StrokeJoin.round;
+    final radius = cornerRadius.isFinite ? math.max(0.0, cornerRadius) : 0.0;
     if (frameStyle == DocumentFrameStyle.outline) {
-      canvas.drawPath(Path()..addPolygon(points, true), paint);
+      final path = Path();
+      if (radius == 0) {
+        path.addPolygon(points, true);
+      } else {
+        final curves = List.generate(4, (i) {
+          final p = points[i];
+          final previous = points[(i + 3) % 4] - p,
+              next = points[(i + 1) % 4] - p;
+          final r = math.min(
+            radius,
+            math.min(previous.distance, next.distance) / 2,
+          );
+          return r == 0
+              ? (p, p)
+              : (
+                  p + previous / previous.distance * r,
+                  p + next / next.distance * r,
+                );
+        });
+        path.moveTo(curves[0].$2.dx, curves[0].$2.dy);
+        for (var step = 1; step <= 4; step++) {
+          final i = step % 4;
+          path.lineTo(curves[i].$1.dx, curves[i].$1.dy);
+          path.quadraticBezierTo(
+            points[i].dx,
+            points[i].dy,
+            curves[i].$2.dx,
+            curves[i].$2.dy,
+          );
+        }
+        path.close();
+      }
+      canvas.drawPath(path, paint);
       return;
     }
     for (var i = 0; i < 4; i++) {
@@ -208,13 +254,21 @@ class DocumentCornersPainter extends CustomPainter {
       final b =
           corner +
           next / next.distance * math.min(cornerLength, next.distance / 3);
-      canvas.drawPath(
-        Path()
-          ..moveTo(a.dx, a.dy)
-          ..lineTo(corner.dx, corner.dy)
-          ..lineTo(b.dx, b.dy),
-        paint,
-      );
+      final path = Path()..moveTo(a.dx, a.dy);
+      if (radius == 0) {
+        path.lineTo(corner.dx, corner.dy);
+      } else {
+        final r = math.min(
+          radius,
+          math.min((a - corner).distance, (b - corner).distance),
+        );
+        final entry = corner + previous / previous.distance * r;
+        final exit = corner + next / next.distance * r;
+        path.lineTo(entry.dx, entry.dy);
+        path.quadraticBezierTo(corner.dx, corner.dy, exit.dx, exit.dy);
+      }
+      path.lineTo(b.dx, b.dy);
+      canvas.drawPath(path, paint);
     }
   }
 
@@ -227,5 +281,6 @@ class DocumentCornersPainter extends CustomPainter {
       color != oldDelegate.color ||
       frameStyle != oldDelegate.frameStyle ||
       strokeWidth != oldDelegate.strokeWidth ||
-      cornerLength != oldDelegate.cornerLength;
+      cornerLength != oldDelegate.cornerLength ||
+      cornerRadius != oldDelegate.cornerRadius;
 }

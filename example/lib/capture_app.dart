@@ -368,6 +368,7 @@ class _CapturePageState extends State<CapturePage> {
                               if (_started)
                                 capture.buildPreview(
                                   frameStyle: DocumentFrameStyle.outline,
+                                  cornerRadius: 6,
                                 ),
                               Align(
                                 alignment: Alignment.topCenter,

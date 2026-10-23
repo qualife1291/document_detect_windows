@@ -197,6 +197,7 @@ class WindowsDocCapture {
     Color warningColor = const Color(0xffffffff),
     double strokeWidth = 3,
     double cornerLength = 24,
+    double cornerRadius = 0,
     DocumentFrameStyle frameStyle = DocumentFrameStyle.corners,
   }) => DocumentCameraPreview(
     frameSource: _source,
@@ -208,6 +209,7 @@ class WindowsDocCapture {
     warningColor: warningColor,
     strokeWidth: strokeWidth,
     cornerLength: cornerLength,
+    cornerRadius: cornerRadius,
     frameStyle: frameStyle,
   );
 

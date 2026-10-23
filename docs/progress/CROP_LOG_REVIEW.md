@@ -71,6 +71,12 @@ byte JPEG gốc, cropQuad bất biến, strict motion check và metadata khi lư
 Các test kích thước crop trước đây được cập nhật theo margin mới; không nới
 ngưỡng chất lượng hay bỏ regression về chuyển động/disposal.
 
+## Tùy chọn bo frame preview
+
+Theo yêu cầu bổ sung, `capture.buildPreview(cornerRadius: 6)` bo nhẹ cả viền
+outline và L markers. Giá trị logical pixels, mặc định 0, clamp theo cạnh/ngắn
+marker. Example chọn 6. Chỉ thay nét vẽ, không thay quad detect/crop hoặc margin.
+
 ## Test lại
 
 Pull main, chạy example profile với `DOC_CAPTURE_LOGS=true` như README. Chụp giấy

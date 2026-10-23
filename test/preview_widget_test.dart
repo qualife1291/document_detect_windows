@@ -190,6 +190,153 @@ void main() {
     value.dispose();
     await source.stream.close();
   });
+  for (final style in DocumentFrameStyle.values) {
+    testWidgets('cornerRadius passes through buildPreview and rounds $style', (
+      tester,
+    ) async {
+      final source = _PreviewSource();
+      final capture = WindowsDocCapture.testing(frameSource: source);
+      await tester.runAsync(capture.start);
+      final view =
+          capture.buildPreview(frameStyle: style, cornerRadius: 8)
+              as DocumentCameraPreview;
+      expect(view.cornerRadius, 8);
+      await tester.pumpWidget(
+        Directionality(textDirection: TextDirection.ltr, child: view),
+      );
+      final finder = find.byWidgetPredicate(
+        (w) => w is CustomPaint && w.painter is DocumentCornersPainter,
+      );
+      final painter =
+          tester.widget<CustomPaint>(finder).painter! as DocumentCornersPainter;
+      expect(painter.cornerRadius, 8);
+      // Controller may not have a document yet; paint a known quad
+      // with the same public widget configuration.
+      final rounded = DocumentCornersPainter(
+        normalizedQuad: corners,
+        imageSize: source.previewSize,
+        frameStyle: view.frameStyle,
+        cornerRadius: view.cornerRadius,
+      );
+      final sharp = DocumentCornersPainter(
+        normalizedQuad: corners,
+        imageSize: source.previewSize,
+        frameStyle: view.frameStyle,
+      );
+      final a = _Canvas(), b = _Canvas();
+      rounded.paint(a, const Size(400, 300));
+      sharp.paint(b, const Size(400, 300));
+      expect(a.paths, hasLength(style == DocumentFrameStyle.outline ? 1 : 4));
+      double length(_Canvas canvas) => canvas.paths
+          .expand((p) => p.computeMetrics())
+          .fold(0, (value, m) => value + m.length);
+      expect(length(a), lessThan(length(b)));
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.runAsync(capture.dispose);
+      await source.stream.close();
+    });
+  }
+  test(
+    'rounded outline avoids sharp vertices and remains closed and aligned',
+    () {
+      final canvas = _Canvas();
+      DocumentCornersPainter(
+        normalizedQuad: corners,
+        imageSize: const Size(400, 300),
+        frameStyle: DocumentFrameStyle.outline,
+        cornerRadius: 8,
+      ).paint(canvas, const Size(400, 300));
+      final metric = canvas.paths.single.computeMetrics().single;
+      expect(metric.isClosed, isTrue);
+      expect(
+        canvas.paths.single.getBounds(),
+        const Rect.fromLTRB(80, 60, 320, 240),
+      );
+      for (final vertex in [
+        const Offset(80, 60),
+        const Offset(320, 60),
+        const Offset(320, 240),
+        const Offset(80, 240),
+      ]) {
+        var nearest = double.infinity;
+        for (var i = 0; i < 2000; i++) {
+          final distance =
+              (metric.getTangentForOffset(metric.length * i / 2000)!.position -
+                      vertex)
+                  .distance;
+          if (distance < nearest) nearest = distance;
+        }
+        expect(nearest, inInclusiveRange(2, 3.6));
+      }
+    },
+  );
+  test(
+    'large radius is bounded on small perspective edges and repeated vertices',
+    () {
+      for (final style in DocumentFrameStyle.values) {
+        for (final quad in [
+          const [
+            Offset(.1, .1),
+            Offset(.5, .2),
+            Offset(.4, .7),
+            Offset(.2, .6),
+          ],
+          const [
+            Offset(.1, .1),
+            Offset(.1, .1),
+            Offset(.8, .8),
+            Offset(.1, .8),
+          ],
+        ]) {
+          final canvas = _Canvas();
+          DocumentCornersPainter(
+            normalizedQuad: quad,
+            imageSize: const Size(100, 100),
+            frameStyle: style,
+            cornerRadius: 1e9,
+          ).paint(canvas, const Size(100, 100));
+          for (final path in canvas.paths) {
+            for (final metric in path.computeMetrics()) {
+              expect(metric.length.isFinite, isTrue);
+              for (var i = 0; i < 20; i++) {
+                final p = metric
+                    .getTangentForOffset(metric.length * i / 20)!
+                    .position;
+                expect(p.dx, inInclusiveRange(0, 100));
+                expect(p.dy, inInclusiveRange(0, 100));
+              }
+            }
+          }
+        }
+      }
+    },
+  );
+  test('cornerRadius rejects negative and non-finite configuration', () async {
+    final source = _PreviewSource();
+    for (final value in [-1.0, double.nan, double.infinity]) {
+      expect(
+        () => DocumentCornersPainter(
+          normalizedQuad: corners,
+          imageSize: const Size(100, 100),
+          cornerRadius: value,
+        ),
+        throwsAssertionError,
+      );
+      final status = ValueNotifier(
+        DocumentPreviewStatus(state: DocumentPreviewState.idle),
+      );
+      expect(
+        () => DocumentCameraPreview(
+          frameSource: source,
+          status: status,
+          cornerRadius: value,
+        ),
+        throwsAssertionError,
+      );
+      status.dispose();
+    }
+    await source.stream.close();
+  });
   for (final fit in [BoxFit.contain, BoxFit.cover]) {
     testWidgets(
       'native preview and four painted corners share the $fit transform',

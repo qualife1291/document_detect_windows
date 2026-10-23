@@ -4,6 +4,13 @@ This changelog follows Keep a Changelog. No production release has been made.
 
 ## [Unreleased]
 
+### Preview corner rounding
+
+- Add optional `cornerRadius` (logical pixels, default 0) to buildPreview,
+  DocumentCameraPreview and DocumentCornersPainter for outlines and L markers.
+  Bound large radii to short edges and keep detection/crop geometry unchanged.
+  Example uses a subtle 6 px radius.
+
 ### Crop edge preservation
 
 - Add a default outward crop margin of 2% of the shortest detected edge, with
