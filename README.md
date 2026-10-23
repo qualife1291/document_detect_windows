@@ -261,8 +261,10 @@ Each `[windows_doc_capture]` line is a JSON object (`v: 1`). Events include:
 - `state`: document enum, warning enums, normalized quad, sharpness, exposure,
   clipping, coverage, margin and tilt. Rapid quality transitions are coalesced
   to at most one per 250 ms; lifecycle terminal/capture states print immediately.
-  `coalesced` counts omitted transitions. UI callbacks are unaffected.
-- `health`: every five seconds while running and once during stop; recent
+  The first analysis prints immediately; `coalesced` counts omitted transitions.
+  UI callbacks are unaffected.
+- `health`: every five seconds while running and once before stop clears the
+  current quality/geometry snapshot (including short test sessions); recent
   analysis FPS, mean/max analysis time, received/submitted/skipped analysis-frame
   counts, stale reports/expiries, last-frame age, RSS MiB and native delivered FPS
   when provided by the backend. Counters are cumulative per session; FPS covers

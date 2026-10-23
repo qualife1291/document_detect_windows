@@ -142,6 +142,33 @@ void main() {
     },
   );
   test(
+    'short sessions log the first analysis and final quality before idle clears it',
+    () async {
+      final source = FakeSource();
+      final c = WindowsDocCapture.testing(
+        frameSource: source,
+        enableDebugLogging: true,
+      );
+      await c.start(enableAutoCapture: false);
+      await analyzeFrame(c, source, fixture());
+      await c.stop();
+      final logs = records();
+      expect(
+        logs
+            .where((r) => r['event'] == 'state')
+            .any((r) => r['state'] == 'clear'),
+        isTrue,
+      );
+      final lastHealth = logs.lastWhere((r) => r['event'] == 'health');
+      expect(lastHealth['state'], 'clear');
+      expect(lastHealth['blur'], greaterThan(100));
+      expect(lastHealth['quad'], hasLength(4));
+      expect(c.currentPreviewStatus.state, DocumentPreviewState.idle);
+      await c.dispose();
+      await source.stream.close();
+    },
+  );
+  test(
     'start errors preserve safe platform codes and redact native details',
     () async {
       final source = _DeniedSource();

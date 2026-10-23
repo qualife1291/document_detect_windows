@@ -614,6 +614,7 @@ class WindowsDocCapture {
         return;
       }
     }
+    _logHealth(); // Preserve the final fresh quality snapshot before idle clears it.
     _running = false;
     ++_epoch;
     _captureCancellation?.cancel();
@@ -628,7 +629,6 @@ class WindowsDocCapture {
         /* capture caller receives errors */
       }
     }
-    _logHealth();
     await _cleanup();
     _diagnostics.event('stopped');
   }

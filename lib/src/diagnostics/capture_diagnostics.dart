@@ -118,7 +118,9 @@ class CaptureDiagnostics {
       DocumentPreviewState.capturing,
       DocumentPreviewState.cooldown,
     };
-    if (!immediate.contains(next.state) &&
+    final firstAnalysis = previous.report == null && next.report != null;
+    if (!firstAnalysis &&
+        !immediate.contains(next.state) &&
         _lastState != null &&
         _clock.elapsed - _lastState! < const Duration(milliseconds: 250)) {
       _suppressed++;
