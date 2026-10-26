@@ -1,6 +1,8 @@
 00:00 +0: loading /workspace/document_detect_windows/adapters/windows_doc_capture_uvc/test/uvc_source_test.dart
-00:00 +0: bitmap start does not register external textures; demand gates copies and snapshots stay full size
-00:00 +1: texture mode keeps native preview and releases it after stopping stream
-00:00 +2: failed starts release resources in either preview mode and permit a retry
-00:00 +3: poll interval and preferred FPS reject unbounded sampling configuration
-00:00 +4: All tests passed!
+00:00 +0: frame stream identity survives repeated preview builds
+00:00 +1: bitmap keeps the decoded frame across status and parent rebuilds
+00:00 +2: bitmap start does not register external textures; demand gates copies and snapshots stay full size
+00:00 +3: texture mode keeps native preview and releases it after stopping stream
+00:00 +4: failed starts release resources in either preview mode and permit a retry
+00:00 +5: poll interval and preferred FPS reject unbounded sampling configuration
+00:00 +6: All tests passed!

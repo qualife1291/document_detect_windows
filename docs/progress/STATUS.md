@@ -91,3 +91,15 @@ Windows/Linux đạt ba SDK: 108 package, 4 UVC adapter, 6 example tests, hai
 benchmark, endurance 30/60 s và Windows x64 release build. Source `65948cf`,
 [workflow](https://github.com/qualife1291/document_detect_windows/actions/runs/39944214256). Chưa retest GPU/driver trên máy người dùng, chưa
 xác nhận 24–168 h. Xem [review](GPU_LOG_REVIEW.md).
+
+## Preview nhấp nháy / log thứ tư — 2026-10-26
+
+Log 148 events, ba lần auto thành công, crop ~780×350 px, không có library error
+hay D3D/EGL trong file gửi. Đã tái hiện stream-wrapper identity thay đổi làm
+bitmap reset ảnh khi status rebuild. Cache stream và kiểm tra 30 rebuild với
+decoder thật. Result dùng scaleDown theo DPI, preset high độc lập low-resource
+và có lựa chọn mode cho lần chụp. Không đổi crop/JPEG/thresholds.
+Windows/Linux đạt ba SDK: 108 package, 6 UVC adapter, 7 example tests, hai
+benchmark, endurance 30/60 s và Windows x64 release build. Source `7d789de`,
+[workflow](https://github.com/qualife1291/document_detect_windows/actions/runs/40262146792). Chưa chứng nhận JPEG quang học, hardware GPU
+hoặc 24–168 h sau bản sửa. Xem [review](FOURTH_LOG_REVIEW.md).

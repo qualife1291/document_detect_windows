@@ -91,3 +91,7 @@ Source cuối chỉ thêm tài liệu/bằng chứng sau CI. [Provenance](logs/c
 
 Số đo synthetic không bao gồm camera/native transport, render latency hoặc
 so sánh CPU trước/sau trên máy yếu. Không dùng chúng để xác nhận hết GPU hang.
+
+Evidence update 2026-10-26: `logs/windows-*`, `logs/linux-*` và provenance hiện
+được cập nhật theo [fourth-log follow-up](FOURTH_LOG_REVIEW.md). Các số đo/source
+lịch sử trong bài vẫn thuộc workflow đã liên kết.

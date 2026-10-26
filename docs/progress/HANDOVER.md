@@ -2,6 +2,13 @@ Handover: CHUA DAT
 
 # Bằng chứng bàn giao
 
+Cập nhật log thứ tư (2026-10-26): sửa nhấp nháy bằng stream identity ổn định,
+giữ ảnh qua 30 status/parent rebuilds. Hiển thị kết quả không upscale theo DPI,
+preset high độc lập sampling, có chọn độ phân giải trong example. Windows/Linux
+đạt ba SDK: 108 package, 6 UVC adapter, 7 example tests, benchmark/endurance và
+Windows release build. Xem [review](FOURTH_LOG_REVIEW.md). Chưa xác nhận nét
+quang học hoặc GPU/24–168 h trên thiết bị thật sau bản sửa này.
+
 Cập nhật log treo GPU: đã thêm bitmap preview có backpressure/dispose, cấu hình
 example nhẹ hơn, dừng camera trước result và evict ảnh result có giới hạn decode.
 Windows/Linux đã đạt ba SDK: 108 package, 4 adapter UVC và 6 example tests,
@@ -41,20 +48,20 @@ từ CI/synthetic tests.
 
 ## Windows x64 SDK matrix đã chạy
 
-Nguồn được kiểm tra: commit `65948cf7a0332f858b4b578afb6375f0de92a931`.
-[Workflow xác nhận cuối](https://github.com/qualife1291/document_detect_windows/actions/runs/39944214256)
+Nguồn được kiểm tra: commit `7d789ded065afeab591f3e4761de49b3bb6458df`.
+[Workflow xác nhận cuối](https://github.com/qualife1291/document_detect_windows/actions/runs/40262146792)
 đã chạy package/example thành công trên cả ba SDK. Mỗi SDK có 108 package tests,
-6 example widget tests và 2 benchmark tests (detector và snapshot processing). Không skip,
+7 example widget tests và 2 benchmark tests (detector và snapshot processing). Không skip,
 disable hoặc expected-failure trong các suite này. Các artifact logs được tải
 qua GitHub API và giữ nguyên nội dung.
 
 | Flutter | pub get package/example | analyze package/example | Package / example / benchmark | Build example | Synthetic mean / FPS | Log |
 | --- | --- | --- | --- | --- | --- | --- |
-| 3.32.8 | Đạt / Đạt | Đạt / Đạt | 108 / 6 / 2 đạt | Đạt x64 release | 47.42 ms / 21.09 FPS | [logs](logs/windows-3.32.8/) |
-| 3.41.9 | Đạt / Đạt | Đạt / Đạt | 108 / 6 / 2 đạt | Đạt x64 release | 61.45 ms / 16.27 FPS | [logs](logs/windows-3.41.9/) |
-| 3.47.7 | Đạt / Đạt | Đạt / Đạt | 108 / 6 / 2 đạt | Đạt x64 release | 59.60 ms / 16.78 FPS | [logs](logs/windows-3.47.7/) |
+| 3.32.8 | Đạt / Đạt | Đạt / Đạt | 108 / 7 / 2 đạt | Đạt x64 release | 51.39 ms / 19.46 FPS | [logs](logs/windows-3.32.8/) |
+| 3.41.9 | Đạt / Đạt | Đạt / Đạt | 108 / 7 / 2 đạt | Đạt x64 release | 48.60 ms / 20.58 FPS | [logs](logs/windows-3.41.9/) |
+| 3.47.8 | Đạt / Đạt | Đạt / Đạt | 108 / 7 / 2 đạt | Đạt x64 release | 59.98 ms / 16.67 FPS | [logs](logs/windows-3.47.8/) |
 
-UVC adapter cũng pub get/analyze và 4 tests đạt cả ba SDK trong cùng Windows jobs.
+UVC adapter cũng pub get/analyze và 6 tests đạt cả ba SDK trong cùng Windows jobs.
 Toàn bộ ba Windows jobs đã đạt, gồm cả adapter camera_desktop trên 3.41.9
 và stable. [ci-provenance.json](logs/ci-provenance.json) lưu source SHA, job/step
 conclusions và artifact hashes. Source commit ở trên bao gồm regression tests
@@ -75,7 +82,7 @@ gian chờ stable feedback.
 ## Linux supplemental
 
 `tool/validate_linux.sh` đã chạy pub get/analyze/test cho package/adapter UVC/
-example trên Flutter 3.32.8, 3.41.9, 3.47.7. Mỗi SDK đạt 108 package tests, 4 UVC adapter và 6 widget
+example trên Flutter 3.32.8, 3.41.9, 3.47.7. Mỗi SDK đạt 108 package tests, 6 UVC adapter và 7 widget
 tests, 2 benchmark tests. Log và version thật ở [3.32.8](logs/linux-3.32.8/),
 [3.41.9](logs/linux-3.41.9/), [3.47.7](logs/linux-3.47.7/).
 Không dùng các kết quả Linux để chứng minh native Windows runtime.
@@ -153,13 +160,13 @@ Engine • hash 9161402dc0e134b3fb5adee5046b6e84b1a5e1c1 (revision 42d3d75a56) (
 Tools • Dart 3.11.5 • DevTools 2.54.2
 ```
 
-### Windows — Flutter 3.47.7
+### Windows — Flutter 3.47.8
 
 ```text
-Flutter 3.47.7 • channel stable • https://github.com/flutter/flutter.git
-Framework • revision abaf9c5237 (2 weeks ago) • 2026-10-08 09:51:21 -0700
-Engine • hash d8a2d6c768c334d53e16277f837970ffa1e2de81 (revision deb287481e) (15 days ago) • 2026-10-07 17:09:12.000Z
-Tools • Dart 3.13.5 • DevTools 2.60.0
+Flutter 3.47.8 • channel stable • https://github.com/flutter/flutter.git
+Framework • revision 737ba8f885 (3 days ago) • 2026-10-22 21:37:31 -0700
+Engine • hash dfd2e6cb7d319db05e3bf1503f3e2ac60f6288a2 (revision cf636b1dfb) (2 days ago) • 2026-10-23 02:13:38.000Z
+Tools • Dart 3.13.7 • DevTools 2.60.0
 ```
 
 ## Cấu hình cloud

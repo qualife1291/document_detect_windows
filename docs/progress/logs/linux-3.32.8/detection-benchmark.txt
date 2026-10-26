@@ -1,4 +1,4 @@
 00:00 +0: loading /workspace/document_detect_windows/tool/detection_benchmark.dart
 00:00 +0: synthetic 640px detection benchmark (not native preview latency)
-BENCHMARK os=linux mode=flutter-test synthetic=30 size=640x480 mean_ms=52.72 p95_ms=58.85 fps=18.97
+BENCHMARK os=linux mode=flutter-test synthetic=30 size=640x480 mean_ms=53.55 p95_ms=61.24 fps=18.67
 00:02 +1: All tests passed!

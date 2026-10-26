@@ -22,7 +22,7 @@ Downloading packages...
 + meta 1.16.0 (1.19.0 available)
 + path 1.9.1
 + petitparser 7.0.2 (7.1.0 available)
-+ posix 6.5.2
++ posix 6.5.3
 + sky_engine 0.0.0 from sdk flutter
 + source_span 1.10.1 (1.10.2 available)
 + stack_trace 1.12.1 (1.12.2 available)

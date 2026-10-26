@@ -1,10 +1,10 @@
-# Camera / continuous-operation review — 2026-10-23
+# Camera / continuous-operation review — 2026-10-26
 
 Linux validation passed on Flutter 3.32.8, 3.41.9 and 3.47.7: 108 package
-tests, 6 example tests, benchmark and 30 s endurance per SDK. Both optional
-desktop SDK analyzers also passed. Windows validation also passed on the same
-three SDKs, including release builds and 60 s synthetic endurance per SDK at
-source `65948cf`. Physical 24/7 acceptance remains
+tests, 7 example tests, benchmark and 30 s endurance per SDK. Both optional
+desktop SDK analyzers also passed. Windows validation passed on 3.32.8, 3.41.9
+and stable 3.47.8, including release builds and 60 s synthetic endurance per SDK at
+source `7d789de`. Physical 24/7 acceptance remains
 pending. This report distinguishes deterministic regression coverage from
 camera/driver and document-dataset evidence that is not available in cloud CI.
 
@@ -82,17 +82,17 @@ Raw [baseline](logs/hardening/linux-baseline-benchmark.txt) and
 
 ## Windows endurance on the committed source
 
-[Workflow](https://github.com/qualife1291/document_detect_windows/actions/runs/39944214256)
-validated `65948cf7a0332f858b4b578afb6375f0de92a931`. Each job also passed
-108 package tests, 6 example tests, benchmark and release build. Endurance logs
+[Workflow](https://github.com/qualife1291/document_detect_windows/actions/runs/40262146792)
+validated `7d789ded065afeab591f3e4761de49b3bb6458df`. Each job also passed
+108 package tests, 7 example tests, benchmark and release build. Endurance logs
 are in the corresponding `logs/windows-*/endurance.txt` and artifact provenance
 is in `logs/ci-provenance.json`.
 
 | Flutter | Duration | Offered frames | Reports | Dropped pending frames | Peak process RSS bytes |
 | --- | --- | --- | --- | --- | --- |
-| 3.32.8 | 60 s | 22860 | 1524 | 21336 | 146567168 |
-| 3.41.9 | 60 s | 21600 | 1440 | 20160 | 155193344 |
-| 3.47.7 | 60 s | 21540 | 1436 | 20104 | 158162944 |
+| 3.32.8 | 60 s | 20010 | 1334 | 18676 | 147357696 |
+| 3.41.9 | 60 s | 23520 | 1568 | 21952 | 153497600 |
+| 3.47.8 | 60 s | 21570 | 1438 | 20132 | 158777344 |
 
 These Windows tests use synthetic RGBA under flutter-test, without a camera,
 USB transport, native Texture or a kiosk's background workload. They verify
@@ -118,3 +118,10 @@ Bounded bitmap preview, immediate image disposal without painting, result camera
 stop/cache eviction and UVC lifecycle paths have regression coverage; UVC has
 4 additional adapter tests per SDK. This does not reproduce or certify recovery
 from the physical D3D device hang. See [GPU review](GPU_LOG_REVIEW.md).
+
+Fourth-log follow-up: a stream-identity regression caused bitmap clearing on
+UI rebuilds despite bounded memory. The new adapter/real-decoder rebuild tests
+cover it; result sizing is checked at 100/150/200% DPI and camera preset forwarding
+is checked across retake. Current per-SDK counts include 6 UVC adapter and
+7 example tests. [Fourth-log review](FOURTH_LOG_REVIEW.md) records physical log
+evidence and the limits of diagnosing optical blur without JPEG pixels.

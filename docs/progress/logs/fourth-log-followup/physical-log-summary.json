@@ -1,0 +1,42 @@
+{
+  "events": 148,
+  "duration_seconds": 95,
+  "sessions": 3,
+  "auto_captures": 3,
+  "successful_captures": 3,
+  "capture_processing_ms": [
+    437,
+    433,
+    438
+  ],
+  "snapshot_dimensions": [
+    1280,
+    720
+  ],
+  "crop_dimensions": [
+    [
+      782,
+      346
+    ],
+    [
+      781,
+      349
+    ],
+    [
+      798,
+      387
+    ]
+  ],
+  "analysis_fps": {
+    "min": 3.54,
+    "median": 5.0,
+    "max": 5.0
+  },
+  "running_rss_mib": {
+    "min": 168,
+    "max": 198
+  },
+  "library_errors": 0,
+  "gpu_error_lines_in_supplied_file": 0,
+  "jpeg_pixels_available_for_review": false
+}

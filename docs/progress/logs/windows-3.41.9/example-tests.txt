@@ -4,5 +4,6 @@
 00:02 +2: result waits for native stop and removes live preview before JPEG display
 00:03 +3: six capture/retake cycles evict only result images and stop camera on results
 00:05 +4: result display decode fits a cap and evicts cached image on close
-00:05 +5: all quality warnings remain readable on a reduced-motion kiosk
-00:06 +6: All tests passed!
+00:05 +5: result never enlarges decoded pixels at 100/150/200 percent DPI
+00:05 +6: all quality warnings remain readable on a reduced-motion kiosk
+00:06 +7: All tests passed!

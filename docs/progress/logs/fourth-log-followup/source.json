@@ -1,0 +1,24 @@
+{
+  "source_commit": "7d789ded065afeab591f3e4761de49b3bb6458df",
+  "windows_workflow": "https://github.com/qualife1291/document_detect_windows/actions/runs/40262146792",
+  "windows_sdks": [
+    "3.32.8",
+    "3.41.9",
+    "3.47.8"
+  ],
+  "linux_sdks": [
+    "3.32.8",
+    "3.41.9",
+    "3.47.7"
+  ],
+  "tests_per_sdk": {
+    "package": 108,
+    "uvc_adapter": 6,
+    "example": 7,
+    "benchmarks": 2
+  },
+  "linux_synthetic_endurance_seconds": 30,
+  "windows_synthetic_endurance_seconds": 60,
+  "physical_gpu_retest": false,
+  "physical_24h_soak": false
+}

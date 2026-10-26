@@ -126,3 +126,7 @@ Chưa xác nhận 24/7.
 Evidence update: `logs/windows-*`, `logs/linux-*` và provenance hiện được cập
 nhật theo lượt [GPU/performance follow-up](GPU_LOG_REVIEW.md); các số đo/source
 lịch sử trong bài này thuộc workflow được liên kết tại thời điểm review.
+
+Evidence update 2026-10-26: `logs/windows-*`, `logs/linux-*` và provenance hiện
+được cập nhật theo [fourth-log follow-up](FOURTH_LOG_REVIEW.md). Các số đo/source
+lịch sử trong bài vẫn thuộc workflow đã liên kết.

@@ -41,6 +41,12 @@ status/parent rebuild rồi kiểm tra dispose khi đóng.
 
 ## Ảnh mềm: giới hạn bằng chứng và thay đổi
 
+Đối chiếu source trước GPU follow-up (`b83c42c`): Image.memory không đặt fit,
+Flutter paintImage mặc định scaleDown. GPU follow-up chuyển sang
+CaptureResultImage với BoxFit.contain, vô tình cho phép phóng lớn ảnh crop. Đây
+là regression của cách trình bày kết quả; bản sửa này khôi phục scaleDown và
+bổ sung ánh xạ physical pixels theo DPI.
+
 Mã crop/JPEG/filter không đổi so với trước; log không có ảnh JPEG để đối chiếu
 chi tiết hoặc xác định focus/ánh sáng. Crop ~780×350 px có thể bị mềm khi bị kéo
 lớn trên màn hình. BoxFit.contain trước đó cho phép upscale và một logical pixel
@@ -65,3 +71,19 @@ Khi cần thêm chi tiết, đặt giấy gần hơn trong khi vẫn giữ đủ
 lớn hơn. Không đổi quality/blur thresholds hoặc bật enhance mặc định để làm log
 đẹp hơn. Cần đối chiếu originalJpeg/croppedJpeg thật để kết luận blur nằm ở
 sensor, warp hay hiển thị; log một mình không thay thế so sánh pixel.
+
+## Validation trên source đã commit
+
+Nguồn `7d789ded065afeab591f3e4761de49b3bb6458df`; [Windows CI](https://github.com/qualife1291/document_detect_windows/actions/runs/40262146792)
+đạt Flutter 3.32.8, 3.41.9, stable 3.47.8: analyze, 108 package, 6 UVC adapter,
+7 example tests; hai benchmark, endurance 60 s/SDK và release build Windows x64.
+Linux 3.32.8/3.41.9/3.47.7 đạt analyze/tests/benchmark/endurance 30 s. Optional
+desktop adapter analyze đạt trên 3.41.9, Linux 3.47.7 và Windows 3.47.8.
+Không skip/disable tests. Validation script clean
+cả UVC widget-test assets khi đổi SDK để tránh dùng shader cache khác phiên bản.
+[Provenance và artifact hashes](logs/ci-provenance.json),
+[source/coverage summary](logs/fourth-log-followup/source.json).
+
+Chỉ tài liệu/evidence thay đổi sau source đã CI. Rebuild/DPI tests xác minh cơ chế
+đã tái hiện; camera/driver/độ nét bản mới vẫn cần retest thực tế. Hosted endurance
+không thay physical soak và benchmark không đo preview latency/CPU máy yếu.
