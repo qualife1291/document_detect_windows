@@ -238,6 +238,27 @@ img.Image warpPerspective(
       ).any((v) => v <= 0)) {
     throw ArgumentError('Expected a convex clockwise in-frame quadrilateral');
   }
+  // Exact integer, axis-aligned corners describe inclusive source pixels.
+  // Preserve them byte-for-byte instead of mapping N pixels to N-1 and blurring
+  // high-frequency text. Never snap a fractional or perspective quadrilateral.
+  final rect = _pixelCrop(q);
+  if (rect != null && rect.width * rect.height > 33554432) {
+    throw ArgumentError('Crop too large');
+  }
+  if (rect != null &&
+      source.format == img.Format.uint8 &&
+      !source.hasPalette &&
+      source.numChannels >= 3 &&
+      (maxOutputDimension == null ||
+          math.max(rect.width, rect.height) <= maxOutputDimension)) {
+    return img.copyCrop(
+      source,
+      x: rect.left.toInt(),
+      y: rect.top.toInt(),
+      width: rect.width.toInt(),
+      height: rect.height.toInt(),
+    );
+  }
   var w = math.max(
     2,
     math.max((q[1] - q[0]).distance, (q[2] - q[3]).distance).round(),
@@ -313,6 +334,24 @@ img.Image warpPerspective(
     }
   }
   return output;
+}
+
+Rect? _pixelCrop(List<Offset> q) {
+  if (q.any(
+        (p) => p.dx != p.dx.roundToDouble() || p.dy != p.dy.roundToDouble(),
+      ) ||
+      q[0].dy != q[1].dy ||
+      q[1].dx != q[2].dx ||
+      q[2].dy != q[3].dy ||
+      q[3].dx != q[0].dx) {
+    return null;
+  }
+  return Rect.fromLTWH(
+    q[0].dx,
+    q[0].dy,
+    q[1].dx - q[0].dx + 1,
+    q[3].dy - q[0].dy + 1,
+  );
 }
 
 class _CropOutcome {

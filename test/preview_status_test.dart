@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ui' show Size;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:windows_doc_capture/windows_doc_capture.dart';
 import 'controller_test.dart' show FakeSource;
@@ -72,6 +73,44 @@ class _CountingSource extends FakeSource {
 }
 
 void main() {
+  test(
+    'native document pixel estimate respects portrait and landscape geometry',
+    () {
+      final id = DocumentPreviewStatus(
+        state: DocumentPreviewState.clear,
+        normalizedQuad: const [
+          Offset(.1, .2),
+          Offset(.9, .2),
+          Offset(.9, .8),
+          Offset(.1, .8),
+        ],
+      );
+      expect(
+        id.documentPixelSize(const Size(1280, 720))!.width,
+        closeTo(1024, .01),
+      );
+      final portrait = DocumentPreviewStatus(
+        state: DocumentPreviewState.clear,
+        normalizedQuad: const [
+          Offset(.35, .05),
+          Offset(.65, .05),
+          Offset(.65, .95),
+          Offset(.35, .95),
+        ],
+      );
+      final size = portrait.documentPixelSize(const Size(1280, 720))!;
+      expect(size.width, closeTo(384, .01));
+      expect(size.height, closeTo(648, .01));
+      expect(id.documentPixelSize(Size.zero), isNull);
+      expect(
+        DocumentPreviewStatus(
+          state: DocumentPreviewState.noDocument,
+        ).documentPixelSize(const Size(1280, 720)),
+        isNull,
+      );
+    },
+  );
+
   TestWidgetsFlutterBinding.ensureInitialized();
   test(
     'live detection and enum callbacks work with auto capture disabled',

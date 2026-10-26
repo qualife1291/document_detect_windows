@@ -3,8 +3,8 @@
 #
 
 list(APPEND FLUTTER_PLUGIN_LIST
-  flutter_ffi_uvc
   windows_doc_capture
+  windows_doc_capture_uvc_backend
 )
 
 list(APPEND FLUTTER_FFI_PLUGIN_LIST

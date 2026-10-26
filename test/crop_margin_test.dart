@@ -121,7 +121,8 @@ void main() {
         img.Image(width: 100, height: 100),
         result.quad,
       );
-      expect(crop.width, 71);
+      // Exact aligned corners include both boundary pixels (0 through 71).
+      expect(crop.width, 72);
       final touching = [
         const Offset(0, 20),
         ...q.skip(1).take(2),

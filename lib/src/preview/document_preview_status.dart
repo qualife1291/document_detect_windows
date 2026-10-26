@@ -1,4 +1,5 @@
 import 'dart:ui';
+import 'dart:math' as math;
 import '../detection/quality_analyzer.dart';
 import '../warnings/preview_warning.dart';
 
@@ -66,6 +67,27 @@ class DocumentPreviewStatus {
   final List<Offset>? normalizedQuad;
   final List<PreviewWarning> warnings;
   final QualityReport? report;
+
+  /// Approximate document edge lengths in the negotiated source pixels, before
+  /// padding/perspective correction. Aspect-aware guidance, not an OCR or focus
+  /// guarantee. Pass actual camera size, never the widget or analysis size.
+  Size? documentPixelSize(Size sourceSize) {
+    final quad = normalizedQuad;
+    if (quad == null ||
+        !sourceSize.width.isFinite ||
+        !sourceSize.height.isFinite ||
+        sourceSize.width <= 0 ||
+        sourceSize.height <= 0) {
+      return null;
+    }
+    final q = quad
+        .map((p) => Offset(p.dx * sourceSize.width, p.dy * sourceSize.height))
+        .toList();
+    return Size(
+      math.max((q[1] - q[0]).distance, (q[2] - q[3]).distance),
+      math.max((q[3] - q[0]).distance, (q[2] - q[1]).distance),
+    );
+  }
 
   bool get isClear =>
       normalizedQuad != null &&

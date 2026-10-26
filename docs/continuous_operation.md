@@ -72,7 +72,7 @@ memory; each contains both original and cropped JPEG. Dispose result screens and
 apply an explicit storage retention/quota policy for continuous use.
 
 The example defaults to high/200 ms analysis, preferred native 15 FPS and bitmap
-preview ≤640 px after the third physical log showed D3D device loss. The fifth-log
+preview (now adaptive balanced ≤960 px, falling back to640) after the third physical log showed D3D device loss. The fifth-log
 fix separates bitmap offers (target ~15 FPS) from analysis (~5 FPS). A session
 readiness handle prevents preview-only readbacks while decoding/unmounted; an
 optional PreviewSamplingSource predicate pauses them during capture/teardown.
@@ -161,3 +161,13 @@ No physical acceptance row is marked passed solely from source review or CI.
 
 Review findings and measured development endurance output are recorded in
 [HARDENING_REVIEW](progress/HARDENING_REVIEW.md).
+
+
+## Adaptive preview integration
+
+See [integration performance](integration-performance.md). Native sampling now
+bounds FFI transfer before Dart, and decode/UI costs inform preview adaptation.
+Hidden TickerMode/inactive consumers suppress bitmap demand only: the host must
+await stop for native producer/analysis shutdown. No app-global image-cache clear,
+frame queue or periodic restart is added. Native full-stream conversion, host UI,
+other camera owners and driver behavior still need profile/release measurements.

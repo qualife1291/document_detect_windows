@@ -4,6 +4,21 @@ This changelog follows Keep a Changelog. No production release has been made.
 
 ## [Unreleased]
 
+### Adaptive preview and captured detail
+
+- Fix additive sampling-cost cadence drift. Add independent bitmap profiles
+  640/960/1280, native bounded sampling, bilinear preview, and conservative load
+  recovery based on sampling/decode/host UI costs. No frame queues or upscaling.
+- Isolate the Windows backend package, DLL, registration and channels from the
+  upstream plugin. Preserve BSD license/provenance; snapshots remain full size.
+- Pause bitmap demand for TickerMode-disabled/inactive consumers; reject late
+  decode after session changes even with a reused stream. Release timing hooks.
+- Exact pixel-aligned crops retain inclusive edge pixels without interpolation;
+  perspective/fractional warps and outward padding keep their behavior.
+- Example JPEG92, actual resolution/MP and aspect-aware native document-size
+  guidance; public documentPixelSize helper and additional safe health metrics.
+- See docs/integration-performance.md for rebuild and host integration budgets.
+
 ### Fifth physical-log follow-up: independent bitmap cadence
 
 - Split cached analysis and bitmap streams; request about 15 FPS for example

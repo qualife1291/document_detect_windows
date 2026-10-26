@@ -16,6 +16,8 @@ Future<void> main(List<String> arguments) async {
     'example/lib',
     'example/test',
     'example/integration_test',
+    'adapters/windows_doc_capture_uvc_backend/lib',
+    'adapters/windows_doc_capture_uvc_backend/test',
     'adapters/windows_doc_capture_uvc/lib',
     'adapters/windows_doc_capture_uvc/test',
     'adapters/windows_doc_capture_desktop/lib',

@@ -10,7 +10,8 @@ dependencies:
     sdk: flutter
   windows_doc_capture:
     path: ../..
-  flutter_ffi_uvc: 1.1.2
+  windows_doc_capture_uvc_backend:
+    path: ../windows_doc_capture_uvc_backend
 dev_dependencies:
   flutter_test:
     sdk: flutter

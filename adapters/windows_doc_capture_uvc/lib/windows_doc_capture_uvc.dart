@@ -1,12 +1,14 @@
 import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
-import 'dart:typed_data';
 import 'package:flutter/widgets.dart';
-import 'package:flutter_ffi_uvc/flutter_ffi_uvc.dart';
+import 'package:windows_doc_capture_uvc_backend/windows_doc_capture_uvc_backend.dart';
 import 'package:windows_doc_capture/windows_doc_capture.dart';
 
 enum UvcPreviewMode { texture, bitmap }
+
+/// Independent from the camera/snapshot resolution preset.
+enum BitmapPreviewProfile { lowResource, balanced, detail }
 
 /// Experimental candidate. Texture is the default; bitmap is an explicit,
 /// bounded low-rate fallback that does not register a Flutter external texture.
@@ -21,6 +23,7 @@ class UvcFrameSource
     this.previewMode = UvcPreviewMode.texture,
     this.pollInterval = const Duration(milliseconds: 100),
     this.preferredNativeFps = 30,
+    this.bitmapPreviewProfile = BitmapPreviewProfile.balanced,
     this.bitmapPreviewInterval = const Duration(milliseconds: 66),
   }) : _testCamera = null {
     _validateInterval();
@@ -31,6 +34,7 @@ class UvcFrameSource
     this.previewMode = UvcPreviewMode.texture,
     this.pollInterval = const Duration(milliseconds: 100),
     this.preferredNativeFps = 30,
+    this.bitmapPreviewProfile = BitmapPreviewProfile.balanced,
     this.bitmapPreviewInterval = const Duration(milliseconds: 66),
   }) : _testCamera = camera {
     _validateInterval();
@@ -42,6 +46,30 @@ class UvcFrameSource
   /// a busy decoder reduces actual offers; this is not a display-FPS guarantee.
   final Duration bitmapPreviewInterval;
   final int preferredNativeFps;
+  final BitmapPreviewProfile bitmapPreviewProfile;
+  int get _load => _bitmapDemand?.loadLevel ?? 0;
+  int get _previewMaximum => switch (bitmapPreviewProfile) {
+    BitmapPreviewProfile.lowResource => 640,
+    BitmapPreviewProfile.balanced => _load == 0 ? 960 : 640,
+    BitmapPreviewProfile.detail =>
+      _load == 0
+          ? 1280
+          : _load == 1
+          ? 960
+          : 640,
+  };
+  Duration get _previewInterval => Duration(
+    microseconds:
+        math.max(
+          bitmapPreviewInterval.inMicroseconds,
+          bitmapPreviewProfile == BitmapPreviewProfile.lowResource
+              ? 100000
+              : 50000,
+        ) *
+        (2 + _load) ~/
+        2,
+  );
+  int _sampleWidth = 0, _sampleHeight = 0;
   final UvcCamera? _testCamera;
   bool _streaming = false;
   void _validateInterval() {
@@ -73,7 +101,7 @@ class UvcFrameSource
   late final Stream<FrameBuffer> _bitmapStream = _bitmapFrames.stream;
   BitmapPreviewDemand? _bitmapDemand;
   final _samplingClock = Stopwatch();
-  Duration? _lastAnalysisAt, _lastBitmapAt, _lastReadAt;
+  Duration? _lastAnalysisAt, _lastBitmapAt, _lastPreviewSampleAt, _lastReadAt;
   int _bitmapOffers = 0, _samples = 0, _sampleTotalUs = 0, _sampleMaxUs = 0;
   double _sampleEwmaUs = 0;
 
@@ -81,8 +109,8 @@ class UvcFrameSource
     // Approximate copy/downsample duty budget for extra preview reads. Analysis
     // may still need work sooner; this is not a bound on total app CPU.
     microseconds: math.max(
-      bitmapPreviewInterval.inMicroseconds,
-      (_sampleEwmaUs * 4).ceil(),
+      _previewInterval.inMicroseconds,
+      (_sampleEwmaUs * 5).ceil(),
     ),
   );
 
@@ -99,6 +127,12 @@ class UvcFrameSource
           requestedInterval: bitmapPreviewInterval,
           effectiveInterval: _readbackInterval,
           lastOfferedAt: _lastBitmapAt,
+          previewWidth: _sampleWidth,
+          previewHeight: _sampleHeight,
+          loadLevel: _load,
+          previewInterval: _previewInterval,
+          decodeTime: _bitmapDemand?.lastDecodeTime ?? Duration.zero,
+          uiFrameTime: _bitmapDemand?.lastUiFrameTime ?? Duration.zero,
         );
 
   bool _due(Duration now, Duration? last, Duration interval) =>
@@ -228,27 +262,17 @@ class UvcFrameSource
       _samplingClock
         ..reset()
         ..start();
-      _lastAnalysisAt = _lastBitmapAt = _lastReadAt = null;
+      _lastAnalysisAt = _lastBitmapAt = _lastPreviewSampleAt = _lastReadAt =
+          null;
       _bitmapOffers = _samples = _sampleTotalUs = _sampleMaxUs = 0;
       _sampleEwmaUs = 0;
+      _sampleWidth = _sampleHeight = 0;
       _liveness
         ..reset()
         ..start();
       final tick = previewMode == UvcPreviewMode.texture
           ? pollInterval
-          : Duration(
-              microseconds: math.max(
-                16000,
-                math.min(
-                  33000,
-                  math.min(
-                        pollInterval.inMicroseconds,
-                        bitmapPreviewInterval.inMicroseconds,
-                      ) ~/
-                      2,
-                ),
-              ),
-            );
+          : const Duration(milliseconds: 16);
       _timer = Timer.periodic(tick, (_) => _poll());
     } catch (_) {
       await _stop();
@@ -283,63 +307,53 @@ class UvcFrameSource
           _bitmapDemand?.canAcceptFrame == true &&
           _bitmapFrames.hasListener &&
           (_previewAllowed?.call() ?? true) &&
-          _due(now, _lastBitmapAt, bitmapPreviewInterval);
+          _due(now, _lastPreviewSampleAt, _previewInterval) &&
+          _due(now, _lastReadAt, _readbackInterval);
       final extraReadAllowed = _due(now, _lastReadAt, _readbackInterval);
       if (!analysis && !(preview && extraReadAllowed)) return;
       if (analysis) _lastAnalysisAt = now;
       final cost = Stopwatch()..start();
-      final raw = camera.copyLatestFrame();
+      final sampled = camera.copyLatestSampledFrames(
+        analysisMaxDimension: analysis ? 640 : 0,
+        previewMaxDimension: preview ? _previewMaximum : 0,
+      );
+      if (sampled == null) return;
+      final raw = sampled.analysis ?? sampled.preview;
       if (raw == null) return;
       _sequence = raw.sequence;
       _liveness
         ..reset()
         ..start();
-      // Analysis and optional bitmap preview share this bounded buffer. Native
-      // Texture does not read it. Full RGBA is copied first: profile that cost.
-      final width = math.max(
-            2,
-            (raw.width * math.min(1, 640 / math.max(raw.width, raw.height)))
-                .round(),
-          ),
-          height = math.max(
-            2,
-            math.min(640, (raw.height * width / raw.width).round()),
-          );
-      final rgba = Uint8List(width * height * 4);
-      for (var y = 0; y < height; y++) {
-        for (var x = 0; x < width; x++) {
-          final from =
-              ((y * raw.height ~/ height) * raw.width +
-                  x * raw.width ~/ width) *
-              4;
-          final to = (y * width + x) * 4;
-          rgba[to] = raw.rgbaBytes[from];
-          rgba[to + 1] = raw.rgbaBytes[from + 1];
-          rgba[to + 2] = raw.rgbaBytes[from + 2];
-          rgba[to + 3] = 255;
-        }
-      }
       cost.stop();
       final us = cost.elapsedMicroseconds;
       _lastReadAt = now;
+      _bitmapDemand?.recordSamplingCost(cost.elapsed);
       _samples++;
       _sampleTotalUs += us;
       _sampleMaxUs = math.max(_sampleMaxUs, us);
       _sampleEwmaUs = _samples == 1
           ? us.toDouble()
           : _sampleEwmaUs * .875 + us * .125;
-      final frame = FrameBuffer(
-        width: width,
-        height: height,
-        rgba: rgba,
-        capturedAt: DateTime.now(),
+      final capturedAt = DateTime.now();
+      FrameBuffer frame(UvcPreviewFrame raw) => FrameBuffer(
+        width: raw.width,
+        height: raw.height,
+        rgba: raw.rgbaBytes,
+        capturedAt: capturedAt,
         sequence: raw.sequence,
       );
-      if (analysis) _frames.add(frame);
-      if (preview) {
+      if (analysis && sampled.analysis != null) {
+        _frames.add(frame(sampled.analysis!));
+      }
+      if (preview && sampled.preview != null) {
+        // Reserve from sampling start. Copy/decode cost must not accumulate
+        // in every requested period. Never catch up missed frames in a loop.
+        _lastPreviewSampleAt = now;
         _lastBitmapAt = _samplingClock.elapsed;
+        _sampleWidth = sampled.preview!.width;
+        _sampleHeight = sampled.preview!.height;
         _bitmapOffers++;
-        _bitmapFrames.add(frame);
+        _bitmapFrames.add(frame(sampled.preview!));
       }
     } catch (_) {
       _timer?.cancel();
@@ -373,6 +387,7 @@ class UvcFrameSource
       return RgbaCameraPreview(
         frames: _bitmapStream,
         frameDemand: _bitmapDemand,
+        maxDimension: 1280,
         onDecodeError: (_, __) {
           if (_streaming) {
             _frames.addError(

@@ -3,7 +3,7 @@ import 'dart:typed_data';
 import 'dart:ui' as ui;
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:flutter_ffi_uvc/flutter_ffi_uvc.dart';
+import 'package:windows_doc_capture_uvc_backend/windows_doc_capture_uvc_backend.dart';
 import 'package:windows_doc_capture/windows_doc_capture.dart';
 import 'package:windows_doc_capture_uvc/windows_doc_capture_uvc.dart';
 
@@ -97,6 +97,7 @@ class Camera extends Fake implements UvcCamera {
   @override
   UvcPreviewFrame? copyLatestFrame() {
     copies++;
+    fullCopies++;
     final work = Stopwatch()..start();
     while (work.elapsed < copyWork) {
       /* deterministic native readback cost */
@@ -106,6 +107,37 @@ class Camera extends Fake implements UvcCamera {
       height: mode.height,
       rgbaBytes: Uint8List(mode.width * mode.height * 4),
       sequence: sequence,
+    );
+  }
+
+  int fullCopies = 0;
+  final requestedSamples = <(int, int)>[];
+  @override
+  UvcSampledFrames? copyLatestSampledFrames({
+    int analysisMaxDimension = 0,
+    int previewMaxDimension = 0,
+  }) {
+    requestedSamples.add((analysisMaxDimension, previewMaxDimension));
+    copies++;
+    final work = Stopwatch()..start();
+    while (work.elapsed < copyWork) {
+      /* native sampling cost */
+    }
+    UvcPreviewFrame? sample(int maximum) {
+      if (maximum == 0) return null;
+      final scale = maximum < mode.width ? maximum / mode.width : 1.0;
+      final w = (mode.width * scale).round(), h = (mode.height * scale).round();
+      return UvcPreviewFrame(
+        width: w,
+        height: h,
+        rgbaBytes: Uint8List(w * h * 4),
+        sequence: sequence,
+      );
+    }
+
+    return UvcSampledFrames(
+      analysis: sample(analysisMaxDimension),
+      preview: sample(previewMaxDimension),
     );
   }
 
@@ -161,6 +193,123 @@ Future<void> advance(WidgetTester tester, int milliseconds) async {
 }
 
 void main() {
+  testWidgets(
+    'profiles bound 8MP samples while snapshots retain every native pixel',
+    (tester) async {
+      final seed = (await tester.runAsync(previewImage))!;
+      for (final entry in [
+        (BitmapPreviewProfile.lowResource, 640),
+        (BitmapPreviewProfile.balanced, 960),
+        (BitmapPreviewProfile.detail, 1280),
+      ]) {
+        final camera = Camera()
+          ..modesOverride = [
+            const UvcCameraMode(
+              frameFormat: 1,
+              formatName: 'synthetic',
+              width: 3264,
+              height: 2448,
+              fps: 15,
+            ),
+          ];
+        final source = UvcFrameSource.testing(
+          camera: camera,
+          previewMode: UvcPreviewMode.bitmap,
+          bitmapPreviewProfile: entry.$1,
+          pollInterval: const Duration(milliseconds: 200),
+        );
+        source.analysisWanted = () => true;
+        final sub = source.frames.listen((frame) {
+          expect(frame.width, 640);
+          expect(frame.height, 480);
+        });
+        await tester.runAsync(
+          () => source.start(preset: ResolutionPreset.veryHigh),
+        );
+        final built = source.buildPreview() as RgbaCameraPreview;
+        try {
+          await tester.pumpWidget(
+            RgbaCameraPreview.testing(
+              frames: built.frames,
+              maxDimension: 1280,
+              frameDemand: built.frameDemand,
+              decodeFrame: (_) => Future.value(seed.clone()),
+            ),
+          );
+          await advance(tester, 220);
+          expect(camera.fullCopies, 0);
+          final metrics = source.bitmapPreviewMetrics!;
+          expect(metrics.previewWidth, entry.$2);
+          expect(metrics.previewHeight, entry.$2 * 3 ~/ 4);
+          source.analysisWanted = () => false;
+          source.previewSamplingAllowed = () => false;
+          final snapshot = (await tester.runAsync(
+            source.latestFullResolutionFrame,
+          ))!;
+          expect(snapshot.width, 3264);
+          expect(snapshot.height, 2448);
+          expect(camera.fullCopies, 1);
+        } finally {
+          await tester.pumpWidget(const SizedBox.shrink());
+          await tester.runAsync(() async {
+            await sub.cancel();
+            await source.stop();
+            await camera.events.close();
+          });
+        }
+      }
+      seed.dispose();
+    },
+  );
+
+  testWidgets('10ms readback preserves cadence without full preview copies', (
+    tester,
+  ) async {
+    final camera = smallCamera()..copyWork = const Duration(milliseconds: 10);
+    final source = UvcFrameSource.testing(
+      camera: camera,
+      previewMode: UvcPreviewMode.bitmap,
+      pollInterval: const Duration(milliseconds: 200),
+    );
+    source.analysisWanted = () => false;
+    final seed = (await tester.runAsync(previewImage))!;
+    await tester.runAsync(source.start);
+    final built = source.buildPreview() as RgbaCameraPreview;
+    try {
+      await tester.pumpWidget(
+        RgbaCameraPreview.testing(
+          frames: built.frames,
+          frameDemand: built.frameDemand,
+          decodeFrame: (_) => Future.value(seed.clone()),
+        ),
+      );
+      await advance(
+        tester,
+        800,
+      ); // before governor's first one-second evaluation
+      expect(
+        source.bitmapPreviewMetrics!.offeredFrames,
+        inInclusiveRange(10, 14),
+      );
+      expect(camera.fullCopies, 0);
+      expect(
+        camera.requestedSamples.every((r) => r.$1 == 0 && r.$2 == 960),
+        isTrue,
+      );
+      source.previewSamplingAllowed = () => false;
+      final full = (await tester.runAsync(source.latestFullResolutionFrame))!;
+      expect(camera.fullCopies, 1);
+      expect(full.width, camera.mode.width);
+    } finally {
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.runAsync(() async {
+        await source.stop();
+        await camera.events.close();
+      });
+      seed.dispose();
+    }
+  });
+
   test('frame stream identity survives repeated preview builds', () async {
     final camera = Camera();
     final source = UvcFrameSource.testing(
@@ -280,7 +429,7 @@ void main() {
         expect(preview.length, lessThanOrEqualTo(18));
         expect(camera.copies, lessThan(analysis.length + preview.length));
         expect(
-          analysis.any((a) => preview.any((p) => identical(a, p))),
+          analysis.any((a) => preview.any((p) => a.sequence == p.sequence)),
           isTrue,
         );
         source.previewSamplingAllowed = () => false;
@@ -404,7 +553,7 @@ void main() {
       );
       expect(
         metrics.effectiveInterval,
-        greaterThanOrEqualTo(const Duration(milliseconds: 240)),
+        greaterThanOrEqualTo(const Duration(milliseconds: 300)),
       );
       expect(metrics.offeredFrames, inInclusiveRange(1, 6));
       expect(camera.copies, metrics.offeredFrames);

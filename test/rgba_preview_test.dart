@@ -18,6 +18,95 @@ Future<ui.Image> image() async {
 
 void main() {
   testWidgets(
+    'new session rejects late decode even when its stream is reused',
+    (tester) async {
+      final frames = StreamController<FrameBuffer>.broadcast();
+      final stream = frames.stream;
+      final oldDemand = BitmapPreviewDemand(),
+          newDemand = BitmapPreviewDemand();
+      final gate = Completer<ui.Image>();
+      var calls = 0;
+      Widget tree(BitmapPreviewDemand demand) => RgbaCameraPreview.testing(
+        frames: stream,
+        frameDemand: demand,
+        decodeFrame: (_) {
+          calls++;
+          return gate.future;
+        },
+      );
+      await tester.pumpWidget(tree(oldDemand));
+      frames.add(fixture(width: 8, height: 8));
+      await tester.pump();
+      await tester.pumpWidget(tree(newDemand));
+      expect(oldDemand.canAcceptFrame, isFalse);
+      expect(newDemand.canAcceptFrame, isFalse);
+      frames.add(fixture(width: 8, height: 8));
+      await tester.pump();
+      expect(calls, 1); // no overlapping native decoder
+      final late = (await tester.runAsync(image))!;
+      gate.complete(late);
+      await tester.pumpAndSettle();
+      expect(late.debugDisposed, isTrue);
+      expect(tester.widget<RawImage>(find.byType(RawImage)).image, isNull);
+      expect(newDemand.canAcceptFrame, isTrue);
+      await tester.pumpWidget(const SizedBox.shrink());
+      await frames.close();
+    },
+  );
+
+  testWidgets(
+    'hidden and inactive consumers refuse new decode and recover safely',
+    (tester) async {
+      final frames = StreamController<FrameBuffer>.broadcast();
+      final demand = BitmapPreviewDemand();
+      var decodes = 0;
+      final seed = (await tester.runAsync(image))!;
+      final stableStream = frames.stream;
+      Widget tree(bool enabled) => TickerMode(
+        enabled: enabled,
+        child: RgbaCameraPreview.testing(
+          frames: stableStream,
+          frameDemand: demand,
+          decodeFrame: (_) async {
+            decodes++;
+            return seed.clone();
+          },
+        ),
+      );
+      try {
+        await tester.pumpWidget(tree(false));
+        expect(demand.canAcceptFrame, isFalse);
+        frames.add(fixture(width: 8, height: 8));
+        await tester.pump();
+        expect(decodes, 0);
+        await tester.pumpWidget(tree(true));
+        expect(demand.canAcceptFrame, isTrue);
+        tester.binding.handleAppLifecycleStateChanged(
+          AppLifecycleState.inactive,
+        );
+        expect(demand.canAcceptFrame, isFalse);
+        frames.add(fixture(width: 8, height: 8));
+        await tester.pump();
+        expect(decodes, 0);
+        tester.binding.handleAppLifecycleStateChanged(
+          AppLifecycleState.resumed,
+        );
+        frames.add(fixture(width: 8, height: 8));
+        await tester.pumpAndSettle();
+        expect(decodes, 1);
+      } finally {
+        tester.binding.handleAppLifecycleStateChanged(
+          AppLifecycleState.resumed,
+        );
+        await tester.pumpWidget(const SizedBox.shrink());
+        expect(demand.canAcceptFrame, isFalse);
+        seed.dispose();
+        await frames.close();
+      }
+    },
+  );
+
+  testWidgets(
     'bitmap preview drops busy frames and disposes replaced/closed images',
     (tester) async {
       final frames = StreamController<FrameBuffer>.broadcast();

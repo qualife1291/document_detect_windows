@@ -35,8 +35,8 @@ dependencies:
     path: ../document_detect_windows/adapters/windows_doc_capture_uvc
 ```
 
-No camera backend is silently selected. `flutter_ffi_uvc` is explicitly selected
-by the example as an **experimental candidate**, not a measured default. The
+No camera backend is silently selected. A Windows-only internal backend derived
+from BSD `flutter_ffi_uvc` 1.1.2 is explicitly selected by the example as an **experimental candidate**, not a measured default. The
 optional `adapters/windows_doc_capture_desktop` uses `camera_desktop` and requires
 Dart 3.11 / Flutter 3.41.9. It is outside the default dependency graph. Real Windows
 measurements must choose the production backend.
@@ -63,7 +63,7 @@ There is no login or authentication layer in this local example.
 The example defaults to **Cân bằng / high** capture resolution and bounded bitmap
 preview: 200 ms analysis sampling (about 5 FPS), independent bitmap delivery
 requesting about 15 FPS, a preferred native 15 FPS mode where available, and
-bitmap longest side ≤640 px. Busy decoders, capture/start/teardown and expensive
+adaptive balanced bitmap longest side ≤960 px (640 under load). Busy decoders, capture/start/teardown and expensive
 native readback reduce actual delivery; no frame history is queued.
 This explicitly avoids registering a camera external texture. For comparison on
 a stable driver, opt back into the previous example configuration:
@@ -91,10 +91,16 @@ resolution; the result display cap does not resize saved bytes.
 default 15); set it to 5 to compare the previous low-rate preview. Analysis and
 corner/enum updates remain at their configured rate, so moving corners can lag
 between reports even when the camera image updates more often. The adapter
-shares one sampled frame when analysis and preview are due together, checks
+samples both bounded outputs natively from one frame when due together, checks
 upstream decoder demand before extra readbacks and pauses extra preview work
 during capture. A readback-cost EWMA backs off preview-only sampling; it is not
 a guarantee for total app CPU, GPU FPS, hardware latency or 24/7 uptime.
+`DOC_CAPTURE_PREVIEW_PROFILE=lowResource|balanced|detail` selects 640/960/1280 px
+without upscaling. Load from sampling, decode and host UI frames reduces size and
+cadence; recovery is gradual. Example JPEG quality is 92; package default stays 90.
+The example shows actual camera MP and document-size/focus guidance. See
+[integration performance](docs/integration-performance.md) for code, profile
+budgets, lifecycle/hidden-route requirements, native backend migration and logs.
 
 The UVC bitmap path keeps stable stream identities across status/UI rebuilds.
 It retains the last decoded frame while waiting for another, avoiding a repeated

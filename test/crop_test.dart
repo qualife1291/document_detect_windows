@@ -5,6 +5,43 @@ import 'package:windows_doc_capture/windows_doc_capture.dart';
 import 'fixtures.dart';
 
 void main() {
+  test('exact rectangular crop preserves fine print and all edge pixels', () {
+    final source = img.Image(width: 40, height: 30, numChannels: 4);
+    for (var y = 0; y < 30; y++) {
+      for (var x = 0; x < 40; x++) {
+        source.setPixelRgba(x, y, x.isEven ? 255 : 0, y * 7, x + y, 255);
+      }
+    }
+    final crop = warpPerspective(source, const [
+      Offset(4, 3),
+      Offset(35, 3),
+      Offset(35, 26),
+      Offset(4, 26),
+    ]);
+    expect(crop.width, 32);
+    expect(crop.height, 24);
+    for (var y = 0; y < crop.height; y++) {
+      for (var x = 0; x < crop.width; x++) {
+        final a = crop.getPixel(x, y), b = source.getPixel(x + 4, y + 3);
+        expect([a.r, a.g, a.b], [b.r, b.g, b.b]);
+      }
+    }
+    final limited = warpPerspective(source, const [
+      Offset(4, 3),
+      Offset(35, 3),
+      Offset(35, 26),
+      Offset(4, 26),
+    ], maxOutputDimension: 20);
+    expect(limited.width, 20);
+    final fractional = warpPerspective(source, const [
+      Offset(4.5, 3),
+      Offset(35.5, 3),
+      Offset(35.5, 26),
+      Offset(4.5, 26),
+    ]);
+    expect(fractional.getPixel(0, 0).r, inInclusiveRange(127, 128));
+    expect(source.width, 40);
+  });
   test('perspective inverse mapping preserves all four colored corners', () {
     final source = img.Image(width: 100, height: 80);
     for (var y = 0; y < 80; y++) {

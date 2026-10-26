@@ -81,11 +81,19 @@ class BitmapPreviewMetrics {
     required this.requestedInterval,
     required this.effectiveInterval,
     this.lastOfferedAt,
+    this.previewWidth = 0,
+    this.previewHeight = 0,
+    this.loadLevel = 0,
+    this.previewInterval = Duration.zero,
+    this.decodeTime = Duration.zero,
+    this.uiFrameTime = Duration.zero,
   });
   final Duration elapsed, totalSamplingTime, maxSamplingTime;
   final Duration requestedInterval, effectiveInterval;
   final Duration? lastOfferedAt;
   final int offeredFrames, sampledFrames;
+  final int previewWidth, previewHeight, loadLevel;
+  final Duration previewInterval, decodeTime, uiFrameTime;
 }
 
 abstract interface class BitmapPreviewDiagnostics {

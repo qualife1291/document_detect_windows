@@ -189,6 +189,11 @@ class CaptureDiagnostics {
       if (bitmap != null) ...{
         'bitmapOfferedFps': double.parse(bitmapFps.toStringAsFixed(2)),
         'bitmapOfferedFrames': bitmap.offeredFrames,
+        'bitmapSize': [bitmap.previewWidth, bitmap.previewHeight],
+        'bitmapLoadLevel': bitmap.loadLevel,
+        'bitmapCadenceMs': bitmap.previewInterval.inMicroseconds / 1000,
+        'bitmapDecodeMs': bitmap.decodeTime.inMicroseconds / 1000,
+        'appFrameCostMs': bitmap.uiFrameTime.inMicroseconds / 1000,
         'bitmapLastOfferAgeMs': bitmap.lastOfferedAt == null
             ? null
             : (bitmap.elapsed - bitmap.lastOfferedAt!).inMilliseconds,

@@ -314,6 +314,18 @@ class _CapturePageState extends State<CapturePage> {
       DocumentPreviewState.error => 'Camera gặp lỗi, hãy thử lại',
       _ => qualityWarning,
     };
+    final cameraSize = capture.previewSize;
+    final pixels = status == null
+        ? null
+        : DocumentPreviewStatus.fromReport(
+            status.report,
+            warnings: status.warnings,
+          ).documentPixelSize(cameraSize);
+    final detailHint = _documentState == DocumentPreviewState.blurry
+        ? 'Tăng ánh sáng, giữ yên và kiểm tra khoảng lấy nét của camera.'
+        : pixels != null && pixels.shortestSide < 300
+        ? 'Giấy đang nhỏ trong ảnh: đặt chiếm khung nhiều hơn, giữ đủ 4 góc và khoảng lấy nét.'
+        : null;
     final feedback =
         _auto &&
         _documentState == DocumentPreviewState.clear &&
@@ -466,6 +478,18 @@ class _CapturePageState extends State<CapturePage> {
                           'Backend UVC thử nghiệm — chưa có kết quả đo Windows.',
                         ),
                       ],
+                    ),
+                  ),
+                if (_started && _result == null && cameraSize.width > 0)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 4,
+                    ),
+                    child: Text(
+                      'Camera ${cameraSize.width.toInt()} × ${cameraSize.height.toInt()} · '
+                      '${(cameraSize.width * cameraSize.height / 1e6).toStringAsFixed(2)} MP'
+                      '${detailHint == null ? "" : " · $detailHint"}',
                     ),
                   ),
                 Expanded(

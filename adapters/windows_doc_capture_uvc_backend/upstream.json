@@ -1,0 +1,88 @@
+{
+  "package": "flutter_ffi_uvc",
+  "version": "1.1.2",
+  "source": "https://pub.dev/packages/flutter_ffi_uvc/versions/1.1.2",
+  "license": "BSD-3-Clause",
+  "files": [
+    {
+      "upstream": "lib/flutter_ffi_uvc.dart",
+      "local": "lib/windows_doc_capture_uvc_backend.dart",
+      "upstreamSha256": "d6258c017cedc28a9fff8e585094f0d2a5d9dc4e587188762ef41afa9df5d517"
+    },
+    {
+      "upstream": "lib/src/flutter_ffi_uvc_bindings_generated.dart",
+      "local": "lib/src/windows_doc_capture_uvc_backend_bindings_generated.dart",
+      "upstreamSha256": "4da11de9070186609b246ca9cc4e117c586f8b120b06d73c7a8c76ae0a1ebdbc"
+    },
+    {
+      "upstream": "lib/src/flutter_ffi_uvc_impl.dart",
+      "local": "lib/src/windows_doc_capture_uvc_backend_impl.dart",
+      "upstreamSha256": "963aa5b18822d07baab510eaebb71e983233ac038d8c399ce65d7bf2adf0f2ce"
+    },
+    {
+      "upstream": "lib/src/uvc_camera_api.dart",
+      "local": "lib/src/uvc_camera_api.dart",
+      "upstreamSha256": "0ef688087288112acd11a4487214ec50b0ee9c35a173c6d8444cf7ba7ba667e9"
+    },
+    {
+      "upstream": "windows/CMakeLists.txt",
+      "local": "windows/CMakeLists.txt",
+      "upstreamSha256": "144170925ca28b7d54e5ad3c5021e93573cd4225c155155b4db8ba8dce69f26b"
+    },
+    {
+      "upstream": "windows/flutter_ffi_uvc_plugin.cpp",
+      "local": "windows/windows_doc_capture_uvc_backend_plugin.cpp",
+      "upstreamSha256": "991333fd9b5121028612ad0e6d140f61627e998574e1db8566702b0b005da601"
+    },
+    {
+      "upstream": "windows/flutter_ffi_uvc_plugin.h",
+      "local": "windows/windows_doc_capture_uvc_backend_plugin.h",
+      "upstreamSha256": "6a901b285263fd1b76b772c5530f55753539bda451f963c5f4e387cbcabd7f35"
+    },
+    {
+      "upstream": "windows/flutter_ffi_uvc_plugin_c_api.cpp",
+      "local": "windows/windows_doc_capture_uvc_backend_plugin_c_api.cpp",
+      "upstreamSha256": "f930f479ce0a7a4bac8d0190ef10148f6b02403adf9974336c36f79bea7058e6"
+    },
+    {
+      "upstream": "windows/uvc_mf_backend.cpp",
+      "local": "windows/uvc_mf_backend.cpp",
+      "upstreamSha256": "0a1f5cfe2d66e36a1c6fae4c518d03410db1294c07bbb13a0e0f485adfd2be9b"
+    },
+    {
+      "upstream": "windows/uvc_mf_backend.h",
+      "local": "windows/uvc_mf_backend.h",
+      "upstreamSha256": "bc5e9b9ba11b6f8dba0713f83001a6b4fe3711a053c973fbea5d369f336b55b0"
+    },
+    {
+      "upstream": "windows/include/flutter_ffi_uvc/flutter_ffi_uvc_plugin_c_api.h",
+      "local": "windows/include/windows_doc_capture_uvc_backend/windows_doc_capture_uvc_backend_plugin_c_api.h",
+      "upstreamSha256": "fc073872b7c7d370c364c7b2db805aae3e01e8fa4c7ac22a0fceb3c92645c87b"
+    },
+    {
+      "upstream": "src/common/uvc_guard.h",
+      "local": "src/common/uvc_guard.h",
+      "upstreamSha256": "f071e0cc5393ee20b81bb230056b3e8621552f59ec8f74bedf5e71b1eba76e2e"
+    },
+    {
+      "upstream": "src/common/uvc_requests.cpp",
+      "local": "src/common/uvc_requests.cpp",
+      "upstreamSha256": "b8f7064bafad81f5930f9333cad4fa6214e763fee82823dba0bcc1bc9da7f953"
+    },
+    {
+      "upstream": "src/common/uvc_requests_internal.h",
+      "local": "src/common/uvc_requests_internal.h",
+      "upstreamSha256": "ac8108be55331f61cd7d13c4fec17de677f1374bab4cdf9454b70463c4f7c01f"
+    },
+    {
+      "upstream": "src/include/flutter_ffi_uvc.h",
+      "local": "src/include/windows_doc_capture_uvc_backend.h",
+      "upstreamSha256": "86606260e6bd200a87d0a82192b0a5e3b72a084a056c53baa895617f7b5a3d02"
+    },
+    {
+      "upstream": "LICENSE",
+      "local": "LICENSE",
+      "upstreamSha256": "df605e6edfd01f6bd3867b4ed38666fa5b0cf0cc97c1d50649ea2851ee212d76"
+    }
+  ]
+}
