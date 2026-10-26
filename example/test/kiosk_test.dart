@@ -115,10 +115,14 @@ void main() {
       final exporter = _PairExporter();
       final owned = await _pairResult(tester, exporter);
       try {
-        final button = find.widgetWithText(
-          FilledButton,
-          'Xuất cặp ảnh gốc + crop',
-        );
+        final button = find
+            .ancestor(
+              of: find.text('Xuất cặp ảnh gốc + crop'),
+              matching: find.byWidgetPredicate(
+                (widget) => widget is FilledButton,
+              ),
+            )
+            .first;
         final originalCallback = tester.widget<FilledButton>(button).onPressed!;
         await tester.tap(button);
         originalCallback(); // stale callback / double click is guarded
