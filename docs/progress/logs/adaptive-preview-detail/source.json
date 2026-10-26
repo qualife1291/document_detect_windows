@@ -1,0 +1,37 @@
+{
+  "source_commit": "b6076ff9d8a07c07535fd3ee3d0e53c40b23b398",
+  "runtime_commit": "668fffdb59dffceb00fd00be583b6eb95189eeb8",
+  "windows_workflow": "https://github.com/qualife1291/document_detect_windows/actions/runs/40283388912",
+  "windows_sdks": [
+    "3.32.8",
+    "3.41.9",
+    "3.47.8"
+  ],
+  "linux_sdks": [
+    "3.32.8",
+    "3.41.9",
+    "3.47.7"
+  ],
+  "tests_per_sdk": {
+    "root": 116,
+    "uvc_adapter": 11,
+    "example": 7,
+    "benchmarks": 3,
+    "native_sampler_ctest": 1
+  },
+  "linux_baseline_note": "Complete Linux root/example suites use identical lib/test/example source trees; final adapter clock seam re-analyzed/tested on each SDK in uvc-final-*.txt. Native final byte fixture also compiled separately with g++.",
+  "component_git_trees": {
+    "lib": "8754ced852d0d7bd502fa7a81104fb7fbe7673f9",
+    "test": "28c8b99867bdc7afb60f8897b8761c1b2cfdf660",
+    "example/lib": "5d90a57f6fb32ad8ff2f90170bb27c21b74d6fde",
+    "example/test": "4443bf4a2e3a3b2b58bdca12e787705be24904cd",
+    "adapters/windows_doc_capture_uvc": "0702a8b200f3799ec3c210aae1988bd50921da46",
+    "adapters/windows_doc_capture_uvc_backend": "d803973f402861eb8a6ceba388e1ce6fed8e5cbc"
+  },
+  "linux_endurance_seconds": 30,
+  "windows_endurance_seconds": 60,
+  "format_files": 56,
+  "windows_host_with_both_plugins_built": true,
+  "physical_camera_retest_after_change": false,
+  "physical_24h_soak": false
+}

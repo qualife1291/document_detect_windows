@@ -1,0 +1,4 @@
+00:00 +0: loading /workspace/document_detect_windows/tool/scan_processing_benchmark.dart
+00:00 +0: synthetic warp and full snapshot processing (not camera latency)
+PROCESSING_BENCHMARK os=linux mode=flutter-test size=1280x720 warp_mean_ms=27.87 capture_mean_ms=232.40
+00:01 +1: All tests passed!

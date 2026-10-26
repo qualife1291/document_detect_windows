@@ -1,0 +1,39 @@
+[√] Flutter (Channel stable, 3.47.8, on Microsoft Windows [Version 10.0.20348.5761], locale en-US) [1,104ms]
+    • Flutter version 3.47.8 on channel stable at C:\hostedtoolcache\windows\flutter\stable-3.47.8-x64\flutter
+    • Upstream repository https://github.com/flutter/flutter.git
+    • Framework revision 737ba8f885 (3 days ago), 2026-10-22 21:37:31 -0700
+    • Engine revision cf636b1dfb
+    • Dart version 3.13.7
+    • DevTools version 2.60.0
+    • Feature flags: enable-web, enable-linux-desktop, enable-macos-desktop, enable-windows-desktop, enable-android, enable-ios, cli-animations, enable-native-assets, enable-record-use, enable-swift-package-manager, omit-legacy-version-file, enable-lldb-debugging, enable-uiscene-migration
+
+[√] Windows Version (Server 2022 Datacenter 64-bit, 21H2, 2009) [15.2s]
+
+[!] Android toolchain - develop for Android devices (Android SDK version 37.0.0) [20.0s]
+    • Android SDK at C:\Android\android-sdk
+    • Emulator version 37.2.12.0 (build_id 16428233) (CL:N/A)
+    • Platform android-37.2-beta3, build-tools 37.0.0
+    • ANDROID_HOME = C:\Android\android-sdk
+    • ANDROID_SDK_ROOT = C:\Android\android-sdk
+    • Java binary at: C:\hostedtoolcache\windows\Java_Temurin-Hotspot_jdk\8.0.504-1\x64\bin\java
+      This JDK is specified by the JAVA_HOME environment variable.
+      To manually set the JDK path, use: `flutter config --jdk-dir="path/to/jdk"`.
+    X Could not determine java version
+    ! Some Android licenses not accepted. To resolve this, run: flutter doctor --android-licenses
+
+[√] Chrome - develop for the web [805ms]
+    • Chrome at C:\Program Files\Google\Chrome\Application\chrome.exe
+
+[√] Visual Studio - develop Windows apps (Visual Studio Enterprise 2022 17.14.42) [804ms]
+    • Visual Studio at C:\Program Files\Microsoft Visual Studio\2022\Enterprise
+    • Visual Studio Enterprise 2022 version 17.14.37806.7
+    • Windows 10 SDK version 10.0.26100.0
+
+[√] Connected device (2 available) [6.4s]
+    • Windows (desktop) • windows • windows-x64    • Microsoft Windows [Version 10.0.20348.5761]
+    • Chrome (web)      • chrome  • web-javascript • unknown
+
+[√] Network resources [500ms]
+    • All expected network resources are available.
+
+! Doctor found issues in 1 category.

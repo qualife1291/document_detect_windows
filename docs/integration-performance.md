@@ -26,7 +26,7 @@ Import the root package and windows_doc_capture_uvc. Root/custom sources keep
 working; optional desktop backend remains outside the default dependency graph.
 UVC still defaults to texture; bitmap is explicit and avoids external textures.
 
-| Bitmap profile | Maximum longest side | Requested cadence ceiling | Under load |
+| Bitmap profile | Maximum longest side | Configured target | Under load |
 | --- | --- | --- | --- |
 | lowResource | 640 | 10 FPS | same size, slower cadence |
 | balanced (example default) | 960 | 20 FPS; default target ~15 | 640, slower cadence |
@@ -59,6 +59,9 @@ limits do not cap total host CPU/GPU use or guarantee displayed FPS/latency.
   inactive lifecycle suppress bitmap demand, but do not stop the native producer
   or analysis. Offstage/Opacity alone are not visibility signals. For a hidden
   tab, use TickerMode plus explicit awaited stop; serialize resumption yourself.
+- Mount one bitmap preview per FrameSource. Unmount it before creating another
+  view of that source, or move the existing widget with a GlobalKey. Do not
+  share its readiness handle between simultaneous consumers.
 - Build the preview in bounded constraints. Its RepaintBoundary isolates bitmap
   repaints; expensive parent layouts, animations, shaders, platform views and
   other image decodes can still consume frame time. Keep UI work outside camera

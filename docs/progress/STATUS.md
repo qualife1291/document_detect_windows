@@ -116,3 +116,17 @@ Source `a9e29c4`, [CI](https://github.com/qualife1291/document_detect_windows/ac
 và Linux 3.32.8/3.41.9/3.47.7 đạt 110 package, 9 UVC, 7 example tests, hai
 benchmark/endurance 30/60 s; Windows release build và formatter 49 files đạt.
 Physical preview/GPU/optical quality/accessibility/24–168 h chưa được chứng nhận.
+
+## Adaptive preview/detail — 2026-10-26
+
+Done source `b6076ff9d8a07c07535fd3ee3d0e53c40b23b398`:
+[CI 40283388912](https://github.com/qualife1291/document_detect_windows/actions/runs/40283388912).
+Native resize trước FFI; profile 640/960/1280 và load sampling/decode/host UI;
+cadence từ sampling start; visibility/late-session cleanup; exact pixel crop;
+exampleJPEG 92, actual MP/aspect-aware document size hints. BSD backend namespace
+riêng, provenance/license đầy đủ. Host chứa cả hai plugin build thành công.
+Windows 3.32.8/3.41.9/3.47.8 đạt 116/11/7 tests, 3 benchmarks, native CTest,
+endurance 60 s, release build; formatter 56 files. Linux supplemental/root/example
+cùng source tree, final adapter kiểm lại ba SDK; endurance 30 s.
+[Review](adaptive-preview-detail.md), [coverage](logs/adaptive-preview-detail/source.json).
+Product gate vẫn CHUA DAT; không suy ra physical clarity/GPU/soak từ CI.

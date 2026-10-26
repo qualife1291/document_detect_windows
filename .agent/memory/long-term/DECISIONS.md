@@ -41,3 +41,13 @@
 - Hệ quả: target bitmap ~15, analysis giữ gate; chia sẻ readback, pause capture và
   decoder demand/backoff; offered FPS không thay measured display FPS.
 - Nguồn: specs/smooth-bitmap-preview.md và docs/progress/fifth-log-review.md.
+
+## D-006 — Native bounded sampling, adaptive preview theo host UI
+
+- Ngày: 2026-10-26; trạng thái: accepted.
+- Lý do: log6 preview640/~9 FPS dù target15; user duyệt tối ưu cả app tích hợp.
+- Hệ quả: fork Windows-only BSD có provenance, DLL/channel/registration riêng;
+  nearest analysis640, bilinear preview640/960/1280 trước FFI. Snapshot vẫn full.
+  Chi phí sampling/decode/UI điều tiết preview; route dài hạn cần caller await stop.
+  Không giành camera của host, dependency_overrides hoặc clear cache toàn app.
+- Nguồn: specs/adaptive-preview-detail.md, docs/integration-performance.md.

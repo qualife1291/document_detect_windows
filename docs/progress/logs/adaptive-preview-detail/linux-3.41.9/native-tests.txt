@@ -1,0 +1,10 @@
+native_sample 2592x1944 max=640 mean_ms=2.30046
+native_sample 2592x1944 max=960 mean_ms=5.36851
+native_sample 2592x1944 max=1280 mean_ms=9.81972
+native_sample 3264x2448 max=640 mean_ms=2.4306
+native_sample 3264x2448 max=960 mean_ms=5.50784
+native_sample 3264x2448 max=1280 mean_ms=9.65154
+native_sample 2448x3264 max=640 mean_ms=2.65708
+native_sample 2448x3264 max=960 mean_ms=5.58956
+native_sample 2448x3264 max=1280 mean_ms=9.62993
+sampler bounds/pixels/5MP/8MP/portrait PASS

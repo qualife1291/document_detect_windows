@@ -1,0 +1,9 @@
+Resolving dependencies...
+Downloading packages...
+< meta 1.17.0 (was 1.19.0) (1.19.0 available)
+  petitparser 7.0.2 (7.1.0 available)
+< vector_math 2.2.0 (was 2.4.3) (2.4.3 available)
+  web 1.1.1 (1.1.2 available)
+Changed 2 dependencies!
+4 packages have newer versions incompatible with dependency constraints.
+Try `flutter pub outdated` for more information.

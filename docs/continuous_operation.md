@@ -56,12 +56,12 @@ no matching mode fails explicitly rather than falling back to an unbounded mode.
 The output snapshot has the selected stream's resolution. Full sensor resolution
 requires a supported mode and `veryHigh`; it is not implied by a 5/8 MP label.
 
-The upstream UVC API still copies a full RGBA buffer in the UI isolate before
-sampling it. At 8 MP that is about 32 MB per accepted sample, plus native memory
-and temporary copies. Backpressure avoids copies for unwanted samples, but
-native downsampling/off-thread readback is still needed before claiming a
-low-end 8 MP latency/CPU budget. Desktop image streams also deliver full native
-frames before Dart sampling. Monitor real UI frame time and RSS, not only FPS.
+The internal Windows UVC backend now samples bounded analysis/preview outputs
+natively before FFI transfer. The native producer still converts/stores the full
+stream; a full snapshot still copies about32 MB at8 MP, followed by worker/JPEG
+memory. Small previews do not remove that capture cost. Desktop image streams
+also deliver full native frames before Dart sampling. Monitor real UI frame
+time, CPU and RSS, not only FPS; weak-hardware8 MP budgets still need measurements.
 
 Start profiling weak hardware with `medium` and `analysisInterval` 200 ms; this
 trades detection/capture responsiveness and pixel detail for lower load. Keep
@@ -72,11 +72,12 @@ memory; each contains both original and cropped JPEG. Dispose result screens and
 apply an explicit storage retention/quota policy for continuous use.
 
 The example defaults to high/200 ms analysis, preferred native 15 FPS and bitmap
-preview (now adaptive balanced ≤960 px, falling back to640) after the third physical log showed D3D device loss. The fifth-log
+preview (adaptive balanced ≤960 px, falling back to640). Bitmap mode was chosen
+after the third physical log showed D3D device loss. The fifth-log
 fix separates bitmap offers (target ~15 FPS) from analysis (~5 FPS). A session
 readiness handle prevents preview-only readbacks while decoding/unmounted; an
 optional PreviewSamplingSource predicate pauses them during capture/teardown.
-One frame serves both streams when due together. Measured sampling cost applies
+One locked native frame supplies bounded outputs when both streams are due. Measured sampling cost applies
 an EWMA backoff to extra preview reads, while analysis retains its own demand.
 This heuristic does not bound total CPU or native 8 MP allocation cost. Bitmap mode creates
 no camera external texture, drops frames while a single decode is busy and

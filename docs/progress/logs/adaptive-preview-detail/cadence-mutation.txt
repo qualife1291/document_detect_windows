@@ -1,0 +1,33 @@
+Intentional regression mutation; EXPECTED failure (7 vs13).
+Production assignment restored in finally before commit b6076ff.
+
+00:00 +0: loading /workspace/document_detect_windows/adapters/windows_doc_capture_uvc/test/uvc_source_test.dart
+00:00 +0: 10ms readback preserves cadence without full preview copies
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following TestFailure was thrown running a test:
+Expected: <13>
+  Actual: <7>
+
+When the exception was thrown, this was the stack:
+#4      main.<anonymous closure> (file:///workspace/document_detect_windows/adapters/windows_doc_capture_uvc/test/uvc_source_test.dart:305:7)
+<asynchronous suspension>
+#5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#6      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+This was caught by the test expectation on the following line:
+  file:///workspace/document_detect_windows/adapters/windows_doc_capture_uvc/test/uvc_source_test.dart line 305
+The test description was:
+  10ms readback preserves cadence without full preview copies
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:00 +0 -1: 10ms readback preserves cadence without full preview copies [E]
+  Test failed. See exception logs above.
+  The test description was: 10ms readback preserves cadence without full preview copies
+  
+00:00 +0 -1: Some tests failed.
+
+Failing tests:
+  /workspace/document_detect_windows/adapters/windows_doc_capture_uvc/test/uvc_source_test.dart: 10ms readback preserves cadence without full preview copies

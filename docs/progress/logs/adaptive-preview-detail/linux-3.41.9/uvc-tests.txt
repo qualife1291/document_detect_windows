@@ -1,0 +1,13 @@
+00:00 +0: loading /workspace/document_detect_windows/adapters/windows_doc_capture_uvc/test/uvc_source_test.dart
+00:00 +0: profiles bound 8MP samples while snapshots retain every native pixel
+00:01 +1: 10ms readback preserves cadence without full preview copies
+00:01 +2: frame stream identity survives repeated preview builds
+00:01 +3: bitmap keeps the decoded frame across status and parent rebuilds
+00:02 +4: bitmap cadence is independent of analysis and shares sampled frames
+00:03 +5: paused, busy and unmounted bitmap consumers prevent extra copies
+00:03 +6: costly bitmap readback backs off without accumulating work
+00:04 +7: bitmap start does not register external textures; demand gates copies and snapshots stay full size
+00:04 +8: texture mode keeps native preview and releases it after stopping stream
+00:04 +9: failed starts release resources in either preview mode and permit a retry
+00:04 +10: poll interval and preferred FPS reject unbounded sampling configuration
+00:04 +11: All tests passed!

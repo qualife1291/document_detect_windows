@@ -2,6 +2,20 @@ Handover: CHUA DAT
 
 # Bằng chứng bàn giao
 
+Cập nhật preview/detail (source `b6076ff`, 2026-10-26): native bounded sampling,
+profile 640/960/1280 tự giảm tải theo sampling/decode/host UI, cadence không cộng
+dồn thời gian, demand theo visibility và loại decode đến trễ. Crop thẳng giữ
+pixel cạnh, example JPEG 92 + actual resolution/MP và hướng dẫn focus/kích thước.
+[Windows CI](https://github.com/qualife1291/document_detect_windows/actions/runs/40283388912)
+đạt Flutter 3.32.8/3.41.9/3.47.8:116 root, 11 UVC, 7 example tests, 3 benchmarks,
+native bounds/pixel tests, synthetic endurance 60 s và release build. Stable kiểm
+format 56 files và build host chứa cả upstream/internal plugin đạt. Linux ba SDK
+đạt suite tương ứng/endurance 30 s; adapter clock cuối được kiểm lại mọi SDK.
+Xem [review/evidence](adaptive-preview-detail.md) và
+[hướng dẫn tích hợp](../integration-performance.md). Các matrix phía dưới là
+bằng chứng lịch sử, giữ log/source cũ; source mới có thư mục evidence riêng.
+Chưa xác nhận camera thật/GPU/focus/latency/24–168h sau thay đổi; gate CHUA DAT.
+
 Cập nhật log thứ năm: 6/6 capture thành công trong log, native ~30 FPS nhưng
 preview cũ đi chung analysis 5 FPS. Đã tách target bitmap ~15 FPS, dùng demand
 trước readback, pause capture và backoff sampling cost. Cả Windows/Linux đạt

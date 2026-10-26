@@ -3,13 +3,14 @@
 ## Stack
 
 - Root: Flutter >=3.32.8, Dart >=3.8.0 <4; image 4.5.4; flutter_lints ^5.0.0.
-- UVC adapter/example: Dart >=3.8.1; flutter_ffi_uvc 1.1.2.
+- UVC adapter/example/backend: Dart >=3.8.1; internal Windows-only BSD derivative
+  of flutter_ffi_uvc 1.1.2, source hashes/license under adapters/windows_doc_capture_uvc_backend.
 - Desktop adapter tùy chọn: Flutter >=3.41.9/Dart >=3.11;
   camera_desktop 2.0.0, camera_platform_interface ^2.7.0, image 4.5.4.
 - Windows CI: 3.32.8, 3.41.9, stable tại thời điểm chạy; đọc version log thật,
   không giả định stable luôn bằng SDK đã cài trong cloud.
 
-Nguồn: bốn pubspec.yaml và .github/workflows/windows.yml.
+Nguồn: năm pubspec.yaml và .github/workflows/windows.yml.
 
 ## Thư mục
 
@@ -20,7 +21,7 @@ Nguồn: bốn pubspec.yaml và .github/workflows/windows.yml.
 | lib/src/capture | Auto state machine, worker cancellation, warp/JPEG/save |
 | lib/src/preview | Enum/status, overlay geometry và bounded bitmap preview |
 | lib/src/diagnostics | JSON metadata/redaction/health, không pixel |
-| adapters | Hai backend tách graph, chọn tường minh |
+| adapters | UVC + backend Windows nội bộ; desktop tùy chọn tách graph |
 | example | Windows runner, kiosk UI, camera/result ownership |
 | test | Fixtures synthetic, regression và lifecycle/conditions |
 | tool | Bootstrap, validation, benchmark, synthetic endurance, format check |
@@ -30,17 +31,20 @@ Nguồn: bốn pubspec.yaml và .github/workflows/windows.yml.
 ## Dữ liệu chạy thế nào
 
 FrameSource mở một camera. Root API default texture; example chọn UVC bitmap
-≤640 px. Stream identity ổn định; một decode đang chạy, bỏ frame khi bận.
+profile 640/960/1280 (không upscale). Stream identity ổn định; một decode,
+bỏ frame khi bận. Balanced mặc định 960; tải cao giảm về 640.
 Analysis demand và bitmap demand tách nhau; example target preview ~15 FPS còn
-analysis ~5 FPS. Chia sẻ readback khi cùng due; decoder busy/unmount/capture thì
-không copy thêm vì preview. Sampling-cost EWMA backoff không bảo đảm tổng CPU.
-Native readback vẫn có chi phí UI isolate; health phân biệt offers/native/analysis.
+analysis ~5 FPS. Một native lock cung cấp hai output bounded khi cùng due; thu nhỏ trước FFI.
+Decoder busy/unmount/inactive/TickerMode(false)/capture không kéo thêm preview.
+Sampling/decode/host frame costs giảm size/cadence, phục hồi 10 s mỗi mức. Native
+producer vẫn xử lý full stream; không bảo đảm tổng CPU. Health tách offers/native/analysis.
 Analyzer isolate nhận frame ≤640 px, trả quad/quality; controller phát trạng thái
 và enum, expire geometry cũ. Auto cần ổn định và feedback, không chỉ enum clear.
 
 Snapshot lấy full negotiated stream, detect lại, rồi worker cancellable warp và
-encode JPEG. Crop padding mặc định .02; quad detect khác cropQuad dùng để warp.
-Không serialize worker đồng thời không giới hạn. Session cũ không được trả kết quả.
+encode JPEG. Crop thẳng integer copy inclusive pixels; không snap quad lệch.
+Package JPEG 90, example 92 theo benchmark chữ giả lập. Crop padding mặc định .02; quad detect khác cropQuad dùng để warp.
+Controller giới hạn một capture worker; session cũ không được trả kết quả.
 Save tạo file .part exclusive, flush, rename JPEG; caller chọn nơi lưu/retention.
 
 Example high preset độc lập sampling 200 ms; có medium/high/veryHigh. Stop camera

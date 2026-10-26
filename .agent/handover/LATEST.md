@@ -1,99 +1,43 @@
 ---
 status: done
-slug: smooth-bitmap-preview
+slug: adaptive-preview-detail
 updated: 2026-10-26
 ---
 
-# Handover — smooth-bitmap-preview
+# Handover — adaptive-preview-detail
 
-## Kết quả
+Đã triển khai yêu cầu đã được user duyệt, commit/push main theo quyền hội thoại.
+Runtime 668fffd; test fixes 66b553e/fd0894a; clock regression/source cuối b6076ff.
 
-Đã đọc log lần 5 và tách target bitmap ~15 FPS khỏi analysis ~5 FPS để giảm cảm
-giác chậm, giữ upstream backpressure và bộ nhớ có giới hạn. Source a9e29c4.
-Đây là task source đã kiểm chứng; FPS/latency/CPU trên camera thật sau sửa chưa đo.
+## Kết quả và spec
 
-## Đối chiếu đặc tả
+Khớp specs/adaptive-preview-detail.md: native bounded resize trước FFI,
+profile 640/960/1280 tự giảm tải sampling/decode/host UI và phục hồi chậm;
+cadence từ đầu sample; demand theo visibility; late-session image disposal;
+crop integer inclusive không interpolation; JPEG 92 cho example và actual MP/
+aspect-aware document-size/focus guidance. Không đổi detector thresholds/storage.
+Backend Windows-only BSD có namespace DLL/channel/registration riêng, hashes và
+license. Không private-pointer hack, dependency_overrides hoặc clear host cache.
+Không có lệch scope cần duyệt thêm.
 
-- File: specs/smooth-bitmap-preview.md.
-- Khớp: cached streams riêng, shared readback, readiness theo session, pause khi
-  capture/teardown, cost backoff và metadata riêng; crop/quality/native plugin không đổi.
-- Lệch đã duyệt: không có.
-- Lệch chưa duyệt: không có. Governance có commit/handover riêng trước task này.
+## Kiểm chứng
 
-## Đã làm
+Windows CI 40283388912, source b6076ff9d8a07c07535fd3ee3d0e53c40b23b398:
+3.32.8/3.41.9/3.47.8 đạt 116 root/11 UVC/7 example tests, 3 benchmarks,
+native CTest5/8MP/bounds/pixels, endurance 60 s và release build. Stable formatter 56
+files, 0 changes; host chứa cả upstream/internal plugin build+license check đạt.
+Linux 3.32.8/3.41.9/3.47.7 đạt cùng Dart suites,3 benchmarks/native test và 30 s;
+clock seam cuối kiểm adapter mọi SDK. Root/example source-tree hashes trùng cuối.
+Regression mutation: completion-based cadence cho 7 thay vì 13 frame; code đúng 13.
+Intermediate CI failures là MSVC byte fixture và test clock, không hạ assertions.
+Evidence riêng giữ nguồn/SDK tại docs/progress/logs/adaptive-preview-detail/;
+review docs/progress/adaptive-preview-detail.md. Historical logs không bị ghi đè.
 
-- Review 433 events/~420 s, 6/6 success; stream thực tế 1280×720 dù veryHigh.
-- BitmapPreviewDemand chỉ báo readiness, không giữ pixels/callback/task queue.
-- PreviewSamplingSource là optional, không bắt custom FrameSource cũ đổi method.
-- Một copy/downsample phục vụ hai consumers khi cùng cần; extra preview bị chặn
-  khi decoder busy/unmount/capture và tự backoff theo sampling cost EWMA.
-- Health phân biệt offered FPS/age/cost với native delivery/analysis; không gọi đó
-  là displayed FPS hoặc hardware capture timestamp.
-- Example DOC_CAPTURE_PREVIEW_FPS 5–20, mặc định 15; có thể đặt 5 để so sánh cũ.
+## Tích hợp và việc ngoài task
 
-## Chưa làm
-
-Không còn mục source trong scope. Chưa retest phiên bản mới trên camera người dùng.
-
-## Cách chạy
-
-- Trong example: flutter run -d windows --profile --dart-define=DOC_CAPTURE_LOGS=true.
-- So sánh trước: thêm --dart-define=DOC_CAPTURE_PREVIEW_FPS=5, giữ nguyên camera/mode.
-- Theo dõi bitmapOfferedFps, frameSamplingMeanMs/MaxMs, bitmapLastOfferAgeMs,
-  nativeDeliveredFps và recentAnalysisFps; giữ cả engine errors trong log copy.
-
-## Test sẵn có
-
-- Trước: CI 40262146792 của runtime 7d789de, 108/6/7 tests và Windows build pass.
-- Sau: CI 40267546967 source a9e29c4, 110 package/9 UVC/7 example tests pass
-  trên Windows 3.32.8/3.41.9/3.47.8, hai benchmark/endurance 60 s và release build.
-- Linux 3.32.8/3.41.9/3.47.7 đạt cùng suite/analyze và endurance 30 s; optional
-  desktop analyzer đạt SDK đủ điều kiện. Format stable 49 files/0 changes.
-
-## Test đã chạy
-
-- PV-01: fake camera + widget: preview offers >1.5× analysis, counters riêng,
-  shared immutable frames không nhân đôi copy; snapshot giữ negotiated size.
-- PV-02: decoder gate, pause, unmount, restart/new handle và late image disposal;
-  các regression stream identity/30 rebuilds/no-paint disposal/DPI giữ nguyên.
-- PV-03: controller predicate false trong capture, true khi xong, null sau stop/dispose.
-- PV-04: readback synthetic 60 ms làm backoff ≥240 ms; health delta metrics tách
-  analysis/native, không pixels/PII. Không suy ra CPU budget tổng app.
-- PV-05: local/full matrix pass. Bằng chứng docs/progress/logs/fifth-log-followup/,
-  logs/windows-<sdk>/, logs/linux-<sdk>/ và logs/ci-provenance.json.
-- CI: https://github.com/qualife1291/document_detect_windows/actions/runs/40267546967.
-
-## Test không chạy
-
-Physical composited FPS, sensor-to-screen latency, native CPU/GPU/VRAM, 5/8 MP
-hardware và 24–168 h sau sửa: không có camera/kiosk Windows thật trong cloud.
-Không gắn pass cho các gate đó từ fake timing test hoặc log trước bản sửa.
-
-## Quyết định đã ghi vào nhớ dài hạn
-
-D-005 — preview cadence độc lập và upstream demand trước readback.
-ARCHITECTURE đã cập nhật luồng sampling/health; các giới hạn production giữ nguyên.
-
-## Rủi ro và nợ
-
-Native readback vẫn copy full RGBA trên UI isolate; backoff chỉ giảm phần extra
-preview và không chặn được native call/driver đã wedged. Bitmap vẫn dùng Flutter
-renderer/GPU; GPU loss có thể cần restart app. Overlay/enum giữ analysis cadence,
-không tự đoán quad giữa reports. Mode veryHigh không ép camera có 5/8 MP.
-Gate sản phẩm docs/progress/HANDOVER.md vẫn CHUA DAT.
-
-## File đã đụng
-
-lib/src/camera/{camera_controller,frame_source}.dart,
-lib/src/preview/rgba_camera_preview.dart,
-lib/src/diagnostics/capture_diagnostics.dart,
-adapters/windows_doc_capture_uvc/{lib,test}/, example/lib/main.dart,
-test/{controller,diagnostics,rgba_preview}_test.dart, README.md, CHANGELOG.md,
-docs/continuous_operation.md, docs/progress/fifth-log-review.md,
-specs/smooth-bitmap-preview.md, .agent/memory/ và evidence/handover.
-
-## Agent sau đọc gì
-
-1. AGENTS.md, specs/smooth-bitmap-preview.md và docs/progress/fifth-log-review.md.
-2. .agent/memory/long-term/ARCHITECTURE.md, DECISIONS.md và CONVENTIONS.md.
-3. docs/progress/HANDOVER.md để phân biệt task done và readiness sản phẩm.
+Rebuild native một lần: example/flutter clean +pub get, chạy profile có logs.
+DOC_CAPTURE_PREVIEW_PROFILE=lowResource|balanced|detail; mặc định balanced960.
+Một preview/source; host await camera handoff, await stop khi route ẩn lâu.
+TickerMode/inactive chỉ giảm bitmap, không dừng native producer/analysis.
+Không còn việc code trong task. Physical camera clarity/focus/latency/GPU,
+accessibility và 24–168h soak vẫn chưa xác nhận; product HANDOVER giữ CHUA DAT.

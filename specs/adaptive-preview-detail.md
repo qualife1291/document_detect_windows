@@ -1,3 +1,10 @@
+---
+status: implemented
+slug: adaptive-preview-detail
+updated: 2026-10-26
+approval_source: direct-user-acceptance-of-proposal
+---
+
 # Preview thích nghi và giữ chi tiết ảnh chụp
 
 Nguồn: người dùng chấp nhận đề xuất sửa cadence, tách preview/analysis, giữ ảnh
@@ -28,3 +35,11 @@ hysteresis; native scaled bounds/5–8MP; full snapshot; crop pixel integrity.
 Analyze/test riêng root/backend/adapter/example; SDK floor + Windows CI build.
 Ghi source/SDK/kết quả, cấu hình tích hợp, giới hạn physical camera/driver rõ ràng.
 Task code có thể done trong khi gate sản phẩm HANDOVER vẫn CHUA DAT.
+
+
+## Kết quả
+
+Source b6076ff; Windows matrix 40283388912 đạt 3.32.8/3.41.9/3.47.8, Linux
+supplemental 3.32.8/3.41.9/3.47.7. Chi tiết source-tree/command/results ở
+`docs/progress/logs/adaptive-preview-detail/source.json`; review và giới hạn tại
+`docs/progress/adaptive-preview-detail.md`. Product HANDOVER vẫn CHUA DAT.
