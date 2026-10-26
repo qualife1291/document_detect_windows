@@ -103,3 +103,16 @@ Windows/Linux đạt ba SDK: 108 package, 6 UVC adapter, 7 example tests, hai
 benchmark, endurance 30/60 s và Windows x64 release build. Source `7d789de`,
 [workflow](https://github.com/qualife1291/document_detect_windows/actions/runs/40262146792). Chưa chứng nhận JPEG quang học, hardware GPU
 hoặc 24–168 h sau bản sửa. Xem [review](FOURTH_LOG_REVIEW.md).
+
+## Log 5 / preview cadence và coding standard — 2026-10-26
+
+Đã đọc 433 events/~420 s, 6/6 capture accepted, không library/GPU error trong
+file; native ~30 vs analysis/bitmap 5 FPS. Tách bitmap target ~15 khỏi analysis
+200 ms, một readback khi chung demand, upstream readiness, pause capture và
+chi phí copy/downsample backoff. Health mới tách FPS/age/cost; không hứa physical
+composited FPS. Governance được review theo profile, giữ nguyên raw standard,
+thêm AGENTS/memory/handover/env ignore và stable format gate.
+Source `a9e29c4`, [CI](https://github.com/qualife1291/document_detect_windows/actions/runs/40267546967), Windows 3.32.8, 3.41.9, 3.47.8
+và Linux 3.32.8/3.41.9/3.47.7 đạt 110 package, 9 UVC, 7 example tests, hai
+benchmark/endurance 30/60 s; Windows release build và formatter 49 files đạt.
+Physical preview/GPU/optical quality/accessibility/24–168 h chưa được chứng nhận.

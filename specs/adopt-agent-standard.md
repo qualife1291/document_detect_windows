@@ -1,5 +1,5 @@
 ---
-status: approved
+status: implemented
 slug: adopt-agent-standard
 level: maintenance
 updated: 2026-10-26

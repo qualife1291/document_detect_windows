@@ -83,3 +83,14 @@ Retest cùng camera/cấu hình với preview target 5 và 15, giữ resolution/
 như nhau. So sánh cảm giác chuyển động và counters/copy cost/RSS; thử capture và
 thoát lúc bận. Physical latency, FPS composited, CPU/GPU/VRAM và 24–168 h vẫn là
 gate hardware, không suy ra từ synthetic tests hoặc 7 phút log.
+
+## Validation đã chạy
+
+Nguồn `a9e29c4e5c4d8d547aaaa6218b1b12fa969ca0c4`; [Windows CI](https://github.com/qualife1291/document_detect_windows/actions/runs/40267546967)
+đạt 3.32.8, 3.41.9, 3.47.8: analyze, 110 package, 9 UVC, 7 example tests, hai
+benchmark, endurance 60 s và release build mỗi SDK. Format gate stable kiểm 49
+Dart files, 0 changes. Linux 3.32.8/3.41.9/3.47.7 đạt cùng suite/analyze,
+benchmark và endurance 30 s; desktop optional analyzer đạt các SDK đủ điều kiện.
+[Provenance](logs/ci-provenance.json), [coverage/source](logs/fifth-log-followup/source.json).
+Chỉ metadata/docs/evidence thay đổi sau source CI; không skip/disable tests.
+Đây là verification source/synthetic, chưa phải physical preview retest.

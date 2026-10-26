@@ -87,3 +87,7 @@ cả UVC widget-test assets khi đổi SDK để tránh dùng shader cache khác
 Chỉ tài liệu/evidence thay đổi sau source đã CI. Rebuild/DPI tests xác minh cơ chế
 đã tái hiện; camera/driver/độ nét bản mới vẫn cần retest thực tế. Hosted endurance
 không thay physical soak và benchmark không đo preview latency/CPU máy yếu.
+
+Evidence update: current SDK log folders và provenance được cập nhật theo
+[fifth-log follow-up](fifth-log-review.md); số đo/source lịch sử ở đây thuộc
+workflow đã liên kết trong chính lượt review đó.

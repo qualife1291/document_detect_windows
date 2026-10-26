@@ -1,5 +1,5 @@
 ---
-status: approved
+status: implemented
 slug: smooth-bitmap-preview
 level: maintenance
 updated: 2026-10-26

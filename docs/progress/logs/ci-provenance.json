@@ -1,271 +1,295 @@
 {
-  "run_id": "40262146792",
-  "source_commit": "7d789ded065afeab591f3e4761de49b3bb6458df",
+  "run_id": "40267546967",
+  "source_commit": "a9e29c4e5c4d8d547aaaa6218b1b12fa969ca0c4",
   "conclusion": "success",
-  "url": "https://github.com/qualife1291/document_detect_windows/actions/runs/40262146792",
+  "url": "https://github.com/qualife1291/document_detect_windows/actions/runs/40267546967",
   "jobs": [
     {
-      "id": 121376608458,
-      "name": "windows (3.32.8, 3.32.8)",
+      "id": 121393124504,
+      "name": "windows (3.41.9, 3.41.9)",
       "status": "completed",
       "conclusion": "success",
-      "html_url": "https://github.com/qualife1291/document_detect_windows/actions/runs/40262146792/job/121376608458",
+      "html_url": "https://github.com/qualife1291/document_detect_windows/actions/runs/40267546967/job/121393124504",
       "steps": [
         {
           "name": "Set up job",
           "status": "completed",
           "conclusion": "success",
           "number": 1,
-          "started_at": "2026-10-26T03:03:28Z",
-          "completed_at": "2026-10-26T03:03:29Z"
+          "started_at": "2026-10-26T04:08:56Z",
+          "completed_at": "2026-10-26T04:08:58Z"
         },
         {
           "name": "Run actions/checkout@v4",
           "status": "completed",
           "conclusion": "success",
           "number": 2,
-          "started_at": "2026-10-26T03:03:29Z",
-          "completed_at": "2026-10-26T03:03:34Z"
+          "started_at": "2026-10-26T04:08:58Z",
+          "completed_at": "2026-10-26T04:09:02Z"
         },
         {
           "name": "Run subosito/flutter-action@v2",
           "status": "completed",
           "conclusion": "success",
           "number": 3,
-          "started_at": "2026-10-26T03:03:34Z",
-          "completed_at": "2026-10-26T03:05:07Z"
+          "started_at": "2026-10-26T04:09:02Z",
+          "completed_at": "2026-10-26T04:10:42Z"
         },
         {
           "name": "Resolve, analyze, test, benchmark and build example",
           "status": "completed",
           "conclusion": "success",
           "number": 4,
-          "started_at": "2026-10-26T03:05:07Z",
-          "completed_at": "2026-10-26T03:09:47Z"
+          "started_at": "2026-10-26T04:10:42Z",
+          "completed_at": "2026-10-26T04:15:41Z"
+        },
+        {
+          "name": "Analyze optional camera_desktop candidate",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-10-26T04:15:41Z",
+          "completed_at": "2026-10-26T04:15:53Z"
+        },
+        {
+          "name": "Check Dart formatting on stable",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 6,
+          "started_at": "2026-10-26T04:15:53Z",
+          "completed_at": "2026-10-26T04:15:53Z"
+        },
+        {
+          "name": "Run actions/upload-artifact@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-10-26T04:15:53Z",
+          "completed_at": "2026-10-26T04:15:55Z"
+        },
+        {
+          "name": "Post Run subosito/flutter-action@v2",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 13,
+          "started_at": "2026-10-26T04:15:55Z",
+          "completed_at": "2026-10-26T04:15:56Z"
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 14,
+          "started_at": "2026-10-26T04:15:56Z",
+          "completed_at": "2026-10-26T04:15:57Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 15,
+          "started_at": "2026-10-26T04:15:57Z",
+          "completed_at": "2026-10-26T04:15:57Z"
+        }
+      ]
+    },
+    {
+      "id": 121393124739,
+      "name": "windows (stable)",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/qualife1291/document_detect_windows/actions/runs/40267546967/job/121393124739",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-10-26T04:08:56Z",
+          "completed_at": "2026-10-26T04:08:58Z"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-10-26T04:08:58Z",
+          "completed_at": "2026-10-26T04:09:03Z"
+        },
+        {
+          "name": "Run subosito/flutter-action@v2",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-10-26T04:09:03Z",
+          "completed_at": "2026-10-26T04:10:30Z"
+        },
+        {
+          "name": "Resolve, analyze, test, benchmark and build example",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-10-26T04:10:30Z",
+          "completed_at": "2026-10-26T04:15:09Z"
+        },
+        {
+          "name": "Analyze optional camera_desktop candidate",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-10-26T04:15:09Z",
+          "completed_at": "2026-10-26T04:15:18Z"
+        },
+        {
+          "name": "Check Dart formatting on stable",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-10-26T04:15:18Z",
+          "completed_at": "2026-10-26T04:15:19Z"
+        },
+        {
+          "name": "Run actions/upload-artifact@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-10-26T04:15:19Z",
+          "completed_at": "2026-10-26T04:15:21Z"
+        },
+        {
+          "name": "Post Run subosito/flutter-action@v2",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 13,
+          "started_at": "2026-10-26T04:15:21Z",
+          "completed_at": "2026-10-26T04:15:21Z"
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 14,
+          "started_at": "2026-10-26T04:15:21Z",
+          "completed_at": "2026-10-26T04:15:23Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 15,
+          "started_at": "2026-10-26T04:15:23Z",
+          "completed_at": "2026-10-26T04:15:23Z"
+        }
+      ]
+    },
+    {
+      "id": 121393124768,
+      "name": "windows (3.32.8, 3.32.8)",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/qualife1291/document_detect_windows/actions/runs/40267546967/job/121393124768",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-10-26T04:08:55Z",
+          "completed_at": "2026-10-26T04:08:56Z"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-10-26T04:08:56Z",
+          "completed_at": "2026-10-26T04:09:02Z"
+        },
+        {
+          "name": "Run subosito/flutter-action@v2",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-10-26T04:09:02Z",
+          "completed_at": "2026-10-26T04:10:16Z"
+        },
+        {
+          "name": "Resolve, analyze, test, benchmark and build example",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-10-26T04:10:16Z",
+          "completed_at": "2026-10-26T04:15:11Z"
         },
         {
           "name": "Analyze optional camera_desktop candidate",
           "status": "completed",
           "conclusion": "skipped",
           "number": 5,
-          "started_at": "2026-10-26T03:09:47Z",
-          "completed_at": "2026-10-26T03:09:47Z"
+          "started_at": "2026-10-26T04:15:11Z",
+          "completed_at": "2026-10-26T04:15:11Z"
+        },
+        {
+          "name": "Check Dart formatting on stable",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 6,
+          "started_at": "2026-10-26T04:15:11Z",
+          "completed_at": "2026-10-26T04:15:11Z"
         },
         {
           "name": "Run actions/upload-artifact@v4",
           "status": "completed",
           "conclusion": "success",
-          "number": 6,
-          "started_at": "2026-10-26T03:09:47Z",
-          "completed_at": "2026-10-26T03:09:48Z"
+          "number": 7,
+          "started_at": "2026-10-26T04:15:11Z",
+          "completed_at": "2026-10-26T04:15:12Z"
         },
         {
           "name": "Post Run subosito/flutter-action@v2",
           "status": "completed",
           "conclusion": "success",
-          "number": 11,
-          "started_at": "2026-10-26T03:09:48Z",
-          "completed_at": "2026-10-26T03:09:49Z"
+          "number": 13,
+          "started_at": "2026-10-26T04:15:12Z",
+          "completed_at": "2026-10-26T04:15:13Z"
         },
         {
           "name": "Post Run actions/checkout@v4",
           "status": "completed",
           "conclusion": "success",
-          "number": 12,
-          "started_at": "2026-10-26T03:09:49Z",
-          "completed_at": "2026-10-26T03:09:51Z"
+          "number": 14,
+          "started_at": "2026-10-26T04:15:13Z",
+          "completed_at": "2026-10-26T04:15:15Z"
         },
         {
           "name": "Complete job",
           "status": "completed",
           "conclusion": "success",
-          "number": 13,
-          "started_at": "2026-10-26T03:09:51Z",
-          "completed_at": "2026-10-26T03:09:51Z"
-        }
-      ]
-    },
-    {
-      "id": 121376608586,
-      "name": "windows (stable)",
-      "status": "completed",
-      "conclusion": "success",
-      "html_url": "https://github.com/qualife1291/document_detect_windows/actions/runs/40262146792/job/121376608586",
-      "steps": [
-        {
-          "name": "Set up job",
-          "status": "completed",
-          "conclusion": "success",
-          "number": 1,
-          "started_at": "2026-10-26T03:03:28Z",
-          "completed_at": "2026-10-26T03:03:30Z"
-        },
-        {
-          "name": "Run actions/checkout@v4",
-          "status": "completed",
-          "conclusion": "success",
-          "number": 2,
-          "started_at": "2026-10-26T03:03:30Z",
-          "completed_at": "2026-10-26T03:03:34Z"
-        },
-        {
-          "name": "Run subosito/flutter-action@v2",
-          "status": "completed",
-          "conclusion": "success",
-          "number": 3,
-          "started_at": "2026-10-26T03:03:34Z",
-          "completed_at": "2026-10-26T03:05:12Z"
-        },
-        {
-          "name": "Resolve, analyze, test, benchmark and build example",
-          "status": "completed",
-          "conclusion": "success",
-          "number": 4,
-          "started_at": "2026-10-26T03:05:12Z",
-          "completed_at": "2026-10-26T03:10:16Z"
-        },
-        {
-          "name": "Analyze optional camera_desktop candidate",
-          "status": "completed",
-          "conclusion": "success",
-          "number": 5,
-          "started_at": "2026-10-26T03:10:16Z",
-          "completed_at": "2026-10-26T03:10:26Z"
-        },
-        {
-          "name": "Run actions/upload-artifact@v4",
-          "status": "completed",
-          "conclusion": "success",
-          "number": 6,
-          "started_at": "2026-10-26T03:10:26Z",
-          "completed_at": "2026-10-26T03:10:27Z"
-        },
-        {
-          "name": "Post Run subosito/flutter-action@v2",
-          "status": "completed",
-          "conclusion": "success",
-          "number": 11,
-          "started_at": "2026-10-26T03:10:27Z",
-          "completed_at": "2026-10-26T03:10:53Z"
-        },
-        {
-          "name": "Post Run actions/checkout@v4",
-          "status": "completed",
-          "conclusion": "success",
-          "number": 12,
-          "started_at": "2026-10-26T03:10:53Z",
-          "completed_at": "2026-10-26T03:10:55Z"
-        },
-        {
-          "name": "Complete job",
-          "status": "completed",
-          "conclusion": "success",
-          "number": 13,
-          "started_at": "2026-10-26T03:10:55Z",
-          "completed_at": "2026-10-26T03:10:55Z"
-        }
-      ]
-    },
-    {
-      "id": 121376608599,
-      "name": "windows (3.41.9, 3.41.9)",
-      "status": "completed",
-      "conclusion": "success",
-      "html_url": "https://github.com/qualife1291/document_detect_windows/actions/runs/40262146792/job/121376608599",
-      "steps": [
-        {
-          "name": "Set up job",
-          "status": "completed",
-          "conclusion": "success",
-          "number": 1,
-          "started_at": "2026-10-26T03:03:29Z",
-          "completed_at": "2026-10-26T03:03:31Z"
-        },
-        {
-          "name": "Run actions/checkout@v4",
-          "status": "completed",
-          "conclusion": "success",
-          "number": 2,
-          "started_at": "2026-10-26T03:03:31Z",
-          "completed_at": "2026-10-26T03:03:38Z"
-        },
-        {
-          "name": "Run subosito/flutter-action@v2",
-          "status": "completed",
-          "conclusion": "success",
-          "number": 3,
-          "started_at": "2026-10-26T03:03:38Z",
-          "completed_at": "2026-10-26T03:05:31Z"
-        },
-        {
-          "name": "Resolve, analyze, test, benchmark and build example",
-          "status": "completed",
-          "conclusion": "success",
-          "number": 4,
-          "started_at": "2026-10-26T03:05:31Z",
-          "completed_at": "2026-10-26T03:10:42Z"
-        },
-        {
-          "name": "Analyze optional camera_desktop candidate",
-          "status": "completed",
-          "conclusion": "success",
-          "number": 5,
-          "started_at": "2026-10-26T03:10:42Z",
-          "completed_at": "2026-10-26T03:10:54Z"
-        },
-        {
-          "name": "Run actions/upload-artifact@v4",
-          "status": "completed",
-          "conclusion": "success",
-          "number": 6,
-          "started_at": "2026-10-26T03:10:54Z",
-          "completed_at": "2026-10-26T03:10:55Z"
-        },
-        {
-          "name": "Post Run subosito/flutter-action@v2",
-          "status": "completed",
-          "conclusion": "success",
-          "number": 11,
-          "started_at": "2026-10-26T03:10:55Z",
-          "completed_at": "2026-10-26T03:10:56Z"
-        },
-        {
-          "name": "Post Run actions/checkout@v4",
-          "status": "completed",
-          "conclusion": "success",
-          "number": 12,
-          "started_at": "2026-10-26T03:10:56Z",
-          "completed_at": "2026-10-26T03:10:57Z"
-        },
-        {
-          "name": "Complete job",
-          "status": "completed",
-          "conclusion": "success",
-          "number": 13,
-          "started_at": "2026-10-26T03:10:57Z",
-          "completed_at": "2026-10-26T03:10:57Z"
+          "number": 15,
+          "started_at": "2026-10-26T04:15:15Z",
+          "completed_at": "2026-10-26T04:15:15Z"
         }
       ]
     }
   ],
   "artifacts": [
     {
-      "id": 12625710845,
-      "name": "windows-3.32.8-evidence",
-      "size_in_bytes": 41610,
-      "digest": "sha256:7dc37592d0d010b34de5a6c8bfcf6ae277eeadfb28f7ffe421c53daf279f92e7"
-    },
-    {
-      "id": 12625121921,
+      "id": 12627471586,
       "name": "windows-stable-evidence",
-      "size_in_bytes": 41297,
-      "digest": "sha256:dddb70fb7445fc8916285f47fd3e7817da0b55430b48398b479f0dc414f3449c"
+      "size_in_bytes": 51560,
+      "digest": "sha256:9e85e53aae37e2341a9e69a2ed49f835fff0d0075dd23d8ab65a2e3c63dc66f5"
     },
     {
-      "id": 12624857530,
+      "id": 12627426674,
       "name": "windows-3.41.9-evidence",
-      "size_in_bytes": 41304,
-      "digest": "sha256:2c129c5596ed678beebf047e3e394d4dede0502e708f798a38732868415daac6"
+      "size_in_bytes": 51894,
+      "digest": "sha256:29a695dd7dbe23e70b860129faa296a846cb39458b4e380173cd18008ed8e8f1"
+    },
+    {
+      "id": 12627181392,
+      "name": "windows-3.32.8-evidence",
+      "size_in_bytes": 52041,
+      "digest": "sha256:20c6cd3a2b9833b733286ace9288caebfe3b5c534bb9081ae2603292e99ea417"
     }
   ]
 }

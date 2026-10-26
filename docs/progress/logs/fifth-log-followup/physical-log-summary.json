@@ -1,0 +1,31 @@
+{
+  "events": 433,
+  "duration_seconds": 420,
+  "sessions": 7,
+  "captures": 6,
+  "successes": 6,
+  "manual_captures": 1,
+  "automatic_captures": 5,
+  "processing_ms": [
+    459,
+    457,
+    449,
+    455,
+    453,
+    615
+  ],
+  "negotiated_size": [
+    1280,
+    720
+  ],
+  "analysis_fps_median": 5.0,
+  "native_fps_median": 29.781,
+  "rss_running_mib_range": [
+    171,
+    235
+  ],
+  "library_errors": 0,
+  "gpu_error_lines_in_supplied_file": 0,
+  "final_session_stopped_in_log": false,
+  "jpeg_pixels_available_for_review": false
+}

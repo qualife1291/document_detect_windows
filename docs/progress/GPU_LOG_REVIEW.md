@@ -95,3 +95,7 @@ so sánh CPU trước/sau trên máy yếu. Không dùng chúng để xác nhậ
 Evidence update 2026-10-26: `logs/windows-*`, `logs/linux-*` và provenance hiện
 được cập nhật theo [fourth-log follow-up](FOURTH_LOG_REVIEW.md). Các số đo/source
 lịch sử trong bài vẫn thuộc workflow đã liên kết.
+
+Evidence update: current SDK log folders và provenance được cập nhật theo
+[fifth-log follow-up](fifth-log-review.md); số đo/source lịch sử ở đây thuộc
+workflow đã liên kết trong chính lượt review đó.

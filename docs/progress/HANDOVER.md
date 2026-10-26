@@ -2,6 +2,13 @@ Handover: CHUA DAT
 
 # Bằng chứng bàn giao
 
+Cập nhật log thứ năm: 6/6 capture thành công trong log, native ~30 FPS nhưng
+preview cũ đi chung analysis 5 FPS. Đã tách target bitmap ~15 FPS, dùng demand
+trước readback, pause capture và backoff sampling cost. Cả Windows/Linux đạt
+110 package, 9 UVC, 7 example tests; Windows release build và format gate stable
+đạt. Xem [review](fifth-log-review.md). Chưa đo preview latency/composited FPS
+hoặc soak thật sau bản sửa; gate sản phẩm vẫn CHUA DAT.
+
 Cập nhật log thứ tư (2026-10-26): sửa nhấp nháy bằng stream identity ổn định,
 giữ ảnh qua 30 status/parent rebuilds. Hiển thị kết quả không upscale theo DPI,
 preset high độc lập sampling, có chọn độ phân giải trong example. Windows/Linux
@@ -48,20 +55,20 @@ từ CI/synthetic tests.
 
 ## Windows x64 SDK matrix đã chạy
 
-Nguồn được kiểm tra: commit `7d789ded065afeab591f3e4761de49b3bb6458df`.
-[Workflow xác nhận cuối](https://github.com/qualife1291/document_detect_windows/actions/runs/40262146792)
-đã chạy package/example thành công trên cả ba SDK. Mỗi SDK có 108 package tests,
+Nguồn được kiểm tra: commit `a9e29c4e5c4d8d547aaaa6218b1b12fa969ca0c4`.
+[Workflow xác nhận cuối](https://github.com/qualife1291/document_detect_windows/actions/runs/40267546967)
+đã chạy package/example thành công trên cả ba SDK. Mỗi SDK có 110 package tests,
 7 example widget tests và 2 benchmark tests (detector và snapshot processing). Không skip,
 disable hoặc expected-failure trong các suite này. Các artifact logs được tải
 qua GitHub API và giữ nguyên nội dung.
 
 | Flutter | pub get package/example | analyze package/example | Package / example / benchmark | Build example | Synthetic mean / FPS | Log |
 | --- | --- | --- | --- | --- | --- | --- |
-| 3.32.8 | Đạt / Đạt | Đạt / Đạt | 108 / 7 / 2 đạt | Đạt x64 release | 51.39 ms / 19.46 FPS | [logs](logs/windows-3.32.8/) |
-| 3.41.9 | Đạt / Đạt | Đạt / Đạt | 108 / 7 / 2 đạt | Đạt x64 release | 48.60 ms / 20.58 FPS | [logs](logs/windows-3.41.9/) |
-| 3.47.8 | Đạt / Đạt | Đạt / Đạt | 108 / 7 / 2 đạt | Đạt x64 release | 59.98 ms / 16.67 FPS | [logs](logs/windows-3.47.8/) |
+| 3.32.8 | Đạt / Đạt | Đạt / Đạt | 110 / 7 / 2 đạt | Đạt x64 release | 57.61 ms / 17.36 FPS | [logs](logs/windows-3.32.8/) |
+| 3.41.9 | Đạt / Đạt | Đạt / Đạt | 110 / 7 / 2 đạt | Đạt x64 release | 59.94 ms / 16.68 FPS | [logs](logs/windows-3.41.9/) |
+| 3.47.8 | Đạt / Đạt | Đạt / Đạt | 110 / 7 / 2 đạt | Đạt x64 release | 60.33 ms / 16.57 FPS | [logs](logs/windows-3.47.8/) |
 
-UVC adapter cũng pub get/analyze và 6 tests đạt cả ba SDK trong cùng Windows jobs.
+UVC adapter cũng pub get/analyze và 9 tests đạt cả ba SDK trong cùng Windows jobs.
 Toàn bộ ba Windows jobs đã đạt, gồm cả adapter camera_desktop trên 3.41.9
 và stable. [ci-provenance.json](logs/ci-provenance.json) lưu source SHA, job/step
 conclusions và artifact hashes. Source commit ở trên bao gồm regression tests
@@ -79,10 +86,13 @@ end-to-end <=300 ms. Log camera do người dùng cung cấp đã ghi native del
 chưa đối chiếu bằng profiler/camera-to-texture measurements. `CapturedDocument.processingTime` không bao gồm thời
 gian chờ stable feedback.
 
+Format gate mới kiểm 49 source Dart files trên stable sau resolve mọi project;
+không áp formatter của SDK floor lên desktop adapter Dart 3.11.
+
 ## Linux supplemental
 
 `tool/validate_linux.sh` đã chạy pub get/analyze/test cho package/adapter UVC/
-example trên Flutter 3.32.8, 3.41.9, 3.47.7. Mỗi SDK đạt 108 package tests, 6 UVC adapter và 7 widget
+example trên Flutter 3.32.8, 3.41.9, 3.47.7. Mỗi SDK đạt 110 package tests, 9 UVC adapter và 7 widget
 tests, 2 benchmark tests. Log và version thật ở [3.32.8](logs/linux-3.32.8/),
 [3.41.9](logs/linux-3.41.9/), [3.47.7](logs/linux-3.47.7/).
 Không dùng các kết quả Linux để chứng minh native Windows runtime.
@@ -165,7 +175,7 @@ Tools • Dart 3.11.5 • DevTools 2.54.2
 ```text
 Flutter 3.47.8 • channel stable • https://github.com/flutter/flutter.git
 Framework • revision 737ba8f885 (3 days ago) • 2026-10-22 21:37:31 -0700
-Engine • hash dfd2e6cb7d319db05e3bf1503f3e2ac60f6288a2 (revision cf636b1dfb) (2 days ago) • 2026-10-23 02:13:38.000Z
+Engine • hash dfd2e6cb7d319db05e3bf1503f3e2ac60f6288a2 (revision cf636b1dfb) (3 days ago) • 2026-10-23 02:13:38.000Z
 Tools • Dart 3.13.7 • DevTools 2.60.0
 ```
 

@@ -7,12 +7,20 @@
       "limit": 80
     },
     "ARCHITECTURE.md": {
-      "lines": 74,
+      "lines": 77,
       "limit": 120
     },
     "CONVENTIONS.md": {
       "lines": 57,
       "limit": 120
+    },
+    "DECISIONS.md": {
+      "items": 5,
+      "limit": 40
+    },
+    "SESSION.md": {
+      "lines": 1,
+      "limit": 40
     },
     "env_patterns": {
       ".env": "ignored",
