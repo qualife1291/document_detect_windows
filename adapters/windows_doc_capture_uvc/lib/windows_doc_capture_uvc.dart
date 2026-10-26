@@ -48,6 +48,9 @@ class UvcFrameSource
   @override
   set analysisWanted(bool Function()? wanted) => _analysisWanted = wanted;
   final _frames = StreamController<FrameBuffer>.broadcast();
+  // StreamController.stream creates a fresh wrapper on each access. Keep the
+  // identity stable so status/parent rebuilds do not reset bitmap preview.
+  late final Stream<FrameBuffer> _frameStream = _frames.stream;
   UvcCamera? _camera;
   Timer? _timer;
   StreamSubscription<UvcStreamError>? _errors;
@@ -59,7 +62,7 @@ class UvcFrameSource
   double? get deliveredPreviewFps => _camera?.getStreamStats().deliveredFps;
   int get nativeSequence => _camera?.latestFrameSequence() ?? 0;
   @override
-  Stream<FrameBuffer> get frames => _frames.stream;
+  Stream<FrameBuffer> get frames => _frameStream;
   @override
   Size get previewSize => _size;
   UvcCamera _getCamera() {
@@ -266,7 +269,7 @@ class UvcFrameSource
     if (!_streaming) return const SizedBox.shrink();
     if (previewMode == UvcPreviewMode.bitmap) {
       return RgbaCameraPreview(
-        frames: _frames.stream,
+        frames: _frameStream,
         onDecodeError: (_, __) {
           if (_streaming) {
             _frames.addError(

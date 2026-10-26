@@ -71,12 +71,18 @@ fields needed by the consuming app. Do not retain every `CapturedDocument` in
 memory; each contains both original and cropped JPEG. Dispose result screens and
 apply an explicit storage retention/quota policy for continuous use.
 
-The example defaults to medium/200 ms, preferred native 15 FPS and bitmap preview
+The example defaults to high/200 ms, preferred native 15 FPS and bitmap preview
 ≤640 px after the third physical log showed D3D device loss. Bitmap mode creates
 no camera external texture, drops frames while a single decode is busy and
 releases superseded images even if no new UI frame presents. Flutter's renderer
 can still use the GPU: this is a load/path mitigation, not device-loss recovery.
-The result screen stops the camera first and decodes a display copy ≤1280 px;
+The fourth-log fix caches stream identity across status rebuilds and prevents
+black image resets. Resolution can be selected independently of sampling in the
+example (medium/high/veryHigh); high can still negotiate 1280×720 on a device.
+Use medium for lower full-frame copy cost or veryHigh for more detail only when
+the actual camera/machine can sustain it. The result screen stops the camera
+first and decodes a display copy ≤1280 px, painted without enlargement at the
+current DPI;
 retake reopens the selected camera. Result disposal evicts only its own cache
 entry. Integrating apps must implement equivalent result/lifecycle ownership;
 retaining output JPEGs/files remains their responsibility. See

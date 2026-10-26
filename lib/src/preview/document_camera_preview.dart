@@ -45,8 +45,8 @@ List<Offset> projectDocumentQuad({
 
 enum DocumentFrameStyle { corners, outline }
 
-/// Native camera texture and document markers in one coordinate
-/// space. This widget never reads or renders analysis-frame pixel bytes.
+/// Camera preview and document markers in one coordinate space. The frame
+/// source selects native texture or a bounded bitmap fallback.
 class DocumentCameraPreview extends StatelessWidget {
   const DocumentCameraPreview({
     super.key,

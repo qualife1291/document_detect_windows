@@ -18,16 +18,24 @@ class CaptureResultImage extends StatefulWidget {
 
 class _CaptureResultImageState extends State<CaptureResultImage> {
   late ImageProvider _provider;
+  double? _displayScale;
   ImageProvider _create() => ResizeImage(
-    MemoryImage(widget.bytes),
+    MemoryImage(widget.bytes, scale: _displayScale!),
     width: widget.maxDimension,
     height: widget.maxDimension,
     policy: ResizeImagePolicy.fit,
   );
   @override
-  void initState() {
-    super.initState();
-    _provider = _create();
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final scale =
+        MediaQuery.maybeDevicePixelRatioOf(context) ??
+        View.of(context).devicePixelRatio;
+    if (_displayScale != scale) {
+      if (_displayScale != null) unawaited(_provider.evict());
+      _displayScale = scale;
+      _provider = _create();
+    }
   }
 
   @override
@@ -49,8 +57,10 @@ class _CaptureResultImageState extends State<CaptureResultImage> {
   @override
   Widget build(BuildContext context) => Image(
     image: _provider,
-    fit: BoxFit.contain,
-    filterQuality: FilterQuality.low,
+    // One decoded pixel occupies at most one physical screen pixel. Avoid
+    // stretching a small crop across the whole result area, especially at DPI.
+    fit: BoxFit.scaleDown,
+    filterQuality: FilterQuality.medium,
     semanticLabel: 'Ảnh giấy tờ đã cắt và chỉnh phối cảnh',
   );
 }

@@ -120,6 +120,92 @@ class Camera extends Fake implements UvcCamera {
 }
 
 void main() {
+  test('frame stream identity survives repeated preview builds', () async {
+    final camera = Camera();
+    final source = UvcFrameSource.testing(
+      camera: camera,
+      previewMode: UvcPreviewMode.bitmap,
+    );
+    source.analysisWanted = () => false;
+    try {
+      await source.start();
+      final frames = source.frames;
+      for (var i = 0; i < 30; i++) {
+        expect(source.frames, same(frames));
+        expect(
+          (source.buildPreview() as RgbaCameraPreview).frames,
+          same(frames),
+        );
+      }
+    } finally {
+      await source.stop();
+      await camera.events.close();
+    }
+  });
+  testWidgets(
+    'bitmap keeps the decoded frame across status and parent rebuilds',
+    (tester) async {
+      final camera = Camera();
+      final source = UvcFrameSource.testing(
+        camera: camera,
+        previewMode: UvcPreviewMode.bitmap,
+      );
+      final status = ValueNotifier(
+        DocumentPreviewStatus(state: DocumentPreviewState.processing),
+      );
+      var wanted = true;
+      source.analysisWanted = () => wanted;
+      await tester.runAsync(source.start);
+      Widget tree() => Directionality(
+        textDirection: TextDirection.ltr,
+        child: SizedBox(
+          width: 640,
+          height: 360,
+          child: DocumentCameraPreview(frameSource: source, status: status),
+        ),
+      );
+      try {
+        await tester.pumpWidget(tree());
+        await tester.pump(const Duration(milliseconds: 100));
+        for (
+          var i = 0;
+          i < 100 &&
+              tester.widget<RawImage>(find.byType(RawImage)).image == null;
+          i++
+        ) {
+          await tester.runAsync(
+            () => Future<void>.delayed(const Duration(milliseconds: 10)),
+          );
+          await tester.pump();
+        }
+        wanted = false;
+        final image = tester.widget<RawImage>(find.byType(RawImage)).image;
+        expect(image, isNotNull);
+        for (var i = 0; i < 30; i++) {
+          status.value = DocumentPreviewStatus(
+            state: i.isEven
+                ? DocumentPreviewState.clear
+                : DocumentPreviewState.noDocument,
+          );
+          await tester.pumpWidget(tree());
+          expect(
+            tester.widget<RawImage>(find.byType(RawImage)).image,
+            same(image),
+          );
+          expect(image!.debugDisposed, isFalse);
+        }
+        await tester.pumpWidget(const SizedBox.shrink());
+        expect(image!.debugDisposed, isTrue);
+      } finally {
+        await tester.pumpWidget(const SizedBox.shrink());
+        await tester.runAsync(() async {
+          await source.stop();
+          await camera.events.close();
+        });
+        status.dispose();
+      }
+    },
+  );
   test(
     'bitmap start does not register external textures; demand gates copies and snapshots stay full size',
     () async {

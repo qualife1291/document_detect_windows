@@ -10,7 +10,8 @@ class CameraDevice {
 }
 
 /// Owned, unmirrored, top-left-origin RGBA pixels. The producer must not mutate
-/// [rgba] after delivery. Preview is rendered separately by the native texture.
+/// [rgba] after delivery. Native texture preview is separate; an opt-in bounded
+/// bitmap preview may share the sampled frame.
 class FrameBuffer {
   FrameBuffer({
     required this.width,

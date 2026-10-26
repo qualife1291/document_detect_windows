@@ -55,11 +55,13 @@ saving and enter an operator-controlled directory before starting if needed.
 The result shows the corrected image; **Chụp lại** or **Esc** dismisses it.
 The example stops the camera before showing the result and reopens it on retake.
 It evicts only its own result image from Flutter's image cache and limits the
-**display decode** to 1280 px; output JPEG resolution is unchanged.
+**display decode** to 1280 px. Results use `scaleDown` with device-pixel-ratio
+mapping so a small crop is not enlarged across the screen or at high DPI; medium
+filtering is used when shrinking. Output JPEG bytes are not resized by this view.
 There is no login or authentication layer in this local example.
 
-The example now defaults to a low-resource configuration: medium preset,
-200 ms sampling (at most 5 analysis/bitmap frames per second), a preferred native
+The example defaults to **Cân bằng / high** capture resolution and bounded bitmap
+preview, with 200 ms sampling (at most 5 analysis/bitmap frames per second), a preferred native
 15 FPS mode where available, and a bitmap preview with longest side ≤640 px.
 This explicitly avoids registering a camera external texture. For comparison on
 a stable driver, opt back into the previous example configuration:
@@ -73,10 +75,20 @@ native texture preview; integrating apps can select `UvcPreviewMode.bitmap`,
 `pollInterval: Duration(milliseconds: 200)` and `preferredNativeFps: 15` explicitly,
 with the same interval in `WindowsDocCapture`. Native FPS is a preference, not a
 hard cap when the camera has no matching mode. A 5 FPS analysis rate also takes
-longer to accumulate eight stable frames before automatic capture. The medium
-preset can negotiate a smaller capture resolution than high; JPEGs still use
-the negotiated stream resolution. The result display cap does not resize saved
-JPEG bytes.
+longer to accumulate eight stable frames before automatic capture. Resolution is
+independent of `DOC_CAPTURE_LOW_RESOURCE`: choose **Tiết kiệm / medium**,
+**Cân bằng / high** (default), or **Chi tiết cao / veryHigh** before starting or
+while viewing a result, then **Chụp lại**. Larger modes can improve small-print
+sampling but increase full-frame copy and capture cost. Actual resolution depends
+on the camera's supported modes; high may still select 1280×720. A 5/8 MP label
+does not guarantee that mode is available. JPEGs use the negotiated stream
+resolution; the result display cap does not resize saved bytes.
+
+The UVC bitmap path keeps a stable stream identity across status/UI rebuilds.
+It retains the last decoded frame while waiting for another, avoiding a repeated
+black/blank reset. See the [fourth-log review](docs/progress/FOURTH_LOG_REVIEW.md)
+for the reproduced regression and the distinction between low-resolution crops,
+display magnification and actual optical blur.
 
 ## Integration
 

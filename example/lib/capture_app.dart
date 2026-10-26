@@ -12,7 +12,7 @@ class CaptureApp extends StatelessWidget {
   const CaptureApp({
     super.key,
     required this.capture,
-    this.preset = ResolutionPreset.medium,
+    this.preset = ResolutionPreset.high,
   });
   final WindowsDocCapture capture;
   final ResolutionPreset preset;
@@ -49,7 +49,7 @@ class CapturePage extends StatefulWidget {
   const CapturePage({
     super.key,
     required this.capture,
-    this.preset = ResolutionPreset.medium,
+    this.preset = ResolutionPreset.high,
   });
   final WindowsDocCapture capture;
   @override
@@ -63,6 +63,7 @@ class _CapturePageState extends State<CapturePage> {
   CaptureStatus? _status;
   DocumentPreviewState _documentState = DocumentPreviewState.idle;
   CapturedDocument? _result;
+  late ResolutionPreset _preset;
   List<CameraDevice> _devices = [];
   String? _device, _error;
   bool _presenting = false;
@@ -93,7 +94,7 @@ class _CapturePageState extends State<CapturePage> {
     final cache = PaintingBinding.instance.imageCache;
     try {
       debugPrint(
-        '[capture_example] ${jsonEncode({'v': 1, 'time': DateTime.now().toUtc().toIso8601String(), 'event': 'ui_health', 'uiFrameAgeMs': _lastUiFrame == null ? null : (_uiClock.elapsed - _lastUiFrame!).inMilliseconds, 'maxBuildMs': _maxBuildUs / 1000, 'maxRasterMs': _maxRasterUs / 1000, 'imageCacheBytes': cache.currentSizeBytes, 'imageCacheEntries': cache.currentSize, 'liveImages': cache.liveImageCount, 'pendingImages': cache.pendingImageCount, 'resultBytes': (_result?.originalJpeg.length ?? 0) + (_result?.croppedJpeg.length ?? 0), 'showingResult': _result != null, 'cameraRunning': capture.isRunning})}',
+        '[capture_example] ${jsonEncode({'v': 1, 'time': DateTime.now().toUtc().toIso8601String(), 'event': 'ui_health', 'uiFrameAgeMs': _lastUiFrame == null ? null : (_uiClock.elapsed - _lastUiFrame!).inMilliseconds, 'maxBuildMs': _maxBuildUs / 1000, 'maxRasterMs': _maxRasterUs / 1000, 'imageCacheBytes': cache.currentSizeBytes, 'imageCacheEntries': cache.currentSize, 'liveImages': cache.liveImageCount, 'pendingImages': cache.pendingImageCount, 'resultBytes': (_result?.originalJpeg.length ?? 0) + (_result?.croppedJpeg.length ?? 0), 'showingResult': _result != null, 'cameraRunning': capture.isRunning, 'preset': _preset.name, 'devicePixelRatio': View.of(context).devicePixelRatio})}',
       );
     } catch (_) {
       // Diagnostics must not interrupt camera/UI cleanup if the app sink fails.
@@ -107,6 +108,7 @@ class _CapturePageState extends State<CapturePage> {
   @override
   void initState() {
     super.initState();
+    _preset = widget.preset;
     if (capture.enableDebugLogging) {
       SchedulerBinding.instance.addTimingsCallback(_onFrameTimings);
       _timingsRegistered = true;
@@ -173,7 +175,7 @@ class _CapturePageState extends State<CapturePage> {
       await capture.stop();
       await capture.start(
         deviceId: _device,
-        preset: widget.preset,
+        preset: _preset,
         enableAutoCapture: _auto,
         saveDirectory: _save ? _saveDirectory.text.trim() : null,
         onAutoCapture: _showResult,
@@ -369,6 +371,34 @@ class _CapturePageState extends State<CapturePage> {
                           onChanged: _busy || _started
                               ? null
                               : (v) => setState(() => _device = v),
+                        ),
+                        const Text('Độ phân giải:'),
+                        Semantics(
+                          label: 'Độ phân giải camera',
+                          child: DropdownButton<ResolutionPreset>(
+                            value: _preset,
+                            items: const [
+                              DropdownMenuItem(
+                                value: ResolutionPreset.medium,
+                                child: Text('Tiết kiệm'),
+                              ),
+                              DropdownMenuItem(
+                                value: ResolutionPreset.high,
+                                child: Text('Cân bằng'),
+                              ),
+                              DropdownMenuItem(
+                                value: ResolutionPreset.veryHigh,
+                                child: Text('Chi tiết cao'),
+                              ),
+                            ],
+                            onChanged: _busy || _started
+                                ? null
+                                : (value) {
+                                    if (value != null) {
+                                      setState(() => _preset = value);
+                                    }
+                                  },
+                          ),
                         ),
                         FilledButton(
                           onPressed: _busy || _result != null ? null : _start,

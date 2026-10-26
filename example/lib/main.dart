@@ -16,11 +16,11 @@ void main() {
   );
   final interval = Duration(milliseconds: lowResource ? 200 : 100);
   debugPrint(
-    '[capture_example] ${jsonEncode({'v': 1, 'time': DateTime.now().toUtc().toIso8601String(), 'event': 'configuration', 'lowResource': lowResource, 'safePreview': safePreview, 'analysisIntervalMs': interval.inMilliseconds})}',
+    '[capture_example] ${jsonEncode({'v': 1, 'time': DateTime.now().toUtc().toIso8601String(), 'event': 'configuration', 'lowResource': lowResource, 'safePreview': safePreview, 'analysisIntervalMs': interval.inMilliseconds, 'preset': ResolutionPreset.high.name})}',
   );
   runApp(
     CaptureApp(
-      preset: lowResource ? ResolutionPreset.medium : ResolutionPreset.high,
+      preset: ResolutionPreset.high,
       capture: WindowsDocCapture(
         analysisInterval: interval,
         frameSource: UvcFrameSource(

@@ -4,12 +4,26 @@ This changelog follows Keep a Changelog. No production release has been made.
 
 ## [Unreleased]
 
+### Fourth physical-log follow-up: bitmap flicker and result presentation
+
+- Cache the UVC frame stream so status/parent rebuilds do not unsubscribe, clear
+  the current bitmap and flash black while waiting for a new frame.
+- Prevent result magnification with scaleDown and device-pixel-ratio mapping;
+  use medium filtering for shrinking and evict old providers on DPI changes.
+- Restore high capture preset independently of low-resource sampling, with an
+  example resolution selector; keep bounded bitmap preview and serial camera
+  teardown/restart. Larger modes depend on hardware and cost more memory/CPU.
+- Reproduce stream identity failure and test 30 real-decoder status/parent
+  rebuilds, result pixel sizing at 100/150/200% DPI and preset forwarding/retake.
+  Crop/JPEG/filter/quality thresholds are unchanged; optical blur is not repaired.
+
 ### Repeated-capture performance and GPU failure follow-up
 
 - Add opt-in bounded UVC bitmap preview without external-texture registration;
   keep one in-flight decoder, drop busy frames and dispose superseded/late images.
   Expose polling interval/native FPS preference; preserve texture API default.
-- Default the example to medium preset, 200 ms analysis/polling and bitmap
+- Initially default the example to medium (superseded by the fourth-log fix),
+  200 ms analysis/polling and bitmap
   preview. Stop camera before showing results; reopen on retake. Limit result
   display decode and evict only the result's image-cache entry on close/replace.
 - Clear analyzer lifecycle references on dispose; add example UI/cache diagnostics

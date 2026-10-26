@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:ui' show AppExitResponse;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:windows_doc_capture/windows_doc_capture.dart';
 import 'package:windows_doc_capture_example/capture_app.dart';
@@ -10,6 +11,7 @@ import '../../test/fixtures.dart';
 
 class _Source implements FrameSource {
   Completer<void>? stopGate;
+  final presets = <ResolutionPreset>[];
   final controller = StreamController<FrameBuffer>.broadcast();
   @override
   Stream<FrameBuffer> get frames => controller.stream;
@@ -25,7 +27,10 @@ class _Source implements FrameSource {
   Future<void> start({
     String? deviceId,
     ResolutionPreset preset = ResolutionPreset.high,
-  }) async {}
+  }) async {
+    presets.add(preset);
+  }
+
   @override
   Future<void> stop() async {
     await stopGate?.future;
@@ -78,12 +83,25 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Camera kiểm thử'), findsOneWidget);
       expect(find.text('Đưa giấy tờ vào khung'), findsOneWidget);
+      expect(
+        tester
+            .widget<DropdownButton<ResolutionPreset>>(
+              find.byType(DropdownButton<ResolutionPreset>),
+            )
+            .value,
+        ResolutionPreset.high,
+      );
+      await tester.tap(find.byType(DropdownButton<ResolutionPreset>));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Chi tiết cao').last);
+      await tester.pumpAndSettle();
       await tester.runAsync(() async {
         await tester.tap(find.text('Bắt đầu'));
         await Future<void>.delayed(const Duration(milliseconds: 100));
       });
       await tester.pumpAndSettle();
       expect(find.text('Camera đang hoạt động'), findsOneWidget);
+      expect(source.presets, [ResolutionPreset.veryHigh]);
       await tester.runAsync(() async {
         await tester.tap(find.text('Chụp ngay'));
         await Future<void>.delayed(const Duration(seconds: 1));
@@ -95,6 +113,14 @@ void main() {
         findsOneWidget,
       );
       expect(capture.isRunning, isFalse);
+      expect(
+        tester
+            .widget<DropdownButton<ResolutionPreset>>(
+              find.byType(DropdownButton<ResolutionPreset>),
+            )
+            .onChanged,
+        isNotNull,
+      );
       expect(find.byType(DocumentCameraPreview), findsNothing);
       await tester.runAsync(() async {
         await tester.sendKeyEvent(LogicalKeyboardKey.escape);
@@ -102,6 +128,10 @@ void main() {
       });
       await tester.pumpAndSettle();
       expect(find.text('Đã chụp giấy tờ'), findsNothing);
+      expect(source.presets, [
+        ResolutionPreset.veryHigh,
+        ResolutionPreset.veryHigh,
+      ]);
       expect(tester.takeException(), isNull);
       // Await real isolate cleanup outside the fake widget clock, before
       // unmounting starts the same disposal future from State.dispose().
@@ -259,6 +289,78 @@ void main() {
       await tester.pumpWidget(const SizedBox.shrink());
       await tester.pump();
       expect(PaintingBinding.instance.imageCache.containsKey(key), isFalse);
+      expect(tester.takeException(), isNull);
+    },
+  );
+  testWidgets(
+    'result never enlarges decoded pixels at 100/150/200 percent DPI',
+    (tester) async {
+      final result = (await tester.runAsync(
+        () => const CropPipeline().capture(fixture(width: 640, height: 480)),
+      ))!;
+      Object? previousKey;
+      for (final ratio in [1.0, 1.5, 2.0]) {
+        await tester.pumpWidget(
+          MediaQuery(
+            data: MediaQueryData(devicePixelRatio: ratio),
+            child: Directionality(
+              textDirection: TextDirection.ltr,
+              child: Center(
+                child: SizedBox(
+                  width: 400,
+                  height: 300,
+                  child: CaptureResultImage(
+                    bytes: result.originalJpeg,
+                    maxDimension: 128,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+        for (
+          var i = 0;
+          i < 100 &&
+              tester.renderObject<RenderImage>(find.byType(RawImage)).image ==
+                  null;
+          i++
+        ) {
+          await tester.runAsync(
+            () => Future<void>.delayed(const Duration(milliseconds: 10)),
+          );
+          await tester.pump();
+        }
+        final render = tester.renderObject<RenderImage>(find.byType(RawImage));
+        expect(render.image, isNotNull);
+        expect(render.image!.width, 128);
+        expect(render.image!.height, 96);
+        expect(render.scale, ratio);
+        final destination = applyBoxFit(
+          render.fit!,
+          Size(
+            render.image!.width / render.scale,
+            render.image!.height / render.scale,
+          ),
+          render.size,
+        ).destination;
+        expect(destination.width * ratio, closeTo(128, .001));
+        expect(destination.height * ratio, closeTo(96, .001));
+        final provider = tester.widget<Image>(find.byType(Image)).image;
+        final key = await provider.obtainKey(ImageConfiguration.empty);
+        if (previousKey != null) {
+          expect(
+            PaintingBinding.instance.imageCache.containsKey(previousKey),
+            isFalse,
+          );
+        }
+        previousKey = key;
+      }
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump();
+      expect(
+        PaintingBinding.instance.imageCache.containsKey(previousKey!),
+        isFalse,
+      );
       expect(tester.takeException(), isNull);
     },
   );
