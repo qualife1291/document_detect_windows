@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:io';
+import 'dart:convert';
 import 'dart:ui' show AppExitResponse;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -7,6 +9,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:windows_doc_capture/windows_doc_capture.dart';
 import 'package:windows_doc_capture_example/capture_app.dart';
 import 'package:windows_doc_capture_example/capture_result_image.dart';
+import 'package:windows_doc_capture_example/capture_pair_exporter.dart';
 import '../../test/fixtures.dart';
 
 class _Source implements FrameSource {
@@ -40,7 +43,258 @@ class _Source implements FrameSource {
   Future<FrameBuffer?> latestFullResolutionFrame() async => fixture();
 }
 
+class _PairExporter extends CapturePairExporter {
+  var picker = Completer<String?>();
+  var write = Completer<Directory?>();
+  int picks = 0, writes = 0;
+  CapturedDocument? received;
+  bool Function()? cancelled;
+  @override
+  Future<String?> chooseDirectory({String? initialDirectory}) {
+    picks++;
+    return picker.future;
+  }
+
+  @override
+  Future<Directory?> writePair(
+    CapturedDocument document,
+    Directory parent, {
+    required bool Function() isCancelled,
+  }) {
+    writes++;
+    received = document;
+    cancelled = isCancelled;
+    return write.future;
+  }
+}
+
+Future<(WindowsDocCapture, _Source)> _pairResult(
+  WidgetTester tester,
+  CapturePairExporter exporter, {
+  bool logging = false,
+}) async {
+  await tester.binding.setSurfaceSize(const Size(1280, 960));
+  final source = _Source();
+  final capture = WindowsDocCapture.testing(
+    frameSource: source,
+    enableDebugLogging: logging,
+  );
+  await tester.pumpWidget(CaptureApp(capture: capture, pairExporter: exporter));
+  await tester.pumpAndSettle();
+  await tester.runAsync(() async {
+    await tester.tap(find.text('Bắt đầu'));
+    await Future<void>.delayed(const Duration(milliseconds: 100));
+  });
+  await tester.pumpAndSettle();
+  await tester.runAsync(() async {
+    await tester.tap(find.text('Chụp ngay'));
+    await Future<void>.delayed(const Duration(seconds: 1));
+  });
+  await tester.pumpAndSettle();
+  expect(find.text('Đã chụp giấy tờ'), findsOneWidget);
+  expect(capture.isRunning, isFalse);
+  return (capture, source);
+}
+
+Future<void> _closePairResult(
+  WidgetTester tester,
+  (WindowsDocCapture, _Source) owned,
+) async {
+  await tester.pumpWidget(const SizedBox.shrink());
+  await tester.runAsync(() async {
+    await owned.$1.dispose();
+    await owned.$2.controller.close();
+  });
+  await tester.binding.setSurfaceSize(null);
+}
+
 void main() {
+  testWidgets(
+    'pair picker cancellation blocks duplicate exports and Esc without restarting camera',
+    (tester) async {
+      final exporter = _PairExporter();
+      final owned = await _pairResult(tester, exporter);
+      try {
+        final button = find.widgetWithText(
+          FilledButton,
+          'Xuất cặp ảnh gốc + crop',
+        );
+        final originalCallback = tester.widget<FilledButton>(button).onPressed!;
+        await tester.tap(button);
+        originalCallback(); // stale callback / double click is guarded
+        await tester.pumpAndSettle();
+        expect(exporter.picks, 1);
+        expect(
+          tester
+              .widget<FilledButton>(
+                find.widgetWithText(FilledButton, 'Chụp lại (Esc)'),
+              )
+              .onPressed,
+          isNull,
+        );
+        await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+        await tester.pumpAndSettle();
+        expect(owned.$2.presets, hasLength(1));
+        exporter.picker.complete(null);
+        await tester.pumpAndSettle();
+        expect(exporter.writes, 0);
+        expect(find.text('Đã hủy xuất cặp ảnh.'), findsOneWidget);
+        expect(tester.widget<FilledButton>(button).onPressed, isNotNull);
+        expect(owned.$1.isRunning, isFalse);
+      } finally {
+        await _closePairResult(tester, owned);
+      }
+    },
+  );
+
+  testWidgets(
+    'pair export waits for both files and leaves the same captured result visible',
+    (tester) async {
+      final exporter = _PairExporter();
+      final owned = await _pairResult(tester, exporter);
+      try {
+        final shown = tester
+            .widget<CaptureResultImage>(find.byType(CaptureResultImage))
+            .bytes;
+        await tester.tap(find.text('Xuất cặp ảnh gốc + crop'));
+        exporter.picker.complete('/selected-output');
+        await tester.pumpAndSettle();
+        expect(exporter.writes, 1);
+        expect(exporter.received!.croppedJpeg, same(shown));
+        expect(find.text('Đã xuất đủ ảnh gốc và ảnh crop.'), findsNothing);
+        await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+        await tester.pumpAndSettle();
+        expect(owned.$2.presets, hasLength(1));
+        exporter.write.complete(Directory('/selected-output/capture-pair'));
+        await tester.pumpAndSettle();
+        expect(find.text('Đã xuất đủ ảnh gốc và ảnh crop.'), findsOneWidget);
+        expect(find.text('/selected-output/capture-pair'), findsOneWidget);
+        expect(owned.$1.isRunning, isFalse);
+        expect(
+          tester
+              .widget<CaptureResultImage>(find.byType(CaptureResultImage))
+              .bytes,
+          same(shown),
+        );
+      } finally {
+        await _closePairResult(tester, owned);
+      }
+    },
+  );
+
+  testWidgets(
+    'pair IO error stays readable without private exception text and permits retry',
+    (tester) async {
+      final messages = <String>[];
+      final previousDebugPrint = debugPrint;
+      debugPrint = (String? message, {int? wrapWidth}) {
+        if (message != null) messages.add(message);
+      };
+      final exporter = _PairExporter();
+      final owned = await _pairResult(tester, exporter, logging: true);
+      try {
+        await tester.tap(find.text('Xuất cặp ảnh gốc + crop'));
+        exporter.picker.complete('/selected-output');
+        await tester.pumpAndSettle();
+        exporter.write.completeError(
+          const FileSystemException('/private/document-data'),
+        );
+        await tester.pumpAndSettle();
+        expect(find.textContaining('Không xuất được cặp ảnh.'), findsOneWidget);
+        expect(find.textContaining('/private/document-data'), findsNothing);
+        expect(find.text('Đã chụp giấy tờ'), findsOneWidget);
+        exporter.picker = Completer<String?>();
+        exporter.write = Completer<Directory?>();
+        await tester.tap(find.text('Xuất cặp ảnh gốc + crop'));
+        exporter.picker.complete('/other-output');
+        await tester.pumpAndSettle();
+        exporter.write.complete(Directory('/other-output/pair'));
+        await tester.pumpAndSettle();
+        expect(exporter.writes, 2);
+        final events = messages
+            .where((m) => m.contains('"event":"export_pair"'))
+            .map(
+              (m) =>
+                  jsonDecode(m.substring(m.indexOf('{')))
+                      as Map<String, dynamic>,
+            )
+            .toList();
+        expect(events.map((e) => e['outcome']), [
+          'start',
+          'error',
+          'start',
+          'success',
+        ]);
+        expect(messages.join(), isNot(contains('/private/document-data')));
+        expect(messages.join(), isNot(contains('/selected-output')));
+        expect(messages.join(), isNot(contains('/other-output')));
+        expect(find.text('Đã xuất đủ ảnh gốc và ảnh crop.'), findsOneWidget);
+        expect(tester.takeException(), isNull);
+      } finally {
+        await _closePairResult(tester, owned);
+        debugPrint = previousDebugPrint;
+      }
+    },
+  );
+
+  testWidgets(
+    'closing while folder picker is open never starts a late export',
+    (tester) async {
+      final exporter = _PairExporter();
+      final owned = await _pairResult(tester, exporter);
+      await tester.tap(find.text('Xuất cặp ảnh gốc + crop'));
+      await tester.pumpAndSettle();
+      await _closePairResult(tester, owned);
+      exporter.picker.complete('/late-output');
+      await tester.pumpAndSettle();
+      expect(exporter.writes, 0);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets(
+    'unmount cancels pending pair write without updating disposed widgets',
+    (tester) async {
+      final exporter = _PairExporter();
+      final owned = await _pairResult(tester, exporter);
+      await tester.tap(find.text('Xuất cặp ảnh gốc + crop'));
+      exporter.picker.complete('/selected-output');
+      await tester.pumpAndSettle();
+      expect(exporter.cancelled!(), isFalse);
+      await _closePairResult(tester, owned);
+      expect(exporter.cancelled!(), isTrue);
+      exporter.write.complete(null);
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets(
+    'graceful exit awaits cancellation of an in-progress pair write',
+    (tester) async {
+      final exporter = _PairExporter();
+      final owned = await _pairResult(tester, exporter);
+      try {
+        await tester.tap(find.text('Xuất cặp ảnh gốc + crop'));
+        exporter.picker.complete('/selected-output');
+        await tester.pumpAndSettle();
+        var exited = false;
+        final exit = tester.binding.handleRequestAppExit().then((value) {
+          exited = true;
+          return value;
+        });
+        await tester.pump();
+        expect(exporter.cancelled!(), isTrue);
+        expect(exited, isFalse);
+        exporter.write.complete(null);
+        await tester.pumpAndSettle();
+        expect(await exit, AppExitResponse.exit);
+      } finally {
+        await _closePairResult(tester, owned);
+      }
+    },
+  );
+
   testWidgets('graceful window exit awaits camera cleanup', (tester) async {
     await tester.binding.setSurfaceSize(const Size(1280, 960));
     final source = _Source();

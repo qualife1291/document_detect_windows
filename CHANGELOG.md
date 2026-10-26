@@ -4,6 +4,15 @@ This changelog follows Keep a Changelog. No production release has been made.
 
 ## [Unreleased]
 
+### Example: export original/crop pair
+
+- Add a result-screen export button and native Windows folder selection, pinned
+  to a Flutter 3.32-compatible file_selector_windows release (example only).
+- Write original.jpg/cropped.jpg from the same capture without decoding or
+  re-encoding, in unique per-export folders. Stage both writes before publishing.
+- Handle cancellation/IO errors, duplicate clicks, retake/Esc and late completion;
+  graceful exit awaits in-flight write cleanup. Add safe export status diagnostics.
+
 ### Adaptive preview and captured detail
 
 - Fix additive sampling-cost cadence drift. Add independent bitmap profiles

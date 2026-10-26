@@ -3,6 +3,7 @@
 #
 
 list(APPEND FLUTTER_PLUGIN_LIST
+  file_selector_windows
   windows_doc_capture
   windows_doc_capture_uvc_backend
 )

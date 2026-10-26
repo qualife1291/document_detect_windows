@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'dart:ui' show AppExitResponse, FrameTiming;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -7,14 +8,17 @@ import 'package:flutter/scheduler.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:windows_doc_capture/windows_doc_capture.dart';
 import 'capture_result_image.dart';
+import 'capture_pair_exporter.dart';
 
 class CaptureApp extends StatelessWidget {
   const CaptureApp({
     super.key,
     required this.capture,
     this.preset = ResolutionPreset.high,
+    this.pairExporter = const CapturePairExporter(),
   });
   final WindowsDocCapture capture;
+  final CapturePairExporter pairExporter;
   final ResolutionPreset preset;
   @override
   Widget build(BuildContext context) => MaterialApp(
@@ -40,7 +44,11 @@ class CaptureApp extends StatelessWidget {
         ),
       ),
     ),
-    home: CapturePage(capture: capture, preset: preset),
+    home: CapturePage(
+      capture: capture,
+      preset: preset,
+      pairExporter: pairExporter,
+    ),
   );
 }
 
@@ -50,8 +58,10 @@ class CapturePage extends StatefulWidget {
     super.key,
     required this.capture,
     this.preset = ResolutionPreset.high,
+    this.pairExporter = const CapturePairExporter(),
   });
   final WindowsDocCapture capture;
+  final CapturePairExporter pairExporter;
   @override
   State<CapturePage> createState() => _CapturePageState();
 }
@@ -63,6 +73,9 @@ class _CapturePageState extends State<CapturePage> {
   CaptureStatus? _status;
   DocumentPreviewState _documentState = DocumentPreviewState.idle;
   CapturedDocument? _result;
+  bool _exporting = false, _closing = false;
+  String? _exportDirectory, _exportedPath, _exportMessage;
+  Future<Directory?>? _pairWrite;
   late ResolutionPreset _preset;
   List<CameraDevice> _devices = [];
   String? _device, _error;
@@ -119,6 +132,12 @@ class _CapturePageState extends State<CapturePage> {
     }
     _lifecycle = AppLifecycleListener(
       onExitRequested: () async {
+        _closing = true;
+        try {
+          await _pairWrite;
+        } catch (_) {
+          // Export reports IO failures itself; exit still releases the camera.
+        }
         try {
           await capture.dispose();
         } catch (_) {
@@ -264,10 +283,86 @@ class _CapturePageState extends State<CapturePage> {
     }
   }
 
+  void _logPairExport(
+    String outcome,
+    CapturedDocument document, {
+    Object? error,
+  }) {
+    if (!capture.enableDebugLogging) return;
+    try {
+      debugPrint(
+        '[capture_example] ${jsonEncode({'v': 1, 'time': DateTime.now().toUtc().toIso8601String(), 'event': 'export_pair', 'outcome': outcome, 'originalBytes': document.originalJpeg.length, 'croppedBytes': document.croppedJpeg.length, if (error != null) 'errorType': error.runtimeType.toString()})}',
+      );
+    } catch (_) {
+      /* Optional diagnostics must not interrupt export cleanup. */
+    }
+  }
+
+  Future<void> _exportPair() async {
+    final document = _result;
+    if (document == null || _busy || _exporting || _closing) return;
+    setState(() {
+      _exporting = _busy = true;
+      _exportMessage = _exportedPath = null;
+    });
+    try {
+      final directory = await widget.pairExporter.chooseDirectory(
+        initialDirectory:
+            _exportDirectory ??
+            (_saveDirectory.text.trim().isEmpty
+                ? null
+                : _saveDirectory.text.trim()),
+      );
+      if (!mounted || _closing || !identical(document, _result)) {
+        _logPairExport('cancelled', document);
+        return;
+      }
+      if (directory == null || directory.isEmpty) {
+        setState(() => _exportMessage = 'Đã hủy xuất cặp ảnh.');
+        _logPairExport('cancelled', document);
+        return;
+      }
+      _exportDirectory = directory;
+      _logPairExport('start', document);
+      final write = widget.pairExporter.writePair(
+        document,
+        Directory(directory),
+        isCancelled: () =>
+            _closing || !mounted || !identical(document, _result),
+      );
+      _pairWrite = write;
+      final exported = await write;
+      _logPairExport(exported == null ? 'cancelled' : 'success', document);
+      if (!mounted || _closing || !identical(document, _result)) return;
+      if (exported == null) {
+        setState(() => _exportMessage = 'Đã hủy xuất cặp ảnh.');
+      } else {
+        setState(() {
+          _exportedPath = exported.path;
+          _exportMessage = 'Đã xuất đủ ảnh gốc và ảnh crop.';
+        });
+      }
+    } catch (error) {
+      _logPairExport('error', document, error: error);
+      if (mounted && !_closing && identical(document, _result)) {
+        setState(
+          () => _exportMessage =
+              'Không xuất được cặp ảnh. Kiểm tra quyền ghi, dung lượng thư mục rồi thử lại.',
+        );
+      }
+    } finally {
+      _pairWrite = null;
+      if (mounted && !_closing) {
+        setState(() => _exporting = _busy = false);
+      }
+    }
+  }
+
   Future<void> _retake() async {
     if (_busy || _presenting) return;
     setState(() {
       _result = null;
+      _exportedPath = _exportMessage = null;
       _error = null;
     });
     await _start();
@@ -276,6 +371,7 @@ class _CapturePageState extends State<CapturePage> {
 
   @override
   void dispose() {
+    _closing = true;
     _uiHealthTimer?.cancel();
     if (_timingsRegistered) {
       SchedulerBinding.instance.removeTimingsCallback(_onFrameTimings);
@@ -638,9 +734,31 @@ class _CapturePageState extends State<CapturePage> {
                                   ? 'Ảnh đang ở bộ nhớ'
                                   : 'Đã lưu ảnh vào thư mục được chọn',
                             ),
-                            FilledButton(
-                              onPressed: _busy ? null : _retake,
-                              child: const Text('Chụp lại (Esc)'),
+                            if (_exportMessage != null)
+                              Semantics(
+                                liveRegion: true,
+                                child: Text(_exportMessage!),
+                              ),
+                            if (_exportedPath != null)
+                              SelectableText(_exportedPath!),
+                            Wrap(
+                              spacing: 12,
+                              runSpacing: 8,
+                              children: [
+                                FilledButton.icon(
+                                  onPressed: _busy ? null : _exportPair,
+                                  icon: const Icon(Icons.save_alt),
+                                  label: Text(
+                                    _exporting
+                                        ? 'Đang xuất cặp ảnh…'
+                                        : 'Xuất cặp ảnh gốc + crop',
+                                  ),
+                                ),
+                                FilledButton(
+                                  onPressed: _busy ? null : _retake,
+                                  child: const Text('Chụp lại (Esc)'),
+                                ),
+                              ],
                             ),
                           ],
                         ),

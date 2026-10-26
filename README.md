@@ -60,6 +60,24 @@ mapping so a small crop is not enlarged across the screen or at high DPI; medium
 filtering is used when shrinking. Output JPEG bytes are not resized by this view.
 There is no login or authentication layer in this local example.
 
+On the result screen, choose **Xuất cặp ảnh gốc + crop**, then select a folder
+in the Windows folder picker. This works after manual and automatic capture,
+without enabling the earlier save checkbox. Each export creates a separate
+`capture-<timestamp>-<suffix>` subfolder containing **original.jpg** (full camera
+frame) and **cropped.jpg** (corrected document), from the same capture. The files
+retain the existing JPEG bytes: export performs no resize or re-encoding.
+The selected export path is shown and can be copied. Open both files in Windows
+Photos at **100% / Actual size** and compare the same printed text.
+
+Canceling the picker writes nothing. While exporting, duplicate clicks and
+retake/Esc are blocked. Partial writes are staged and cleaned on ordinary
+failure/cancellation; completed pairs are retained. Forced process termination,
+media removal or failed filesystem cleanup may leave a `.capture-...` staging
+folder. The app does not sweep/delete unrelated or previously completed files.
+Export is separate from the earlier **Lưu ảnh vào thư mục** option, which saves
+only the cropped image. The app/operator still owns destination ACL/retention.
+
+
 The example defaults to **Cân bằng / high** capture resolution and bounded bitmap
 preview: 200 ms analysis sampling (about 5 FPS), independent bitmap delivery
 requesting about 15 FPS, a preferred native 15 FPS mode where available, and

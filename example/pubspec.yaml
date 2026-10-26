@@ -8,6 +8,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  file_selector_windows: 0.9.3+5
   flutter_localizations:
     sdk: flutter
   windows_doc_capture:

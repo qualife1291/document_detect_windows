@@ -126,3 +126,16 @@ pixels/document text/device identifiers. Compare profile/release with real host
 animations and result transitions; look for CPU/raster spikes, memory growth,
 mode fallback, stale geometry and cleanup failures. CI/synthetic tests do not
 certify physical-camera sharpness, driver stability or 24/7 operation.
+
+
+## Export a comparison pair
+
+In the example's result screen choose **Xuất cặp ảnh gốc + crop**, then a Windows
+folder. The new capture-timestamp/random-suffix subfolder contains original.jpg
+and cropped.jpg, with byte-identical copies of the same CapturedDocument outputs.
+Export runs asynchronously with the camera stopped, and does not decode images,
+re-encode JPEGs or register additional preview listeners. It adds no work to the
+preview loop. Cancel/error/exit cleanup affects only that export's staging data;
+completed pairs remain. Export logs contain outcome/byte counts/error type only.
+Use Windows Photos at 100% to compare the same text, not fit-to-window screenshots.
+The existing save checkbox still controls crop-only automatic saving.
