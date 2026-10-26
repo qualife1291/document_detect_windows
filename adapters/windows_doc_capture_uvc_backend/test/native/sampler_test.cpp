@@ -24,7 +24,7 @@ int main() {
   CHECK(SampleRgba(input.data(),input.size(),4,4,output.data()+1,64,4,true,&size));
   for(size_t i=0;i<64;++i) CHECK(output[i+1] == (i%4==3 ? 255 : input[i]));
   CHECK(output.front()==213 && output.back()==213);
-  std::fill(output.begin(),output.end(),213);
+  std::fill(output.begin(),output.end(),static_cast<uint8_t>(213));
   CHECK(SampleRgba(input.data(),64,4,4,output.data()+1,16,2,true,&size));
   CHECK(output[1]==10 && output[2]==11 && output[3]==12 && output[4]==255);
   CHECK(output[16]==255 && output[17]==213);
