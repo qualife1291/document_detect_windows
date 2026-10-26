@@ -75,6 +75,9 @@ class WindowsDocCapture {
         autoState: _auto.state.name,
         stableFrames: _auto.stableFrames,
         feedbackProgress: _auto.feedbackProgress,
+        bitmap: _source is BitmapPreviewDiagnostics
+            ? (_source as BitmapPreviewDiagnostics).bitmapPreviewMetrics
+            : null,
       );
     } catch (error, stack) {
       _diagnostics.error('diagnostic_health', error, stack);
@@ -307,6 +310,10 @@ class WindowsDocCapture {
       if (source is AnalysisDemandSource) {
         (source as AnalysisDemandSource).analysisWanted = () =>
             _requestAnalysis(analyzer);
+      }
+      if (source is PreviewSamplingSource) {
+        (source as PreviewSamplingSource).previewSamplingAllowed = () =>
+            _running && !_disposed && _stopping == null && _capture == null;
       }
       await _verifyPlatform();
       if (_disposed || _stopping != null) {
@@ -690,6 +697,9 @@ class WindowsDocCapture {
         (source as AnalysisDemandSource).analysisWanted = null;
       }
       await attempt('camera_stop', _source.stop);
+      if (source is PreviewSamplingSource) {
+        (source as PreviewSamplingSource).previewSamplingAllowed = null;
+      }
       if (_cameraOwner == this) _cameraOwner = null;
     }
     _callback = null;

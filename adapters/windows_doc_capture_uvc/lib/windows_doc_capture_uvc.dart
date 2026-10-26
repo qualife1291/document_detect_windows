@@ -11,11 +11,17 @@ enum UvcPreviewMode { texture, bitmap }
 /// Experimental candidate. Texture is the default; bitmap is an explicit,
 /// bounded low-rate fallback that does not register a Flutter external texture.
 class UvcFrameSource
-    implements FrameSource, FrameSourceDiagnostics, AnalysisDemandSource {
+    implements
+        FrameSource,
+        FrameSourceDiagnostics,
+        AnalysisDemandSource,
+        PreviewSamplingSource,
+        BitmapPreviewDiagnostics {
   UvcFrameSource({
     this.previewMode = UvcPreviewMode.texture,
     this.pollInterval = const Duration(milliseconds: 100),
     this.preferredNativeFps = 30,
+    this.bitmapPreviewInterval = const Duration(milliseconds: 66),
   }) : _testCamera = null {
     _validateInterval();
   }
@@ -25,17 +31,26 @@ class UvcFrameSource
     this.previewMode = UvcPreviewMode.texture,
     this.pollInterval = const Duration(milliseconds: 100),
     this.preferredNativeFps = 30,
+    this.bitmapPreviewInterval = const Duration(milliseconds: 66),
   }) : _testCamera = camera {
     _validateInterval();
   }
   final UvcPreviewMode previewMode;
   final Duration pollInterval;
+
+  /// Requested bitmap cadence, independent of analysis. Expensive readback or
+  /// a busy decoder reduces actual offers; this is not a display-FPS guarantee.
+  final Duration bitmapPreviewInterval;
   final int preferredNativeFps;
   final UvcCamera? _testCamera;
   bool _streaming = false;
   void _validateInterval() {
     if (preferredNativeFps < 10 || preferredNativeFps > 120) {
       throw ArgumentError.value(preferredNativeFps, 'preferredNativeFps');
+    }
+    if (bitmapPreviewInterval < const Duration(milliseconds: 50) ||
+        bitmapPreviewInterval > const Duration(seconds: 1)) {
+      throw ArgumentError.value(bitmapPreviewInterval, 'bitmapPreviewInterval');
     }
     if (pollInterval < const Duration(milliseconds: 50) ||
         pollInterval > const Duration(seconds: 1)) {
@@ -44,13 +59,50 @@ class UvcFrameSource
   }
 
   final _operations = CameraOperationQueue();
-  bool Function()? _analysisWanted;
+  bool Function()? _analysisWanted, _previewAllowed;
+  @override
+  set previewSamplingAllowed(bool Function()? allowed) =>
+      _previewAllowed = allowed;
   @override
   set analysisWanted(bool Function()? wanted) => _analysisWanted = wanted;
   final _frames = StreamController<FrameBuffer>.broadcast();
   // StreamController.stream creates a fresh wrapper on each access. Keep the
   // identity stable so status/parent rebuilds do not reset bitmap preview.
   late final Stream<FrameBuffer> _frameStream = _frames.stream;
+  final _bitmapFrames = StreamController<FrameBuffer>.broadcast();
+  late final Stream<FrameBuffer> _bitmapStream = _bitmapFrames.stream;
+  BitmapPreviewDemand? _bitmapDemand;
+  final _samplingClock = Stopwatch();
+  Duration? _lastAnalysisAt, _lastBitmapAt, _lastReadAt;
+  int _bitmapOffers = 0, _samples = 0, _sampleTotalUs = 0, _sampleMaxUs = 0;
+  double _sampleEwmaUs = 0;
+
+  Duration get _readbackInterval => Duration(
+    // Approximate copy/downsample duty budget for extra preview reads. Analysis
+    // may still need work sooner; this is not a bound on total app CPU.
+    microseconds: math.max(
+      bitmapPreviewInterval.inMicroseconds,
+      (_sampleEwmaUs * 4).ceil(),
+    ),
+  );
+
+  @override
+  BitmapPreviewMetrics? get bitmapPreviewMetrics =>
+      previewMode != UvcPreviewMode.bitmap || !_streaming
+      ? null
+      : BitmapPreviewMetrics(
+          elapsed: _samplingClock.elapsed,
+          offeredFrames: _bitmapOffers,
+          sampledFrames: _samples,
+          totalSamplingTime: Duration(microseconds: _sampleTotalUs),
+          maxSamplingTime: Duration(microseconds: _sampleMaxUs),
+          requestedInterval: bitmapPreviewInterval,
+          effectiveInterval: _readbackInterval,
+          lastOfferedAt: _lastBitmapAt,
+        );
+
+  bool _due(Duration now, Duration? last, Duration interval) =>
+      last == null || now + const Duration(milliseconds: 5) - last >= interval;
   UvcCamera? _camera;
   Timer? _timer;
   StreamSubscription<UvcStreamError>? _errors;
@@ -170,10 +222,34 @@ class UvcFrameSource
       );
       _streaming = true;
       _sequence = -1;
+      _bitmapDemand = previewMode == UvcPreviewMode.bitmap
+          ? BitmapPreviewDemand()
+          : null;
+      _samplingClock
+        ..reset()
+        ..start();
+      _lastAnalysisAt = _lastBitmapAt = _lastReadAt = null;
+      _bitmapOffers = _samples = _sampleTotalUs = _sampleMaxUs = 0;
+      _sampleEwmaUs = 0;
       _liveness
         ..reset()
         ..start();
-      _timer = Timer.periodic(pollInterval, (_) => _poll());
+      final tick = previewMode == UvcPreviewMode.texture
+          ? pollInterval
+          : Duration(
+              microseconds: math.max(
+                16000,
+                math.min(
+                  33000,
+                  math.min(
+                        pollInterval.inMicroseconds,
+                        bitmapPreviewInterval.inMicroseconds,
+                      ) ~/
+                      2,
+                ),
+              ),
+            );
+      _timer = Timer.periodic(tick, (_) => _poll());
     } catch (_) {
       await _stop();
       rethrow;
@@ -198,7 +274,20 @@ class UvcFrameSource
         ..reset()
         ..start();
       _sequence = sequence;
-      if (!(_analysisWanted?.call() ?? true)) return;
+      final now = _samplingClock.elapsed;
+      final analysis =
+          _frames.hasListener &&
+          _due(now, _lastAnalysisAt, pollInterval) &&
+          (_analysisWanted?.call() ?? true);
+      final preview =
+          _bitmapDemand?.canAcceptFrame == true &&
+          _bitmapFrames.hasListener &&
+          (_previewAllowed?.call() ?? true) &&
+          _due(now, _lastBitmapAt, bitmapPreviewInterval);
+      final extraReadAllowed = _due(now, _lastReadAt, _readbackInterval);
+      if (!analysis && !(preview && extraReadAllowed)) return;
+      if (analysis) _lastAnalysisAt = now;
+      final cost = Stopwatch()..start();
       final raw = camera.copyLatestFrame();
       if (raw == null) return;
       _sequence = raw.sequence;
@@ -230,15 +319,28 @@ class UvcFrameSource
           rgba[to + 3] = 255;
         }
       }
-      _frames.add(
-        FrameBuffer(
-          width: width,
-          height: height,
-          rgba: rgba,
-          capturedAt: DateTime.now(),
-          sequence: raw.sequence,
-        ),
+      cost.stop();
+      final us = cost.elapsedMicroseconds;
+      _lastReadAt = now;
+      _samples++;
+      _sampleTotalUs += us;
+      _sampleMaxUs = math.max(_sampleMaxUs, us);
+      _sampleEwmaUs = _samples == 1
+          ? us.toDouble()
+          : _sampleEwmaUs * .875 + us * .125;
+      final frame = FrameBuffer(
+        width: width,
+        height: height,
+        rgba: rgba,
+        capturedAt: DateTime.now(),
+        sequence: raw.sequence,
       );
+      if (analysis) _frames.add(frame);
+      if (preview) {
+        _lastBitmapAt = _samplingClock.elapsed;
+        _bitmapOffers++;
+        _bitmapFrames.add(frame);
+      }
     } catch (_) {
       _timer?.cancel();
       _frames.addError(
@@ -269,7 +371,8 @@ class UvcFrameSource
     if (!_streaming) return const SizedBox.shrink();
     if (previewMode == UvcPreviewMode.bitmap) {
       return RgbaCameraPreview(
-        frames: _frameStream,
+        frames: _bitmapStream,
+        frameDemand: _bitmapDemand,
         onDecodeError: (_, __) {
           if (_streaming) {
             _frames.addError(
@@ -291,6 +394,8 @@ class UvcFrameSource
 
   Future<void> _stop() async {
     _streaming = false;
+    _samplingClock.stop();
+    _bitmapDemand = null;
     _timer?.cancel();
     _timer = null;
     await _errors?.cancel();

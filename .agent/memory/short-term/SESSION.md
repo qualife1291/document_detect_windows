@@ -1,8 +1,9 @@
 # Bối cảnh phiên
 
-- Task: specs/adopt-agent-standard.md.
-- Người dùng yêu cầu review rule và bổ sung phần thiếu/hợp lý.
-- Baseline runtime: 7d789de; tài liệu: be7bdfe.
-- Đã đọc đủ 1139 dòng raw rule; bản gốc giữ nguyên tại root.
-- Source hiện có 48 Dart files đều qua format với Flutter 3.47.7.
-- Quyền commit/push/merge trong hội thoại đã có; không tạo approval gate mới.
+- Rule review đã commit b66ce7f, chưa push; original raw file giữ nguyên.
+- Local standard checks: formatter 49 files pass, dirty/missing fixture fail đúng,
+  không ghi lại file; env patterns pass; analyze root pass.
+- User bổ sung log 5 và yêu cầu preview mượt hơn; task specs/smooth-bitmap-preview.md.
+- Log: 433 events/~420 s, 7 sessions, 6/6 captures success, không library/GPU error
+  trong file. Native ~30 FPS, analysis/bitmap 5 FPS; veryHigh thực tế 1280×720.
+- Cần giữ stream identity/dispose/cache fixes trước, không tăng queue hoặc dùng texture lại.

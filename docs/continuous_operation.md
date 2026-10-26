@@ -10,8 +10,8 @@ required. Synthetic tests contain no real identity or medical information.
 - `analysisInterval` defaults to 100 ms: a maximum requested analysis rate, not
   guaranteed detection FPS. Frames are skipped while analysis/capture is busy.
   Adapters implementing `AnalysisDemandSource` avoid copying/sampling those
-  frames. Native texture preview remains independent; opt-in bitmap preview shares
-  the bounded sampled stream. A slow detector does not build an
+  frames. Native texture preview remains independent; opt-in bitmap preview has a separate bounded
+  delivery cadence and shares a readback when both consumers need it. A slow detector does not build an
   unlimited work queue: the standalone analyzer retains at most one pending
   latest frame. Analysis is limited by the longest dimension, including portrait.
 - Detection avoids per-pixel neighbor-list and point-object allocation in its
@@ -71,8 +71,14 @@ fields needed by the consuming app. Do not retain every `CapturedDocument` in
 memory; each contains both original and cropped JPEG. Dispose result screens and
 apply an explicit storage retention/quota policy for continuous use.
 
-The example defaults to high/200 ms, preferred native 15 FPS and bitmap preview
-≤640 px after the third physical log showed D3D device loss. Bitmap mode creates
+The example defaults to high/200 ms analysis, preferred native 15 FPS and bitmap
+preview ≤640 px after the third physical log showed D3D device loss. The fifth-log
+fix separates bitmap offers (target ~15 FPS) from analysis (~5 FPS). A session
+readiness handle prevents preview-only readbacks while decoding/unmounted; an
+optional PreviewSamplingSource predicate pauses them during capture/teardown.
+One frame serves both streams when due together. Measured sampling cost applies
+an EWMA backoff to extra preview reads, while analysis retains its own demand.
+This heuristic does not bound total CPU or native 8 MP allocation cost. Bitmap mode creates
 no camera external texture, drops frames while a single decode is busy and
 releases superseded images even if no new UI frame presents. Flutter's renderer
 can still use the GPU: this is a load/path mitigation, not device-loss recovery.

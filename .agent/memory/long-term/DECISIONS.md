@@ -32,3 +32,12 @@
 - Lý do: CI không có camera/driver, accessibility inspection hoặc physical soak.
 - Hệ quả: ghi source/SDK/lệnh thật; task hạ tầng done không đổi gate CHUA DAT.
 - Nguồn: docs/progress/HANDOVER.md, docs/continuous_operation.md.
+
+## D-005 — Preview cadence độc lập, demand trước readback
+
+- Ngày: 2026-10-26
+- Trạng thái: accepted
+- Lý do: log 5 native ~30 FPS nhưng preview đi chung analysis 5 FPS.
+- Hệ quả: target bitmap ~15, analysis giữ gate; chia sẻ readback, pause capture và
+  decoder demand/backoff; offered FPS không thay measured display FPS.
+- Nguồn: specs/smooth-bitmap-preview.md và docs/progress/fifth-log-review.md.

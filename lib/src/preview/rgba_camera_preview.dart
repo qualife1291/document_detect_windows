@@ -3,6 +3,13 @@ import 'dart:ui' as ui;
 import 'package:flutter/widgets.dart';
 import '../camera/frame_source.dart';
 
+/// One bitmap consumer's readiness. Create a new handle for each camera session.
+/// Sources read this before costly native readback; only the widget mutates it.
+class BitmapPreviewDemand {
+  bool _ready = false;
+  bool get canAcceptFrame => _ready;
+}
+
 /// Explicit low-rate bitmap fallback for external-texture/driver problems.
 /// At most one frame is decoding and one image is displayed. Busy frames are
 /// dropped; this widget never buffers a history or uses Flutter's image cache.
@@ -11,6 +18,7 @@ class RgbaCameraPreview extends StatefulWidget {
     super.key,
     required this.frames,
     this.onDecodeError,
+    this.frameDemand,
     this.maxDimension = 640,
   }) : decodeFrame = null,
        assert(maxDimension >= 2 && maxDimension <= 1920);
@@ -21,10 +29,12 @@ class RgbaCameraPreview extends StatefulWidget {
     required this.frames,
     required this.decodeFrame,
     this.onDecodeError,
+    this.frameDemand,
     this.maxDimension = 640,
   }) : assert(maxDimension >= 2 && maxDimension <= 1920);
 
   final Stream<FrameBuffer> frames;
+  final BitmapPreviewDemand? frameDemand;
   final int maxDimension;
   final void Function(Object, StackTrace)? onDecodeError;
   final Future<ui.Image> Function(FrameBuffer)? decodeFrame;
@@ -41,6 +51,11 @@ class _RgbaCameraPreviewState extends State<RgbaCameraPreview> {
   void initState() {
     super.initState();
     _listen();
+    _updateDemand();
+  }
+
+  void _updateDemand() {
+    widget.frameDemand?._ready = mounted && !_decoding;
   }
 
   void _listen() {
@@ -56,6 +71,9 @@ class _RgbaCameraPreviewState extends State<RgbaCameraPreview> {
   @override
   void didUpdateWidget(RgbaCameraPreview oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (!identical(oldWidget.frameDemand, widget.frameDemand)) {
+      oldWidget.frameDemand?._ready = false;
+    }
     if (!identical(oldWidget.frames, widget.frames)) {
       ++_epoch;
       unawaited(_subscription?.cancel());
@@ -63,6 +81,7 @@ class _RgbaCameraPreviewState extends State<RgbaCameraPreview> {
       _image = null;
       _listen();
     }
+    _updateDemand();
   }
 
   void _frame(FrameBuffer frame) {
@@ -73,6 +92,7 @@ class _RgbaCameraPreviewState extends State<RgbaCameraPreview> {
       return;
     }
     _decoding = true;
+    _updateDemand();
     final epoch = _epoch;
     unawaited(_decode(frame, epoch));
   }
@@ -93,12 +113,14 @@ class _RgbaCameraPreviewState extends State<RgbaCameraPreview> {
       if (mounted && epoch == _epoch) widget.onDecodeError?.call(error, stack);
     } finally {
       _decoding = false;
+      if (mounted) _updateDemand();
     }
   }
 
   @override
   void dispose() {
     ++_epoch;
+    widget.frameDemand?._ready = false;
     unawaited(_subscription?.cancel());
     _image?.dispose();
     _image = null;

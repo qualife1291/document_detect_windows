@@ -4,6 +4,19 @@ This changelog follows Keep a Changelog. No production release has been made.
 
 ## [Unreleased]
 
+### Fifth physical-log follow-up: independent bitmap cadence
+
+- Split cached analysis and bitmap streams; request about 15 FPS for example
+  preview while analysis keeps its 200 ms interval. Share readback/downsample
+  when both consumers need a frame, with upstream decoder demand and no queue.
+- Pause extra bitmap work during capture/start/teardown through an optional
+  source interface. Keep texture defaults and custom FrameSource compatibility.
+- Back off preview-only reads using measured copy/downsample cost; add safe
+  health counters distinguishing bitmap offers, native delivery and analysis.
+  Expose example DOC_CAPTURE_PREVIEW_FPS (5–20) for hardware comparisons.
+- Keep crop/JPEG/quality gates and prior dispose/stream identity fixes unchanged.
+  The target is not a physical displayed-FPS, CPU or 24/7 guarantee.
+
 ### Fourth physical-log follow-up: bitmap flicker and result presentation
 
 - Cache the UVC frame stream so status/parent rebuilds do not unsubscribe, clear

@@ -5,6 +5,7 @@ import 'dart:isolate';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import '../detection/quality_analyzer.dart';
+import '../camera/frame_source.dart';
 import '../preview/document_preview_status.dart';
 
 /// Local, bounded diagnostic output. Never pass exception messages, paths,
@@ -22,7 +23,8 @@ class CaptureDiagnostics {
   double _analysisMs = 0, _maxAnalysisMs = 0;
   DateTime? _lastFrame;
   Duration _lastHealth = Duration.zero;
-  int _lastHealthReports = 0;
+  int _lastHealthReports = 0, _lastBitmapOffers = 0;
+  Duration _lastBitmapElapsed = Duration.zero;
 
   void event(String name, [Map<String, Object?> fields = const {}]) {
     if (!enabled) return;
@@ -63,6 +65,8 @@ class CaptureDiagnostics {
     _lastFrame = null;
     _lastHealth = _clock.elapsed;
     _lastHealthReports = 0;
+    _lastBitmapOffers = 0;
+    _lastBitmapElapsed = Duration.zero;
     _lastState = null;
     _suppressed = 0;
   }
@@ -139,6 +143,7 @@ class CaptureDiagnostics {
     DocumentPreviewStatus status, {
     required bool running,
     double? nativeFps,
+    BitmapPreviewMetrics? bitmap,
     required bool autoEnabled,
     required String autoState,
     required int stableFrames,
@@ -150,6 +155,15 @@ class CaptureDiagnostics {
     final fps = elapsed > 0 ? (reports - _lastHealthReports) / elapsed : 0.0;
     _lastHealth = now;
     _lastHealthReports = reports;
+    double bitmapFps = 0;
+    if (bitmap != null) {
+      final seconds =
+          (bitmap.elapsed - _lastBitmapElapsed).inMicroseconds / 1e6;
+      final delta = bitmap.offeredFrames - _lastBitmapOffers;
+      if (seconds > 0 && delta >= 0) bitmapFps = delta / seconds;
+      _lastBitmapElapsed = bitmap.elapsed;
+      _lastBitmapOffers = bitmap.offeredFrames;
+    }
     event('health', {
       ...snapshot(status),
       'running': running,
@@ -172,6 +186,24 @@ class CaptureDiagnostics {
       'nativeDeliveredFps': nativeFps != null && nativeFps.isFinite
           ? nativeFps
           : null,
+      if (bitmap != null) ...{
+        'bitmapOfferedFps': double.parse(bitmapFps.toStringAsFixed(2)),
+        'bitmapOfferedFrames': bitmap.offeredFrames,
+        'bitmapLastOfferAgeMs': bitmap.lastOfferedAt == null
+            ? null
+            : (bitmap.elapsed - bitmap.lastOfferedAt!).inMilliseconds,
+        'sampledNativeFrames': bitmap.sampledFrames,
+        'frameSamplingMeanMs': bitmap.sampledFrames == 0
+            ? null
+            : bitmap.totalSamplingTime.inMicroseconds /
+                  bitmap.sampledFrames /
+                  1000,
+        'frameSamplingMaxMs': bitmap.maxSamplingTime.inMicroseconds / 1000,
+        'bitmapRequestedIntervalMs':
+            bitmap.requestedInterval.inMicroseconds / 1000,
+        'bitmapReadbackMinIntervalMs':
+            bitmap.effectiveInterval.inMicroseconds / 1000,
+      },
       'rssMiB': (ProcessInfo.currentRss / 1048576).round(),
     });
   }

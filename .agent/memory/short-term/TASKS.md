@@ -1,5 +1,5 @@
 # Việc đang code
 
-- T-001: Review rule, ghi profile áp dụng và bộ nhớ có nguồn.
-- T-002: Chặn env files và thêm format check stable trong CI.
-- T-003: Kiểm chứng, commit/push và bàn giao task.
+- T-003: CI/push và handover specs/adopt-agent-standard.md sau commit b66ce7f.
+- P-001: Tách preview cadence và upstream decoder demand theo specs/smooth-bitmap-preview.md.
+- P-002: Kiểm pause/cost metrics, regression, SDK validation và review log 5.

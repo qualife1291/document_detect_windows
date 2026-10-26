@@ -53,6 +53,43 @@ void main() {
         as Map<String, dynamic>;
   }).toList();
 
+  test('bitmap health uses independent offers and sampling counters', () {
+    final diagnostics = CaptureDiagnostics(enabled: true)..resetSession();
+    void health(int second, int offers) => diagnostics.health(
+      DocumentPreviewStatus(state: DocumentPreviewState.processing),
+      running: true,
+      autoEnabled: false,
+      autoState: 'idle',
+      stableFrames: 0,
+      feedbackProgress: 0,
+      bitmap: BitmapPreviewMetrics(
+        elapsed: Duration(seconds: second),
+        offeredFrames: offers,
+        sampledFrames: offers,
+        totalSamplingTime: Duration(milliseconds: offers * 2),
+        maxSamplingTime: const Duration(milliseconds: 3),
+        requestedInterval: const Duration(milliseconds: 66),
+        effectiveInterval: const Duration(milliseconds: 66),
+        lastOfferedAt: Duration(milliseconds: second * 1000 - 20),
+      ),
+    );
+    health(1, 15);
+    health(2, 30);
+    final logs = records().where((e) => e['event'] == 'health').toList();
+    expect(logs, hasLength(2));
+    for (final log in logs) {
+      expect(log['bitmapOfferedFps'], 15);
+      expect(log['bitmapLastOfferAgeMs'], 20);
+      expect(log['frameSamplingMeanMs'], 2);
+      expect(log['frameSamplingMaxMs'], 3);
+      expect(log['recentAnalysisFps'], 0);
+      expect(log['bitmapRequestedIntervalMs'], 66);
+    }
+    diagnostics.resetSession();
+    health(1, 15);
+    expect(records().last['bitmapOfferedFps'], 15);
+    expect(output.join(), isNot(contains(secret)));
+  });
   test('debug builds enable production diagnostics by default', () async {
     final source = FakeSource();
     final c = WindowsDocCapture(frameSource: source);

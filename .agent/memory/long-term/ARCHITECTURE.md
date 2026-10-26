@@ -31,7 +31,10 @@ Nguồn: bốn pubspec.yaml và .github/workflows/windows.yml.
 
 FrameSource mở một camera. Root API default texture; example chọn UVC bitmap
 ≤640 px. Stream identity ổn định; một decode đang chạy, bỏ frame khi bận.
-Demand gate giới hạn full-RGBA sampling; native readback vẫn có chi phí UI isolate.
+Analysis demand và bitmap demand tách nhau; example target preview ~15 FPS còn
+analysis ~5 FPS. Chia sẻ readback khi cùng due; decoder busy/unmount/capture thì
+không copy thêm vì preview. Sampling-cost EWMA backoff không bảo đảm tổng CPU.
+Native readback vẫn có chi phí UI isolate; health phân biệt offers/native/analysis.
 Analyzer isolate nhận frame ≤640 px, trả quad/quality; controller phát trạng thái
 và enum, expire geometry cũ. Auto cần ổn định và feedback, không chỉ enum clear.
 

@@ -64,6 +64,34 @@ abstract interface class AnalysisDemandSource {
   set analysisWanted(bool Function()? wanted);
 }
 
+/// Optional control for a sampled bitmap preview. Keep the last displayed image
+/// while capture/start/teardown disallow extra native readbacks.
+abstract interface class PreviewSamplingSource {
+  set previewSamplingAllowed(bool Function()? allowed);
+}
+
+/// Cumulative counters only, no frame history or user identifiers.
+class BitmapPreviewMetrics {
+  const BitmapPreviewMetrics({
+    required this.elapsed,
+    required this.offeredFrames,
+    required this.sampledFrames,
+    required this.totalSamplingTime,
+    required this.maxSamplingTime,
+    required this.requestedInterval,
+    required this.effectiveInterval,
+    this.lastOfferedAt,
+  });
+  final Duration elapsed, totalSamplingTime, maxSamplingTime;
+  final Duration requestedInterval, effectiveInterval;
+  final Duration? lastOfferedAt;
+  final int offeredFrames, sampledFrames;
+}
+
+abstract interface class BitmapPreviewDiagnostics {
+  BitmapPreviewMetrics? get bitmapPreviewMetrics;
+}
+
 /// Serializes native lifecycle operations, including enumeration and snapshots.
 /// A failed operation does not poison subsequent cleanup/restart.
 class CameraOperationQueue {

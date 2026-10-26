@@ -61,8 +61,10 @@ filtering is used when shrinking. Output JPEG bytes are not resized by this view
 There is no login or authentication layer in this local example.
 
 The example defaults to **Cân bằng / high** capture resolution and bounded bitmap
-preview, with 200 ms sampling (at most 5 analysis/bitmap frames per second), a preferred native
-15 FPS mode where available, and a bitmap preview with longest side ≤640 px.
+preview: 200 ms analysis sampling (about 5 FPS), independent bitmap delivery
+requesting about 15 FPS, a preferred native 15 FPS mode where available, and
+bitmap longest side ≤640 px. Busy decoders, capture/start/teardown and expensive
+native readback reduce actual delivery; no frame history is queued.
 This explicitly avoids registering a camera external texture. For comparison on
 a stable driver, opt back into the previous example configuration:
 
@@ -72,8 +74,9 @@ flutter run -d windows --profile --dart-define=DOC_CAPTURE_LOW_RESOURCE=false --
 
 These defines configure the example only. `UvcFrameSource()` still defaults to
 native texture preview; integrating apps can select `UvcPreviewMode.bitmap`,
-`pollInterval: Duration(milliseconds: 200)` and `preferredNativeFps: 15` explicitly,
-with the same interval in `WindowsDocCapture`. Native FPS is a preference, not a
+`pollInterval: Duration(milliseconds: 200)`,
+`bitmapPreviewInterval: Duration(milliseconds: 66)` and `preferredNativeFps: 15`
+explicitly, with the analysis interval in `WindowsDocCapture`. Native FPS is a preference, not a
 hard cap when the camera has no matching mode. A 5 FPS analysis rate also takes
 longer to accumulate eight stable frames before automatic capture. Resolution is
 independent of `DOC_CAPTURE_LOW_RESOURCE`: choose **Tiết kiệm / medium**,
@@ -84,7 +87,16 @@ on the camera's supported modes; high may still select 1280×720. A 5/8 MP label
 does not guarantee that mode is available. JPEGs use the negotiated stream
 resolution; the result display cap does not resize saved bytes.
 
-The UVC bitmap path keeps a stable stream identity across status/UI rebuilds.
+`DOC_CAPTURE_PREVIEW_FPS` controls only the example bitmap target (5–20,
+default 15); set it to 5 to compare the previous low-rate preview. Analysis and
+corner/enum updates remain at their configured rate, so moving corners can lag
+between reports even when the camera image updates more often. The adapter
+shares one sampled frame when analysis and preview are due together, checks
+upstream decoder demand before extra readbacks and pauses extra preview work
+during capture. A readback-cost EWMA backs off preview-only sampling; it is not
+a guarantee for total app CPU, GPU FPS, hardware latency or 24/7 uptime.
+
+The UVC bitmap path keeps stable stream identities across status/UI rebuilds.
 It retains the last decoded frame while waiting for another, avoiding a repeated
 black/blank reset. See the [fourth-log review](docs/progress/FOURTH_LOG_REVIEW.md)
 for the reproduced regression and the distinction between low-resolution crops,
@@ -291,6 +303,8 @@ explicit presentation choice. Neither restores blur, performs OCR or guarantees
 readability. Filtering and JPEG encoding run in the cancellable capture worker.
 See the [physical-log review and reference comparison](docs/progress/PHYSICAL_LOG_REVIEW.md)
 and [second-log crop review](docs/progress/CROP_LOG_REVIEW.md).
+See [fifth-log preview review](docs/progress/fifth-log-review.md) for the
+independent preview cadence and physical-test findings.
 
 ## Copy diagnostic logs from physical testing
 
@@ -359,6 +373,11 @@ Each `[windows_doc_capture]` line is a JSON object (`v: 1`). Events include:
   the interval since the preceding health sample. Native delivered FPS is not
   measured UI/composited FPS. Backend skips before Dart delivery are not included
   in `skippedAtController`.
+  UVC bitmap sessions also report `bitmapOfferedFps` / offered frames / last-offer
+  age, sampled native-frame count, `frameSamplingMeanMs` / `frameSamplingMaxMs`
+  (native copy plus downsample), requested cadence and
+  `bitmapReadbackMinIntervalMs` for extra reads. These counters do not prove
+  frames were decoded or composited by the GPU.
 - `capture_*`, `snapshot`, `snapshot_rejected`: capture outcome, source dimensions,
   JPEG byte counts and processing time. `rejected` means the snapshot did not
   pass detection/quality/movement checks; no result was produced.

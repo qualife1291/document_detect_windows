@@ -39,8 +39,43 @@ class FakeSource implements FrameSource {
   Future<FrameBuffer?> latestFullResolutionFrame() async => latest;
 }
 
+class PreviewSource extends FakeSource implements PreviewSamplingSource {
+  @override
+  bool Function()? previewSamplingAllowed;
+  Completer<FrameBuffer?>? snapshotGate;
+  @override
+  Future<FrameBuffer?> latestFullResolutionFrame() =>
+      snapshotGate?.future ?? super.latestFullResolutionFrame();
+}
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+  test(
+    'bitmap sampling pauses during capture and releases its predicate on teardown',
+    () async {
+      final source = PreviewSource();
+      final capture = WindowsDocCapture.testing(frameSource: source);
+      try {
+        await capture.start(enableAutoCapture: false);
+        expect(source.previewSamplingAllowed!(), isTrue);
+        source.snapshotGate = Completer<FrameBuffer?>();
+        final pending = capture.captureNow();
+        expect(source.previewSamplingAllowed!(), isFalse);
+        source.snapshotGate!.complete(null);
+        expect(await pending, isNull);
+        expect(source.previewSamplingAllowed!(), isTrue);
+        await capture.stop();
+        expect(source.previewSamplingAllowed, isNull);
+        await capture.start(enableAutoCapture: false);
+        expect(source.previewSamplingAllowed!(), isTrue);
+        await capture.dispose();
+        expect(source.previewSamplingAllowed, isNull);
+      } finally {
+        await capture.dispose();
+        await source.stream.close();
+      }
+    },
+  );
   test(
     'manual capture is single flight, restartable, and empty frames return null',
     () async {

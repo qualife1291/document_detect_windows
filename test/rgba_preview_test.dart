@@ -21,10 +21,13 @@ void main() {
     'bitmap preview drops busy frames and disposes replaced/closed images',
     (tester) async {
       final frames = StreamController<FrameBuffer>.broadcast();
+      final demand = BitmapPreviewDemand();
+      expect(demand.canAcceptFrame, isFalse);
       final gates = <Completer<ui.Image>>[];
       await tester.pumpWidget(
         RgbaCameraPreview.testing(
           frames: frames.stream,
+          frameDemand: demand,
           decodeFrame: (_) {
             final gate = Completer<ui.Image>();
             gates.add(gate);
@@ -32,14 +35,17 @@ void main() {
           },
         ),
       );
+      expect(demand.canAcceptFrame, isTrue);
       for (var i = 0; i < 40; i++) {
         frames.add(fixture(width: 8, height: 8, sequence: i));
       }
       await tester.pump();
       expect(gates, hasLength(1));
+      expect(demand.canAcceptFrame, isFalse);
       final first = (await tester.runAsync(image))!;
       gates[0].complete(first);
       await tester.pumpAndSettle();
+      expect(demand.canAcceptFrame, isTrue);
       expect(tester.widget<RawImage>(find.byType(RawImage)).image, same(first));
       frames.add(fixture(width: 8, height: 8));
       await tester.pump();
@@ -51,6 +57,7 @@ void main() {
       expect(second.debugDisposed, isFalse);
       await tester.pumpWidget(const SizedBox.shrink());
       expect(second.debugDisposed, isTrue);
+      expect(demand.canAcceptFrame, isFalse);
       expect(frames.hasListener, isFalse);
       await frames.close();
       expect(tester.takeException(), isNull);
@@ -113,10 +120,13 @@ void main() {
     (tester) async {
       final a = StreamController<FrameBuffer>.broadcast(),
           b = StreamController<FrameBuffer>.broadcast();
+      final oldDemand = BitmapPreviewDemand(),
+          newDemand = BitmapPreviewDemand();
       final gate = Completer<ui.Image>();
       await tester.pumpWidget(
         RgbaCameraPreview.testing(
           frames: a.stream,
+          frameDemand: oldDemand,
           decodeFrame: (_) => gate.future,
         ),
       );
@@ -125,15 +135,20 @@ void main() {
       await tester.pumpWidget(
         RgbaCameraPreview.testing(
           frames: b.stream,
+          frameDemand: newDemand,
           decodeFrame: (_) => gate.future,
         ),
       );
+      expect(oldDemand.canAcceptFrame, isFalse);
+      expect(newDemand.canAcceptFrame, isFalse);
       expect(a.hasListener, isFalse);
       expect(b.hasListener, isTrue);
       final late = (await tester.runAsync(image))!;
       gate.complete(late);
       await tester.pump();
       expect(late.debugDisposed, isTrue);
+      expect(oldDemand.canAcceptFrame, isFalse);
+      expect(newDemand.canAcceptFrame, isTrue);
       await tester.pumpWidget(const SizedBox.shrink());
       await a.close();
       await b.close();
