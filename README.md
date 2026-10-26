@@ -303,9 +303,11 @@ feature starts. Do not enumerate devices while preview is active.
 
 For a weak PC, begin with `ResolutionPreset.medium` and an analysis interval of
 200 ms, then measure responsiveness and document readability. A 5/8 MP sensor
-does not imply full sensor resolution at the default preset. The upstream UVC
-API still copies full RGBA before sampling; full 8 MP low-end latency and 24/7
-stability require physical profiling. See [continuous operation](docs/continuous_operation.md)
+does not imply full sensor resolution at the default preset. The internal UVC
+backend samples bounded preview/analysis buffers before transfer into Dart.
+Native full-stream conversion and full-resolution snapshots still carry the
+8 MP cost; low-end latency and 24/7 stability require physical profiling.
+See [continuous operation](docs/continuous_operation.md)
 for cancellation/file behavior, document/light coverage and the physical soak matrix.
 
 ## Optional scan presentation

@@ -53,7 +53,11 @@ provider riêng; không sửa byte JPEG hoặc clear toàn bộ image cache.
 Result có export pair chủ động: file_selector_windows 0.9.3+5 (example-only)
 chọn thư mục; async ghi nguyên byte original/cropped trong staging riêng rồi
 publish thư mục con unique. Busy chặn double-click/retake; exit await write cleanup.
-Không đổi crop-only saveDirectory của package; file đã publish thuộc caller.
+Example không cấu hình saveDirectory/auto-save; nút export là thao tác ghi chủ động.
+Root saveDirectory vẫn là caller opt-in; desktop dependency tạo temporary still.
+Example stop khi hidden/paused/detached, epoch bỏ late result, inactive giữ session;
+foreground cần restart chủ động sau cleanup. Host route/tab vẫn cần awaited stop.
+File đã publish thuộc caller.
 
 Nguồn: camera_controller.dart, quality_analyzer.dart, crop_pipeline.dart,
 frame_source.dart, UVC adapter và example/lib/.

@@ -21,3 +21,11 @@
   and source commit pushed with all relevant repository files.
 - Limits: Linux and Windows CI have no physical kiosk camera/GPU/driver. No claim
   of 24/7 readiness, focus quality, OS secure erasure or cleanup after forced kill.
+
+## Completion
+
+Done at source 0535530; Windows CI 40311068502 passed the three supported SDKs.
+Review, evidence and remaining physical validation are documented in
+[the review](../docs/progress/kiosk-memory-review.md). Product readiness remains
+separate from task completion. Explicit export and caller opt-in persistence
+remain documented; no automatic image file saving is configured in the example.

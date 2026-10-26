@@ -1,0 +1,34 @@
+{
+  "source_commit": "05355304ed3974677c225bdddb04f9abec5ccb3a",
+  "windows_workflow": "https://github.com/qualife1291/document_detect_windows/actions/runs/40311068502",
+  "windows_sdks": [
+    "3.32.8",
+    "3.41.9",
+    "3.47.8"
+  ],
+  "linux_sdks": [
+    "3.32.8",
+    "3.41.9",
+    "3.47.7"
+  ],
+  "tests_per_windows_sdk": {
+    "root": 117,
+    "uvc": 11,
+    "example": 22,
+    "benchmarks": 3,
+    "native_ctest": 1,
+    "endurance_seconds": 60
+  },
+  "linux_scope": "Root/example pub get, analyze, 117/22 tests on floor/middle (logs). Stable root/example analyze and 117/22 tests passed in execution transcript before SDK switching; stable config/format restored afterward. Adapters unchanged; full native/adapter/build checks rerun on Windows.",
+  "unchanged_component_trees_from_6e7929b": {
+    "adapters": "9d840b3c4a3b65c71ab5e7f404be22dd53ffcd76",
+    "tool": "f267ce10881618d2d003164f773acc59a83438dd",
+    ".github": "6a31e5e8b41f0ea5f59cc539d2ed127e6f678cce"
+  },
+  "format_files": 58,
+  "physical_camera_24h_soak": false,
+  "native_folder_dialog_manual_interaction_tested": false,
+  "real_document_pair_visual_reviewed": true,
+  "real_images_committed": false,
+  "product_handover": "CHUA DAT"
+}

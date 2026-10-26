@@ -1,7 +1,21 @@
 # Kiosk integration and memory-only capture review
 
 Review requested 2026-10-26 after visual inspection of two exported image pairs.
-Source and Windows evidence will be recorded after the matrix completes.
+Validated source: `05355304ed3974677c225bdddb04f9abec5ccb3a` (main).
+[Windows CI 40311068502](https://github.com/qualife1291/document_detect_windows/actions/runs/40311068502)
+passed Flutter 3.32.8, 3.41.9 and 3.47.8. Per SDK: root analyze/117 tests,
+UVC analyze/11 tests, example analyze/22 tests, backend analyze/native CTest,
+three synthetic benchmarks, 60-second synthetic endurance and x64 release build.
+Stable additionally passed format (58 files) and the separate host build with
+both upstream/internal plugins, distinct DLLs/license/registrations.
+
+Linux 3.32.8/3.41.9 root/example analyze and 117/22 tests passed with logs.
+Linux 3.47.7 root/example analyze and 117/22 tests passed before SDK switching
+in the execution transcript; stable package configs and format were restored
+afterward. Unchanged adapter/tool/CI trees were verified against 6e7929b; the
+Windows matrix reran all suites. Evidence: [source record](logs/kiosk-memory-review/source.json),
+[CI details](logs/kiosk-memory-review/windows-ci.json), logs in the same folder.
+Subsequent changes in this task are documentation/evidence only.
 
 ## Findings and changes
 

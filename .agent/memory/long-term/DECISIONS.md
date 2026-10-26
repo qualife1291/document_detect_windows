@@ -60,3 +60,13 @@
   staging riêng, một operation, cancel/cleanup và không mở lại camera. Native
   folder picker pin SDK-compatible trong example; root/storage mặc định không đổi.
 - Nguồn: specs/export-capture-pair.md và example/lib/capture_pair_exporter.dart.
+
+## D-008 — Kiosk capture mặc định trong bộ nhớ, dừng khi ẩn
+
+- Ngày: 2026-10-26; trạng thái: accepted.
+- Lý do: user yêu cầu review kiosk và không lưu file khi chụp.
+- Hệ quả: example bỏ auto-save, giữ export pair chủ động phục vụ test. Dùng UVC
+  không saveDirectory; root opt-in API vẫn tương thích, desktop temp file không
+  đáp ứng no-capture-files. Hidden/paused/detached stop, epoch hủy late operations,
+  foreground restart thủ công; inactive không giành/nhả camera do mất focus.
+- Nguồn: specs/kiosk-memory-review.md, docs/progress/kiosk-memory-review.md.

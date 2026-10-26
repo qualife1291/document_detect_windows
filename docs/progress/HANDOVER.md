@@ -2,6 +2,21 @@ Handover: CHUA DAT
 
 # Bằng chứng bàn giao
 
+Cập nhật kiosk/memory (2026-10-26, source `0535530`): example bỏ auto-save,
+chụp tay/tự động giữ JPEG trong bộ nhớ; export pair chỉ ghi khi chủ động bấm.
+Hidden/paused/detached stop camera, hủy capture và loại late result/start/export;
+foreground cần restart thủ công sau cleanup. Inactive giữ session. Dùng UVC,
+không saveDirectory để không tạo file ảnh khi chụp; desktop dependency có temp file.
+[Windows CI](https://github.com/qualife1291/document_detect_windows/actions/runs/40311068502)
+đạt Flutter 3.32.8/3.41.9/3.47.8:117 root, 11 UVC, 22 example tests, 3 benchmarks,
+native CTest, endurance mô phỏng 60 s, release build; stable format 58 files và
+host chứa hai plugin đạt. Linux ba SDK đạt root/example analyze và 117/22 tests
+(stable có transcript; floor/middle có log). Xem [review](kiosk-memory-review.md).
+Hai cặp JPEG thực tế đã được xem ở pixel gốc: chữ nhỏ mềm ngay trong ảnh gốc,
+crop thêm mềm nhẹ; một cặp bị vật đen che mép giấy từ ảnh gốc. Không commit ảnh.
+Đây chưa phải camera/backend comparison được kiểm soát hoặc chứng nhận kiosk.
+Physical GPU/USB/focus/accessibility/24–168 h vẫn thiếu; gate vẫn CHUA DAT.
+
 Cập nhật export pair (2026-10-26, source `2a1644b`): example có nút chọn thư mục
 Windows và xuất original.jpg/cropped.jpg của cùng capture, giữ nguyên byte JPEG,
 staging riêng và cleanup khi cancel/lỗi; busy chặn double-click/retake/Esc,
@@ -10,7 +25,7 @@ exit await write và late completion không cập nhật widget đã dispose.
 đạt 3.32.8/3.41.9/3.47.8:116 root, 11 UVC, 18 example tests, 3 benchmarks/native CTest,
 endurance 60 s và release build; stable format 58 files và plugin coexistence đạt.
 Linux ba SDK đạt example analyze/18 tests. Xem [review](export-capture-pair.md).
-Đây là chức năng phục vụ đối chiếu ảnh; chưa có cặp ảnh thực tế được kiểm tra
+Ở đợt export pair này chưa kiểm tra cặp ảnh thực tế
 và chưa test thao tác folder dialog trên Windows thật. Product gate vẫn CHUA DAT.
 
 Cập nhật preview/detail (source `b6076ff`, 2026-10-26): native bounded sampling,
