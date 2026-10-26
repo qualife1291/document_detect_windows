@@ -129,6 +129,7 @@ void main() {
       try {
         final result = await done.future.timeout(const Duration(seconds: 15));
         expect(result.croppedJpeg, isNotEmpty);
+        expect(result.savedPath, isNull);
       } finally {
         timer.cancel();
       }

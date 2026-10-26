@@ -76,15 +76,20 @@ class _CapturePageState extends State<CapturePage> {
   bool _exporting = false, _closing = false;
   String? _exportDirectory, _exportedPath, _exportMessage;
   Future<Directory?>? _pairWrite;
+  Future<void>? _suspending;
+  bool _foreground = true, _loadingDevices = false;
+  int _operationEpoch = 0;
+  bool get _blocked =>
+      _busy ||
+      _loadingDevices ||
+      _suspending != null ||
+      !_foreground ||
+      _closing;
   late ResolutionPreset _preset;
   List<CameraDevice> _devices = [];
   String? _device, _error;
   bool _presenting = false;
-  bool _busy = false,
-      _auto = true,
-      _debug = false,
-      _started = false,
-      _save = false;
+  bool _busy = false, _auto = true, _debug = false, _started = false;
   AppLifecycleListener? _lifecycle;
   Timer? _uiHealthTimer;
   bool _timingsRegistered = false;
@@ -115,7 +120,6 @@ class _CapturePageState extends State<CapturePage> {
     _maxBuildUs = _maxRasterUs = 0;
   }
 
-  final _saveDirectory = TextEditingController();
   final _captureFocus = FocusNode();
   final _resultFocus = FocusNode();
   @override
@@ -130,7 +134,9 @@ class _CapturePageState extends State<CapturePage> {
         (_) => _logUiHealth(),
       );
     }
+    _foreground = !_isBackground(WidgetsBinding.instance.lifecycleState);
     _lifecycle = AppLifecycleListener(
+      onStateChange: _onLifecycleState,
       onExitRequested: () async {
         _closing = true;
         try {
@@ -147,7 +153,11 @@ class _CapturePageState extends State<CapturePage> {
       },
     );
     _statusSub = capture.statuses.listen((status) {
-      if (mounted && !_presenting && _result == null) {
+      if (mounted &&
+          !_closing &&
+          _foreground &&
+          !_presenting &&
+          _result == null) {
         setState(() => _status = status);
       }
     });
@@ -164,6 +174,8 @@ class _CapturePageState extends State<CapturePage> {
   }
 
   Future<void> _loadDevices() async {
+    if (_blocked || _started) return;
+    setState(() => _loadingDevices = true);
     try {
       final devices = await capture.listDevices();
       if (mounted) {
@@ -179,27 +191,76 @@ class _CapturePageState extends State<CapturePage> {
               'Không đọc được danh sách camera. Chỉ hỗ trợ Windows x64. Kiểm tra kết nối USB và quyền camera trong Windows Settings.',
         );
       }
+    } finally {
+      if (mounted && !_closing) setState(() => _loadingDevices = false);
     }
   }
 
+  static bool _isBackground(AppLifecycleState? state) =>
+      state == AppLifecycleState.hidden ||
+      state == AppLifecycleState.paused ||
+      state == AppLifecycleState.detached;
+
+  void _onLifecycleState(AppLifecycleState state) {
+    if (_closing || !mounted) return;
+    final foreground = !_isBackground(state);
+    if (_foreground == foreground) return;
+    setState(() => _foreground = foreground);
+    if (foreground) return; // Operator explicitly restarts after cleanup.
+    ++_operationEpoch;
+    setState(() {
+      _started = _presenting = false;
+      _status = null;
+      _documentState = DocumentPreviewState.idle;
+    });
+    final completion = Completer<void>();
+    _suspending = completion.future;
+    unawaited(_suspend(completion));
+  }
+
+  Future<void> _suspend(Completer<void> completion) async {
+    try {
+      await capture.stop();
+    } catch (_) {
+      if (mounted && !_closing) {
+        setState(
+          () => _error =
+              'Chưa đóng camera hoàn toàn. Kiểm tra camera rồi thử lại.',
+        );
+      }
+    } finally {
+      // A second hide may share the controller's stop while the first finishes.
+      if (identical(_suspending, completion.future)) _suspending = null;
+      completion.complete();
+      if (mounted && !_closing) setState(() {});
+    }
+  }
+
+  bool _operationActive(int epoch) =>
+      mounted && !_closing && _foreground && epoch == _operationEpoch;
+
   Future<void> _start() async {
+    if (_blocked) return;
+    final epoch = _operationEpoch;
     setState(() {
       _busy = true;
       _error = null;
     });
     try {
-      if (_save && _saveDirectory.text.trim().isEmpty) {
-        throw StateError('Missing output directory');
-      }
       await capture.stop();
+      if (!_operationActive(epoch)) return;
       await capture.start(
         deviceId: _device,
         preset: _preset,
         enableAutoCapture: _auto,
-        saveDirectory: _save ? _saveDirectory.text.trim() : null,
+        // Keep manual and automatic capture in memory; export is explicit.
         onAutoCapture: _showResult,
         onDocumentStateChanged: (state) {
-          if (mounted && !_presenting && _result == null) {
+          if (mounted &&
+              !_closing &&
+              _foreground &&
+              !_presenting &&
+              _result == null) {
             setState(() {
               _documentState = state;
               if (state == DocumentPreviewState.processing ||
@@ -211,12 +272,12 @@ class _CapturePageState extends State<CapturePage> {
           }
         },
       );
-      if (mounted) setState(() => _started = true);
+      if (_operationActive(epoch)) setState(() => _started = true);
     } catch (_) {
-      if (mounted) {
+      if (_operationActive(epoch)) {
         setState(
           () => _error =
-              'Không mở được camera. Kiểm tra camera USB, bật Settings > Privacy & security > Camera và quyền cho desktop apps; kiểm tra thư mục lưu hoặc liên hệ IT về group policy.',
+              'Không mở được camera. Kiểm tra camera USB, bật Settings > Privacy & security > Camera và quyền cho desktop apps; liên hệ IT nếu bị group policy chặn.',
         );
       }
     } finally {
@@ -225,7 +286,13 @@ class _CapturePageState extends State<CapturePage> {
   }
 
   void _showResult(CapturedDocument result) {
-    if (!mounted || _presenting || _result != null) return;
+    if (!mounted ||
+        _closing ||
+        !_foreground ||
+        _presenting ||
+        _result != null) {
+      return;
+    }
     capture.autoCaptureEnabled = false;
     setState(() {
       _presenting = true;
@@ -235,6 +302,7 @@ class _CapturePageState extends State<CapturePage> {
   }
 
   Future<void> _presentResult(CapturedDocument result) async {
+    final epoch = _operationEpoch;
     String? cleanupError;
     try {
       // Remove the native preview before decoding/uploading the result image.
@@ -244,7 +312,10 @@ class _CapturePageState extends State<CapturePage> {
       cleanupError =
           'Đã chụp ảnh nhưng chưa đóng camera hoàn toàn. Kiểm tra camera trước lần tiếp theo.';
     }
-    if (!mounted) return;
+    if (!_operationActive(epoch)) {
+      if (mounted && !_closing) setState(() => _busy = false);
+      return;
+    }
     setState(() {
       _started = false;
       _presenting = false;
@@ -260,9 +331,12 @@ class _CapturePageState extends State<CapturePage> {
   }
 
   Future<void> _manual() async {
+    if (_blocked || !_started) return;
+    final epoch = _operationEpoch;
     setState(() => _busy = true);
     try {
       final result = await capture.captureNow();
+      if (!_operationActive(epoch)) return;
       if (result != null) {
         _showResult(result);
       } else if (mounted) {
@@ -272,10 +346,9 @@ class _CapturePageState extends State<CapturePage> {
         );
       }
     } catch (_) {
-      if (mounted) {
+      if (_operationActive(epoch)) {
         setState(
-          () => _error =
-              'Không lưu được ảnh. Kiểm tra quyền ghi thư mục và thử lại.',
+          () => _error = 'Không chụp được ảnh. Kiểm tra camera rồi thử lại.',
         );
       }
     } finally {
@@ -300,20 +373,17 @@ class _CapturePageState extends State<CapturePage> {
 
   Future<void> _exportPair() async {
     final document = _result;
-    if (document == null || _busy || _exporting || _closing) return;
+    if (document == null || _blocked || _exporting) return;
+    final epoch = _operationEpoch;
     setState(() {
       _exporting = _busy = true;
       _exportMessage = _exportedPath = null;
     });
     try {
       final directory = await widget.pairExporter.chooseDirectory(
-        initialDirectory:
-            _exportDirectory ??
-            (_saveDirectory.text.trim().isEmpty
-                ? null
-                : _saveDirectory.text.trim()),
+        initialDirectory: _exportDirectory,
       );
-      if (!mounted || _closing || !identical(document, _result)) {
+      if (!_operationActive(epoch) || !identical(document, _result)) {
         _logPairExport('cancelled', document);
         return;
       }
@@ -328,12 +398,14 @@ class _CapturePageState extends State<CapturePage> {
         document,
         Directory(directory),
         isCancelled: () =>
-            _closing || !mounted || !identical(document, _result),
+            !_operationActive(epoch) || !identical(document, _result),
       );
       _pairWrite = write;
       final exported = await write;
       _logPairExport(exported == null ? 'cancelled' : 'success', document);
-      if (!mounted || _closing || !identical(document, _result)) return;
+      if (!_operationActive(epoch) || !identical(document, _result)) {
+        return;
+      }
       if (exported == null) {
         setState(() => _exportMessage = 'Đã hủy xuất cặp ảnh.');
       } else {
@@ -344,7 +416,7 @@ class _CapturePageState extends State<CapturePage> {
       }
     } catch (error) {
       _logPairExport('error', document, error: error);
-      if (mounted && !_closing && identical(document, _result)) {
+      if (_operationActive(epoch) && identical(document, _result)) {
         setState(
           () => _exportMessage =
               'Không xuất được cặp ảnh. Kiểm tra quyền ghi, dung lượng thư mục rồi thử lại.',
@@ -359,7 +431,7 @@ class _CapturePageState extends State<CapturePage> {
   }
 
   Future<void> _retake() async {
-    if (_busy || _presenting) return;
+    if (_blocked || _presenting) return;
     setState(() {
       _result = null;
       _exportedPath = _exportMessage = null;
@@ -386,7 +458,6 @@ class _CapturePageState extends State<CapturePage> {
         // Widget is already gone. Native cleanup was attempted; never setState.
       }),
     );
-    _saveDirectory.dispose();
     _captureFocus.dispose();
     _resultFocus.dispose();
     super.dispose();
@@ -435,7 +506,7 @@ class _CapturePageState extends State<CapturePage> {
         actions: {
           _RetakeIntent: CallbackAction<_RetakeIntent>(
             onInvoke: (_) {
-              if (_result != null && !_busy) unawaited(_retake());
+              if (_result != null && !_blocked) unawaited(_retake());
               return null;
             },
           ),
@@ -476,7 +547,7 @@ class _CapturePageState extends State<CapturePage> {
                                 ),
                               )
                               .toList(),
-                          onChanged: _busy || _started
+                          onChanged: _blocked || _started
                               ? null
                               : (v) => setState(() => _device = v),
                         ),
@@ -499,7 +570,7 @@ class _CapturePageState extends State<CapturePage> {
                                 child: Text('Chi tiết cao'),
                               ),
                             ],
-                            onChanged: _busy || _started
+                            onChanged: _blocked || _started
                                 ? null
                                 : (value) {
                                     if (value != null) {
@@ -509,12 +580,14 @@ class _CapturePageState extends State<CapturePage> {
                           ),
                         ),
                         FilledButton(
-                          onPressed: _busy || _result != null ? null : _start,
+                          onPressed: _blocked || _result != null
+                              ? null
+                              : _start,
                           child: Text(_started ? 'Khởi động lại' : 'Bắt đầu'),
                         ),
                         if (!_started)
                           IconButton(
-                            onPressed: _busy ? null : _loadDevices,
+                            onPressed: _blocked ? null : _loadDevices,
                             tooltip: 'Tìm lại camera',
                             icon: const Icon(Icons.refresh),
                           ),
@@ -523,7 +596,7 @@ class _CapturePageState extends State<CapturePage> {
                           children: [
                             Switch(
                               value: _auto,
-                              onChanged: _result != null
+                              onChanged: _blocked || _result != null
                                   ? null
                                   : (v) {
                                       setState(() => _auto = v);
@@ -543,37 +616,10 @@ class _CapturePageState extends State<CapturePage> {
                   ),
                 ),
                 if (!_started && _result == null && !_presenting)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Wrap(
-                      spacing: 12,
-                      crossAxisAlignment: WrapCrossAlignment.center,
-                      children: [
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Checkbox(
-                              value: _save,
-                              onChanged: (v) =>
-                                  setState(() => _save = v ?? false),
-                            ),
-                            const Text('Lưu ảnh vào thư mục'),
-                          ],
-                        ),
-                        if (_save)
-                          SizedBox(
-                            width: 400,
-                            child: TextField(
-                              controller: _saveDirectory,
-                              decoration: const InputDecoration(
-                                labelText: 'Thư mục lưu do người vận hành chọn',
-                              ),
-                            ),
-                          ),
-                        const Text(
-                          'Backend UVC thử nghiệm — chưa có kết quả đo Windows.',
-                        ),
-                      ],
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 16),
+                    child: Text(
+                      'Ảnh chụp chỉ giữ trong bộ nhớ. Chỉ ghi file khi bấm xuất cặp ảnh.',
                     ),
                   ),
                 if (_started && _result == null && cameraSize.width > 0)
@@ -697,15 +743,13 @@ class _CapturePageState extends State<CapturePage> {
                     children: [
                       FilledButton.icon(
                         focusNode: _captureFocus,
-                        onPressed: !_started || _busy || _result != null
+                        onPressed: !_started || _blocked || _result != null
                             ? null
                             : _manual,
                         icon: const Icon(Icons.camera_alt),
                         label: const Text('Chụp ngay'),
                       ),
-                      const Text(
-                        'Xanh: đủ chất lượng · Cam: xem cảnh báo. Hướng dẫn: README.md',
-                      ),
+                      const Text('Xanh: đủ chất lượng · Trắng: xem cảnh báo.'),
                     ],
                   ),
                 ),
@@ -729,11 +773,7 @@ class _CapturePageState extends State<CapturePage> {
                                 bytes: _result!.croppedJpeg,
                               ),
                             ),
-                            Text(
-                              _result!.savedPath == null
-                                  ? 'Ảnh đang ở bộ nhớ'
-                                  : 'Đã lưu ảnh vào thư mục được chọn',
-                            ),
+                            const Text('Ảnh đang ở bộ nhớ'),
                             if (_exportMessage != null)
                               Semantics(
                                 liveRegion: true,
@@ -746,7 +786,7 @@ class _CapturePageState extends State<CapturePage> {
                               runSpacing: 8,
                               children: [
                                 FilledButton.icon(
-                                  onPressed: _busy ? null : _exportPair,
+                                  onPressed: _blocked ? null : _exportPair,
                                   icon: const Icon(Icons.save_alt),
                                   label: Text(
                                     _exporting
@@ -755,7 +795,7 @@ class _CapturePageState extends State<CapturePage> {
                                   ),
                                 ),
                                 FilledButton(
-                                  onPressed: _busy ? null : _retake,
+                                  onPressed: _blocked ? null : _retake,
                                   child: const Text('Chụp lại (Esc)'),
                                 ),
                               ],

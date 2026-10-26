@@ -51,6 +51,22 @@ limits do not cap total host CPU/GPU use or guarantee displayed FPS/latency.
 
 ## Integrate without competing owners
 
+Use UVC and omit `saveDirectory` for memory-only manual/auto capture. Snapshot,
+worker processing and both JPEG outputs use memory; there is no capture temp
+file in this backend. The optional desktop adapter creates a temporary image
+through its dependency, so it does not meet a no-capture-files requirement.
+OS paging/crash dumps are outside the package's control; this is not a secure
+memory-erasure guarantee. Do not retain a history of JPEGs in the host app.
+
+The example stops on hidden/paused/detached and rejects results from the old
+operation. Inactive alone (focus loss/native picker) does not stop it. After
+foregrounding, **Bắt đầu** remains disabled until cleanup completes and needs an
+explicit click; there is no automatic camera reacquisition. A host's navigator
+can hide a route while the application is still resumed, so the host must also
+stop on its own route/tab visibility signal. Widget disposal starts a fallback
+cleanup but cannot be awaited by Flutter: await stop/dispose in the host before
+handing the camera to another feature, not merely after popping the route.
+
 - Await the existing camera's stop/dispose before starting capture. Await capture
   stop/dispose before handing the device back. Do not open a second owner while
   it is processing a capture or stopping. Operation serialization is per source;
@@ -138,4 +154,6 @@ re-encode JPEGs or register additional preview listeners. It adds no work to the
 preview loop. Cancel/error/exit cleanup affects only that export's staging data;
 completed pairs remain. Export logs contain outcome/byte counts/error type only.
 Use Windows Photos at 100% to compare the same text, not fit-to-window screenshots.
-The existing save checkbox still controls crop-only automatic saving.
+The example no longer offers automatic crop saving; manual/auto capture remains
+in memory. Keep this diagnostic export out of end-user kiosk UI if file export
+is not allowed.

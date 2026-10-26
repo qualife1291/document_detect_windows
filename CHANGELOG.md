@@ -4,6 +4,17 @@ This changelog follows Keep a Changelog. No production release has been made.
 
 ## [Unreleased]
 
+### Kiosk memory-only capture and lifecycle review
+
+- Remove automatic-save controls from the example. Manual/auto captures retain
+  JPEGs in memory; only explicit comparison export writes image files. Keep
+  caller opt-in saveDirectory API compatible and document the desktop backend's
+  temporary-file limitation.
+- Stop camera on hidden/paused/detached, reject late start/capture results and
+  require explicit restart after cleanup. Keep inactive focus/native-dialog
+  transitions separate; block repeated enumeration and controls during cleanup.
+- Correct stale orange-frame guidance and add memory/lifecycle regression checks.
+
 ### Example: export original/crop pair
 
 - Add a result-screen export button and native Windows folder selection, pinned

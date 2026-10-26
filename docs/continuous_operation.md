@@ -46,6 +46,12 @@ than leaving a paused listener for hours. Prefer `previewStatus` for UI that onl
 needs the current snapshot; it has no per-listener event backlog. Await cleanup
 when leaving the camera route. The example handles a graceful Windows exit
 request and also attempts cleanup on widget disposal; don't setState in cleanup.
+It also stops on hidden/paused/detached, cancels pending startup/snapshot/worker
+results, and requires explicit restart after cleanup. Inactive alone does not
+close the camera. Host route/tab hiding needs its own awaited stop even while
+the application remains resumed. Example captures stay in memory; diagnostic
+pair export is an explicit separate action. For no capture files use UVC without
+saveDirectory; camera_desktop's dependency creates a temporary still image.
 
 ## 5 MP / 8 MP and low-end devices
 

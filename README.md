@@ -50,8 +50,8 @@ flutter run -d windows
 
 Select a device and choose **Bắt đầu**. **Tự chụp** toggles automatic capture;
 **Chụp ngay** captures manually when four document corners can be found. Manual
-capture bypasses quality gates. Check the warning before using it. Enable file
-saving and enter an operator-controlled directory before starting if needed.
+capture bypasses quality gates. Check the warning before using it. Manual and
+automatic captures stay in memory; the example does not automatically save files.
 The result shows the corrected image; **Chụp lại** or **Esc** dismisses it.
 The example stops the camera before showing the result and reopens it on retake.
 It evicts only its own result image from Flutter's image cache and limits the
@@ -61,8 +61,8 @@ filtering is used when shrinking. Output JPEG bytes are not resized by this view
 There is no login or authentication layer in this local example.
 
 On the result screen, choose **Xuất cặp ảnh gốc + crop**, then select a folder
-in the Windows folder picker. This works after manual and automatic capture,
-without enabling the earlier save checkbox. Each export creates a separate
+in the Windows folder picker. This explicit action is the only image-writing
+operation in the UVC example. Each export creates a separate
 `capture-<timestamp>-<suffix>` subfolder containing **original.jpg** (full camera
 frame) and **cropped.jpg** (corrected document), from the same capture. The files
 retain the existing JPEG bytes: export performs no resize or re-encoding.
@@ -74,8 +74,10 @@ retake/Esc are blocked. Partial writes are staged and cleaned on ordinary
 failure/cancellation; completed pairs are retained. Forced process termination,
 media removal or failed filesystem cleanup may leave a `.capture-...` staging
 folder. The app does not sweep/delete unrelated or previously completed files.
-Export is separate from the earlier **Lưu ảnh vào thư mục** option, which saves
-only the cropped image. The app/operator still owns destination ACL/retention.
+The app/operator owns destination ACL/retention for explicitly exported pairs.
+Minimizing/hiding the example stops the camera and cancels pending capture;
+returning does not reopen it until **Bắt đầu** is pressed. Temporary focus loss
+(`inactive`), including a native folder picker, does not stop the camera.
 
 
 The example defaults to **Cân bằng / high** capture resolution and bounded bitmap
@@ -128,8 +130,17 @@ display magnification and actual optical blur.
 
 ## Integration
 
+For kiosk memory-only capture use the UVC adapter. The optional desktop adapter
+creates a temporary image via its camera dependency; omit that adapter when
+image files must not be created. The existing root `saveDirectory` parameter is
+explicit opt-in persistence and writes the cropped JPEG when supplied.
+
+
 ```dart
-final capture = WindowsDocCapture(frameSource: UvcFrameSource());
+final capture = WindowsDocCapture(
+  analysisInterval: const Duration(milliseconds: 200),
+  frameSource: UvcFrameSource(previewMode: UvcPreviewMode.bitmap),
+);
 final errors = capture.errors.listen((error) {
   // Present a camera/permission/IO error without logging sensitive paths.
 });
@@ -139,7 +150,7 @@ final warnings = capture.warnings.listen((warning) {
 await capture.start(
   preset: ResolutionPreset.high,
   enableAutoCapture: true,
-  saveDirectory: outputDirectory, // omit to keep outputs only in memory
+  // No saveDirectory: both manual/automatic JPEGs stay in memory.
   onAutoCapture: (document) {
     consume(document.croppedJpeg); // caller owns retention and delivery
   },

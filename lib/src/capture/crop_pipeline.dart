@@ -34,6 +34,8 @@ class CropPipeline {
   /// shrinks uniformly if the source frame has insufficient space.
   final double cropPadding;
 
+  /// Produces both JPEGs in memory. Only an explicit [saveDirectory] writes
+  /// the cropped JPEG; processing itself creates no temporary image file.
   Future<CapturedDocument?> capture(
     FrameBuffer frame, {
     String? saveDirectory,

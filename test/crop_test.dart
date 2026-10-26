@@ -5,6 +5,32 @@ import 'package:windows_doc_capture/windows_doc_capture.dart';
 import 'fixtures.dart';
 
 void main() {
+  test(
+    'default capture returns JPEGs without accessing capture files or directories',
+    () async {
+      var fileAccesses = 0;
+      final result = await IOOverrides.runZoned(
+        () => const CropPipeline().capture(fixture()),
+        createFile: (_) {
+          fileAccesses++;
+          throw StateError('Unexpected file IO');
+        },
+        createDirectory: (_) {
+          fileAccesses++;
+          throw StateError('Unexpected directory IO');
+        },
+        getSystemTempDirectory: () {
+          fileAccesses++;
+          throw StateError('Unexpected temp directory');
+        },
+      );
+      expect(result, isNotNull);
+      expect(result!.savedPath, isNull);
+      expect(img.decodeJpg(result.originalJpeg), isNotNull);
+      expect(img.decodeJpg(result.croppedJpeg), isNotNull);
+      expect(fileAccesses, 0);
+    },
+  );
   test('exact rectangular crop preserves fine print and all edge pixels', () {
     final source = img.Image(width: 40, height: 30, numChannels: 4);
     for (var y = 0; y < 30; y++) {

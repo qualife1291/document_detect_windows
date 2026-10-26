@@ -10,12 +10,16 @@ the UVC adapter requests error-only native logging.
 `originalJpeg`, `croppedJpeg` and native/intermediate buffers contain sensitive
 personal data. Dart garbage collection does not guarantee secure erasure.
 Caller code owns retention, access control, encryption, upload and deletion.
-`saveDirectory` is supplied by the caller; use an ACL-protected local directory,
+Manual/auto capture with the UVC adapter and no `saveDirectory` writes no image
+files. The example uses this configuration; only the explicit pair-export action
+writes images. Disable/remove that diagnostic action in a kiosk that forbids
+export. The existing `saveDirectory` opt-in is supplied by the caller; use an
+ACL-protected local directory,
 validate it against application policy, and avoid public/shared directories.
 The package creates missing directories and does not enforce an allowed root.
 Random filenames avoid document identifiers and exclusive creation prevents
-replacing existing captures. Only cropped JPEG is deliberately saved by the UVC
-flow. The optional desktop candidate creates a temporary full-frame image via
+replacing existing captures. The root persistence option saves only cropped
+JPEG; the separate example pair-export action saves both original and crop. The optional desktop candidate creates a temporary full-frame image via
 its dependency and removes it in `finally`; abrupt termination can leave it
 behind. Assess this before production use.
 

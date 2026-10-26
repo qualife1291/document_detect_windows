@@ -13,7 +13,9 @@ import 'package:windows_doc_capture_example/capture_pair_exporter.dart';
 import '../../test/fixtures.dart';
 
 class _Source implements FrameSource {
-  Completer<void>? stopGate;
+  Completer<void>? stopGate, startGate;
+  Completer<FrameBuffer?>? snapshotGate;
+  int stops = 0;
   final presets = <ResolutionPreset>[];
   final controller = StreamController<FrameBuffer>.broadcast();
   @override
@@ -32,15 +34,18 @@ class _Source implements FrameSource {
     ResolutionPreset preset = ResolutionPreset.high,
   }) async {
     presets.add(preset);
+    await startGate?.future;
   }
 
   @override
   Future<void> stop() async {
+    stops++;
     await stopGate?.future;
   }
 
   @override
-  Future<FrameBuffer?> latestFullResolutionFrame() async => fixture();
+  Future<FrameBuffer?> latestFullResolutionFrame() async =>
+      snapshotGate == null ? fixture() : await snapshotGate!.future;
 }
 
 class _PairExporter extends CapturePairExporter {
@@ -100,12 +105,30 @@ Future<void> _closePairResult(
   WidgetTester tester,
   (WindowsDocCapture, _Source) owned,
 ) async {
+  await tester.runAsync(() async {
+    await owned.$1.stop();
+  });
+
   await tester.pumpWidget(const SizedBox.shrink());
+
   await tester.runAsync(() async {
     await owned.$1.dispose();
+
     await owned.$2.controller.close();
   });
   await tester.binding.setSurfaceSize(null);
+}
+
+void _hideKiosk(WidgetTester tester) {
+  tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+  tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.hidden);
+}
+
+void _resumeKiosk(WidgetTester tester) {
+  if (tester.binding.lifecycleState == AppLifecycleState.hidden) {
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+  }
+  tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
 }
 
 void main() {
@@ -298,6 +321,200 @@ void main() {
       }
     },
   );
+
+  testWidgets(
+    'hidden kiosk stops fully, waits for cleanup and requires explicit restart',
+    (tester) async {
+      await tester.binding.setSurfaceSize(const Size(1280, 960));
+      _resumeKiosk(tester);
+      final source = _Source();
+      final capture = WindowsDocCapture.testing(frameSource: source);
+      await tester.pumpWidget(CaptureApp(capture: capture));
+      await tester.pumpAndSettle();
+      try {
+        expect(find.byType(Checkbox), findsNothing);
+        expect(find.byType(TextField), findsNothing);
+        await tester.runAsync(() async {
+          await tester.tap(find.text('Bắt đầu'));
+          await Future<void>.delayed(const Duration(milliseconds: 150));
+        });
+        await tester.pumpAndSettle();
+        // Inactive includes focus loss/native dialogs; do not close the device.
+        tester.binding.handleAppLifecycleStateChanged(
+          AppLifecycleState.inactive,
+        );
+        await tester.pump();
+
+        expect(capture.isRunning, isTrue);
+
+        expect(source.stops, 0);
+        source.stopGate = Completer<void>();
+        await tester.runAsync(() async {
+          _hideKiosk(tester);
+          await Future<void>.delayed(const Duration(milliseconds: 50));
+        });
+        await tester.pump();
+
+        expect(capture.isRunning, isFalse);
+        _resumeKiosk(tester);
+        await tester.pump();
+        expect(find.byType(DocumentCameraPreview), findsNothing);
+        expect(
+          tester
+              .widget<FilledButton>(
+                find.widgetWithText(FilledButton, 'Bắt đầu'),
+              )
+              .onPressed,
+          isNull,
+        );
+        await tester.runAsync(() async {
+          source.stopGate!.complete();
+          source.stopGate = null;
+          await Future<void>.delayed(const Duration(milliseconds: 80));
+        });
+        await tester.pumpAndSettle();
+
+        expect(source.presets, hasLength(1));
+
+        expect(capture.isRunning, isFalse);
+        await tester.runAsync(() async {
+          await tester.tap(find.text('Bắt đầu'));
+          await Future<void>.delayed(const Duration(milliseconds: 150));
+        });
+        await tester.pumpAndSettle();
+
+        expect(capture.isRunning, isTrue);
+
+        expect(source.presets, hasLength(2));
+      } finally {
+        _resumeKiosk(tester);
+        await tester.runAsync(() async {
+          if (source.stopGate != null && !source.stopGate!.isCompleted) {
+            source.stopGate!.complete();
+          }
+          await Future<void>.delayed(const Duration(milliseconds: 50));
+        });
+        await _closePairResult(tester, (capture, source));
+      }
+    },
+  );
+
+  testWidgets(
+    'hide during native startup rejects late start without a false camera error',
+    (tester) async {
+      await tester.binding.setSurfaceSize(const Size(1280, 960));
+      _resumeKiosk(tester);
+      final source = _Source();
+      final capture = WindowsDocCapture.testing(frameSource: source);
+      await tester.pumpWidget(CaptureApp(capture: capture));
+      await tester.pumpAndSettle();
+      try {
+        await tester.runAsync(() async {
+          source.startGate = Completer<void>();
+          await tester.tap(find.text('Bắt đầu'));
+          final deadline = DateTime.now().add(const Duration(seconds: 3));
+          while (source.presets.isEmpty && DateTime.now().isBefore(deadline)) {
+            await Future<void>.delayed(const Duration(milliseconds: 10));
+          }
+          expect(source.presets, hasLength(1));
+          _hideKiosk(tester);
+          source.startGate!.complete();
+          final stopDeadline = DateTime.now().add(const Duration(seconds: 3));
+          while (source.stops == 0 && DateTime.now().isBefore(stopDeadline)) {
+            await Future<void>.delayed(const Duration(milliseconds: 10));
+          }
+        });
+        _resumeKiosk(tester);
+        await tester.pumpAndSettle();
+        expect(capture.isRunning, isFalse);
+        expect(source.stops, 1);
+        expect(find.textContaining('Không mở được camera'), findsNothing);
+        expect(find.byType(DocumentCameraPreview), findsNothing);
+        expect(
+          tester
+              .widget<FilledButton>(
+                find.widgetWithText(FilledButton, 'Bắt đầu'),
+              )
+              .onPressed,
+          isNotNull,
+        );
+        expect(tester.takeException(), isNull);
+      } finally {
+        if (!source.startGate!.isCompleted) source.startGate!.complete();
+        await _closePairResult(tester, (capture, source));
+        _resumeKiosk(tester);
+      }
+    },
+  );
+
+  testWidgets(
+    'hide during snapshot cancels capture and rejects the late JPEG',
+    (tester) async {
+      await tester.binding.setSurfaceSize(const Size(1280, 960));
+      _resumeKiosk(tester);
+      final source = _Source()..snapshotGate = Completer<FrameBuffer?>();
+      final capture = WindowsDocCapture.testing(frameSource: source);
+      await tester.pumpWidget(CaptureApp(capture: capture));
+      await tester.pumpAndSettle();
+      try {
+        await tester.runAsync(() async {
+          await tester.tap(find.text('Bắt đầu'));
+          await Future<void>.delayed(const Duration(milliseconds: 150));
+        });
+        await tester.pumpAndSettle();
+        await tester.runAsync(() async {
+          await tester.tap(find.text('Chụp ngay'));
+          _hideKiosk(tester);
+          await Future<void>.delayed(const Duration(milliseconds: 100));
+          source.snapshotGate!.complete(fixture());
+          await Future<void>.delayed(const Duration(milliseconds: 100));
+        });
+        _resumeKiosk(tester);
+        await tester.pumpAndSettle();
+        expect(capture.isRunning, isFalse);
+        expect(find.byType(CaptureResultImage), findsNothing);
+        expect(find.textContaining('Chưa thấy đủ bốn góc'), findsNothing);
+        expect(
+          tester
+              .widget<FilledButton>(
+                find.widgetWithText(FilledButton, 'Bắt đầu'),
+              )
+              .onPressed,
+          isNotNull,
+        );
+        expect(tester.takeException(), isNull);
+      } finally {
+        await _closePairResult(tester, (capture, source));
+        _resumeKiosk(tester);
+      }
+    },
+  );
+
+  testWidgets('hide and resume permanently cancel an open export picker', (
+    tester,
+  ) async {
+    _resumeKiosk(tester);
+    final exporter = _PairExporter();
+    final owned = await _pairResult(tester, exporter);
+    try {
+      await tester.tap(find.text('Xuất cặp ảnh gốc + crop'));
+      await tester.pumpAndSettle();
+      await tester.runAsync(() async {
+        _hideKiosk(tester);
+        await Future<void>.delayed(const Duration(milliseconds: 50));
+      });
+      _resumeKiosk(tester);
+      await tester.pump();
+      exporter.picker.complete('/late-after-resume');
+      await tester.pumpAndSettle();
+      expect(exporter.writes, 0);
+      expect(find.text('Đã chụp giấy tờ'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    } finally {
+      _resumeKiosk(tester);
+      await _closePairResult(tester, owned);
+    }
+  });
 
   testWidgets('graceful window exit awaits camera cleanup', (tester) async {
     await tester.binding.setSurfaceSize(const Size(1280, 960));

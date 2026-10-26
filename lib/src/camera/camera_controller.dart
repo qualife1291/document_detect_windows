@@ -216,6 +216,9 @@ class WindowsDocCapture {
     frameStyle: frameStyle,
   );
 
+  /// Starts one camera session. Omit [saveDirectory] to keep manual and
+  /// automatic JPEG outputs in memory. Supplying it explicitly persists crops;
+  /// temporary-file behavior of a custom FrameSource is owned by that source.
   Future<void> start({
     String? deviceId,
     ResolutionPreset preset = ResolutionPreset.high,
