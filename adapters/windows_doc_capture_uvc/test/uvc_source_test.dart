@@ -219,10 +219,8 @@ void main() {
           pollInterval: const Duration(milliseconds: 200),
         );
         source.analysisWanted = () => true;
-        final sub = source.frames.listen((frame) {
-          expect(frame.width, 640);
-          expect(frame.height, 480);
-        });
+        final received = <FrameBuffer>[];
+        final sub = source.frames.listen(received.add);
         await tester.runAsync(
           () => source.start(preset: ResolutionPreset.veryHigh),
         );
@@ -238,6 +236,11 @@ void main() {
           );
           await advance(tester, 220);
           expect(camera.fullCopies, 0);
+          expect(received, isNotEmpty);
+          for (final frame in received) {
+            expect(frame.width, 640);
+            expect(frame.height, 480);
+          }
           final metrics = source.bitmapPreviewMetrics!;
           expect(metrics.previewWidth, entry.$2);
           expect(metrics.previewHeight, entry.$2 * 3 ~/ 4);
