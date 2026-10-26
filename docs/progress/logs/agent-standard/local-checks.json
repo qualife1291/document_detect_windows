@@ -1,0 +1,38 @@
+{
+  "raw_reference_unchanged": true,
+  "raw_reference_sha256": "117b13b22dd7f7bf79d12cb3ef9ab4df14e70f985fe0cf6579e828a91d1294e7",
+  "checks": {
+    "PROJECT.md": {
+      "lines": 33,
+      "limit": 80
+    },
+    "ARCHITECTURE.md": {
+      "lines": 74,
+      "limit": 120
+    },
+    "CONVENTIONS.md": {
+      "lines": 57,
+      "limit": 120
+    },
+    "env_patterns": {
+      ".env": "ignored",
+      ".env.local": "ignored",
+      ".env.production": "ignored",
+      "example/.env": "ignored",
+      "example/.env.local": "ignored",
+      ".env.example": "trackable",
+      "example/.env.example": "trackable"
+    },
+    "reject_dirty_without_writing": {
+      "exit_code": 1,
+      "file_unchanged": true
+    },
+    "accept_clean_without_writing": {
+      "exit_code": 0,
+      "file_unchanged": true
+    },
+    "reject_missing_target": {
+      "exit_code": 66
+    }
+  }
+}

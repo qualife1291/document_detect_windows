@@ -7,3 +7,8 @@ build/
 **/pubspec.lock
 *.log
 coverage/
+
+# Local environment files may contain credentials. Track only the template.
+.env
+.env.*
+!.env.example

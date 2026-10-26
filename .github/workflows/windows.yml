@@ -38,6 +38,12 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           flutter analyze
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Check Dart formatting on stable
+        if: matrix.sdk == 'stable'
+        shell: pwsh
+        run: |
+          dart tool/check_format.dart
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - uses: actions/upload-artifact@v4
         if: always()
         with:

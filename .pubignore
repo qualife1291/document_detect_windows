@@ -4,3 +4,14 @@ tool/
 .github/
 adapters/
 docs/specification.md
+
+# Agent workflow/reference files are not runtime package assets.
+.agent/
+specs/
+AGENTS.md
+AGENT-CODING-STANDARD.md
+docs/agent-standard-review.md
+# .pubignore is independent of .gitignore.
+.env
+.env.*
+!.env.example
