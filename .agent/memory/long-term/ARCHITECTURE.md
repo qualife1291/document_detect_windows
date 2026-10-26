@@ -50,6 +50,10 @@ Save tạo file .part exclusive, flush, rename JPEG; caller chọn nơi lưu/ret
 Example high preset độc lập sampling 200 ms; có medium/high/veryHigh. Stop camera
 trước result, retake mở lại. Result decode ≤1280 px, scaleDown theo DPI, evict
 provider riêng; không sửa byte JPEG hoặc clear toàn bộ image cache.
+Result có export pair chủ động: file_selector_windows 0.9.3+5 (example-only)
+chọn thư mục; async ghi nguyên byte original/cropped trong staging riêng rồi
+publish thư mục con unique. Busy chặn double-click/retake; exit await write cleanup.
+Không đổi crop-only saveDirectory của package; file đã publish thuộc caller.
 
 Nguồn: camera_controller.dart, quality_analyzer.dart, crop_pipeline.dart,
 frame_source.dart, UVC adapter và example/lib/.

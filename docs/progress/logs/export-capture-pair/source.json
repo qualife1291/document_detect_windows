@@ -1,0 +1,38 @@
+{
+  "source_commit": "2a1644b06ca429c31a882a76dee1d59bde6fa279",
+  "feature_commit": "d6b64c9ac8c0317cce9b796edfc6cb26d0a00f8b",
+  "windows_workflow": "https://github.com/qualife1291/document_detect_windows/actions/runs/40298617835",
+  "windows_sdks": [
+    "3.32.8",
+    "3.41.9",
+    "3.47.8"
+  ],
+  "linux_sdks": [
+    "3.32.8",
+    "3.41.9",
+    "3.47.7"
+  ],
+  "tests": {
+    "windows_per_sdk": {
+      "root": 116,
+      "uvc": 11,
+      "example": 18,
+      "benchmarks": 3,
+      "native_ctest": 1
+    },
+    "linux_example_per_sdk": 18
+  },
+  "linux_scope": "Example pub get/analyze/tests and stable format only; unchanged root/adapter baseline trees verified, Windows matrix reruns full suites.",
+  "unchanged_component_trees_from_f4e215c": {
+    "lib": "8754ced852d0d7bd502fa7a81104fb7fbe7673f9",
+    "test": "28c8b99867bdc7afb60f8897b8761c1b2cfdf660",
+    "adapters": "9d840b3c4a3b65c71ab5e7f404be22dd53ffcd76",
+    "tool": "f267ce10881618d2d003164f773acc59a83438dd",
+    ".github": "6a31e5e8b41f0ea5f59cc539d2ed127e6f678cce"
+  },
+  "format_files": 58,
+  "native_folder_dialog_manual_interaction_tested": false,
+  "real_document_pair_visual_reviewed": false,
+  "physical_camera_24h_soak": false,
+  "product_handover": "CHUA DAT"
+}

@@ -1,5 +1,5 @@
 ---
-status: implementing
+status: implemented
 slug: export-capture-pair
 approval_source: direct-user-request
 updated: 2026-10-26
@@ -24,3 +24,11 @@ Quyền commit/push/merge đã cấp trong hội thoại; không thêm vòng xá
 Kiểm chứng: bytes giống hệt, unique pair/no overwrite, cancel/partial IO failure,
 repeated click/retake/Esc/unmount; analyzer/example tests trên SDK floor và stable,
 Windows release build để kiểm folder picker. Camera thật/24h không thuộc proof CI.
+
+
+## Hoàn tất
+
+Feature d6b64c9, test finder 2a1644b. Windows run 40298617835 đạt ba SDK,
+18 example tests, release build và formatter 58 files; Linux example cùng ba SDK
+đạt analyze/18 tests. Source/commands/limits ở docs/progress/export-capture-pair.md
+và docs/progress/logs/export-capture-pair/source.json. Product gate CHUA DAT.

@@ -2,6 +2,17 @@ Handover: CHUA DAT
 
 # Bằng chứng bàn giao
 
+Cập nhật export pair (2026-10-26, source `2a1644b`): example có nút chọn thư mục
+Windows và xuất original.jpg/cropped.jpg của cùng capture, giữ nguyên byte JPEG,
+staging riêng và cleanup khi cancel/lỗi; busy chặn double-click/retake/Esc,
+exit await write và late completion không cập nhật widget đã dispose.
+[Windows CI](https://github.com/qualife1291/document_detect_windows/actions/runs/40298617835)
+đạt 3.32.8/3.41.9/3.47.8:116 root, 11 UVC, 18 example tests, 3 benchmarks/native CTest,
+endurance 60 s và release build; stable format 58 files và plugin coexistence đạt.
+Linux ba SDK đạt example analyze/18 tests. Xem [review](export-capture-pair.md).
+Đây là chức năng phục vụ đối chiếu ảnh; chưa có cặp ảnh thực tế được kiểm tra
+và chưa test thao tác folder dialog trên Windows thật. Product gate vẫn CHUA DAT.
+
 Cập nhật preview/detail (source `b6076ff`, 2026-10-26): native bounded sampling,
 profile 640/960/1280 tự giảm tải theo sampling/decode/host UI, cadence không cộng
 dồn thời gian, demand theo visibility và loại decode đến trễ. Crop thẳng giữ

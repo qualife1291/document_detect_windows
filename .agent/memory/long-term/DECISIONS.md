@@ -51,3 +51,12 @@
   Chi phí sampling/decode/UI điều tiết preview; route dài hạn cần caller await stop.
   Không giành camera của host, dependency_overrides hoặc clear cache toàn app.
 - Nguồn: specs/adaptive-preview-detail.md, docs/integration-performance.md.
+
+## D-007 — Xuất cặp JPEG chủ động trong example
+
+- Ngày: 2026-10-26; trạng thái: accepted.
+- Lý do: user cần cặp ảnh cùng capture để phân biệt mờ camera/crop.
+- Hệ quả: chỉ bấm export mới chọn thư mục/ghi original + cropped nguyên byte;
+  staging riêng, một operation, cancel/cleanup và không mở lại camera. Native
+  folder picker pin SDK-compatible trong example; root/storage mặc định không đổi.
+- Nguồn: specs/export-capture-pair.md và example/lib/capture_pair_exporter.dart.

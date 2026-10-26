@@ -130,3 +130,16 @@ endurance 60 s, release build; formatter 56 files. Linux supplemental/root/examp
 cùng source tree, final adapter kiểm lại ba SDK; endurance 30 s.
 [Review](adaptive-preview-detail.md), [coverage](logs/adaptive-preview-detail/source.json).
 Product gate vẫn CHUA DAT; không suy ra physical clarity/GPU/soak từ CI.
+
+## Export original/crop pair trong example — 2026-10-26
+
+Done source `2a1644b06ca429c31a882a76dee1d59bde6fa279`:
+[Windows CI 40298617835](https://github.com/qualife1291/document_detect_windows/actions/runs/40298617835).
+Windows 3.32.8/3.41.9/3.47.8 đạt 116/11/18 tests, 3 benchmarks/native CTest,
+endurance 60 s, release build, stable format 58 files và coexistence build.
+Linux 3.32.8/3.41.9/3.47.7 đạt example analyze/18 tests. Export native picker
+chỉ trong example; root/camera/adapter/CI source trees trùng baseline f4e215c.
+Byte-copy pair + owned staging, cancel/error/retry/exit/unmount được kiểm chứng;
+physical pair visual review và thao tác folder dialog thật còn thiếu.
+[Review](export-capture-pair.md), [coverage](logs/export-capture-pair/source.json).
+Gate sản phẩm vẫn CHUA DAT.

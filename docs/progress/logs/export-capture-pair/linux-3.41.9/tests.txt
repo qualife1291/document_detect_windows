@@ -1,0 +1,20 @@
+00:00 +0: loading /workspace/document_detect_windows/example/test/kiosk_test.dart
+00:00 +0: /workspace/document_detect_windows/example/test/kiosk_test.dart: pair picker cancellation blocks duplicate exports and Esc without restarting camera
+00:00 +1: /workspace/document_detect_windows/example/test/kiosk_test.dart: pair picker cancellation blocks duplicate exports and Esc without restarting camera
+00:00 +2: /workspace/document_detect_windows/example/test/kiosk_test.dart: pair picker cancellation blocks duplicate exports and Esc without restarting camera
+00:00 +3: /workspace/document_detect_windows/example/test/kiosk_test.dart: pair picker cancellation blocks duplicate exports and Esc without restarting camera
+00:00 +4: /workspace/document_detect_windows/example/test/kiosk_test.dart: pair picker cancellation blocks duplicate exports and Esc without restarting camera
+00:00 +5: /workspace/document_detect_windows/example/test/kiosk_test.dart: pair picker cancellation blocks duplicate exports and Esc without restarting camera
+00:02 +6: /workspace/document_detect_windows/example/test/kiosk_test.dart: pair export waits for both files and leaves the same captured result visible
+00:03 +7: /workspace/document_detect_windows/example/test/kiosk_test.dart: pair IO error stays readable without private exception text and permits retry
+00:05 +8: /workspace/document_detect_windows/example/test/kiosk_test.dart: closing while folder picker is open never starts a late export
+00:06 +9: /workspace/document_detect_windows/example/test/kiosk_test.dart: unmount cancels pending pair write without updating disposed widgets
+00:07 +10: /workspace/document_detect_windows/example/test/kiosk_test.dart: graceful exit awaits cancellation of an in-progress pair write
+00:09 +11: /workspace/document_detect_windows/example/test/kiosk_test.dart: graceful window exit awaits camera cleanup
+00:09 +12: /workspace/document_detect_windows/example/test/kiosk_test.dart: Vietnamese kiosk supports start, manual result, retake and Esc
+00:11 +13: /workspace/document_detect_windows/example/test/kiosk_test.dart: result waits for native stop and removes live preview before JPEG display
+00:11 +14: /workspace/document_detect_windows/example/test/kiosk_test.dart: six capture/retake cycles evict only result images and stop camera on results
+00:14 +15: /workspace/document_detect_windows/example/test/kiosk_test.dart: result display decode fits a cap and evicts cached image on close
+00:14 +16: /workspace/document_detect_windows/example/test/kiosk_test.dart: result never enlarges decoded pixels at 100/150/200 percent DPI
+00:14 +17: /workspace/document_detect_windows/example/test/kiosk_test.dart: all quality warnings remain readable on a reduced-motion kiosk
+00:15 +18: All tests passed!

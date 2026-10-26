@@ -1,0 +1,319 @@
+{
+  "run_id": "40298617835",
+  "source_commit": "2a1644b06ca429c31a882a76dee1d59bde6fa279",
+  "conclusion": "success",
+  "url": "https://github.com/qualife1291/document_detect_windows/actions/runs/40298617835",
+  "jobs": [
+    {
+      "id": 121490714000,
+      "name": "windows (3.32.8, 3.32.8)",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/qualife1291/document_detect_windows/actions/runs/40298617835/job/121490714000",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-10-26T09:19:15Z",
+          "completed_at": "2026-10-26T09:19:16Z"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-10-26T09:19:16Z",
+          "completed_at": "2026-10-26T09:19:21Z"
+        },
+        {
+          "name": "Run subosito/flutter-action@v2",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-10-26T09:19:21Z",
+          "completed_at": "2026-10-26T09:20:44Z"
+        },
+        {
+          "name": "Resolve, analyze, test, benchmark and build example",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-10-26T09:20:44Z",
+          "completed_at": "2026-10-26T09:26:28Z"
+        },
+        {
+          "name": "Analyze optional camera_desktop candidate",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 5,
+          "started_at": "2026-10-26T09:26:28Z",
+          "completed_at": "2026-10-26T09:26:28Z"
+        },
+        {
+          "name": "Check Dart formatting on stable",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 6,
+          "started_at": "2026-10-26T09:26:28Z",
+          "completed_at": "2026-10-26T09:26:28Z"
+        },
+        {
+          "name": "Build host with upstream and capture plugins together",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 7,
+          "started_at": "2026-10-26T09:26:28Z",
+          "completed_at": "2026-10-26T09:26:28Z"
+        },
+        {
+          "name": "Run actions/upload-artifact@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 8,
+          "started_at": "2026-10-26T09:26:28Z",
+          "completed_at": "2026-10-26T09:26:29Z"
+        },
+        {
+          "name": "Post Run subosito/flutter-action@v2",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 15,
+          "started_at": "2026-10-26T09:26:29Z",
+          "completed_at": "2026-10-26T09:26:30Z"
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 16,
+          "started_at": "2026-10-26T09:26:30Z",
+          "completed_at": "2026-10-26T09:26:32Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 17,
+          "started_at": "2026-10-26T09:26:32Z",
+          "completed_at": "2026-10-26T09:26:32Z"
+        }
+      ]
+    },
+    {
+      "id": 121490714189,
+      "name": "windows (3.41.9, 3.41.9)",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/qualife1291/document_detect_windows/actions/runs/40298617835/job/121490714189",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-10-26T09:19:15Z",
+          "completed_at": "2026-10-26T09:19:17Z"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-10-26T09:19:17Z",
+          "completed_at": "2026-10-26T09:19:22Z"
+        },
+        {
+          "name": "Run subosito/flutter-action@v2",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-10-26T09:19:22Z",
+          "completed_at": "2026-10-26T09:20:52Z"
+        },
+        {
+          "name": "Resolve, analyze, test, benchmark and build example",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-10-26T09:20:52Z",
+          "completed_at": "2026-10-26T09:26:43Z"
+        },
+        {
+          "name": "Analyze optional camera_desktop candidate",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-10-26T09:26:43Z",
+          "completed_at": "2026-10-26T09:26:56Z"
+        },
+        {
+          "name": "Check Dart formatting on stable",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 6,
+          "started_at": "2026-10-26T09:26:56Z",
+          "completed_at": "2026-10-26T09:26:56Z"
+        },
+        {
+          "name": "Build host with upstream and capture plugins together",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 7,
+          "started_at": "2026-10-26T09:26:56Z",
+          "completed_at": "2026-10-26T09:26:56Z"
+        },
+        {
+          "name": "Run actions/upload-artifact@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 8,
+          "started_at": "2026-10-26T09:26:56Z",
+          "completed_at": "2026-10-26T09:26:57Z"
+        },
+        {
+          "name": "Post Run subosito/flutter-action@v2",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 15,
+          "started_at": "2026-10-26T09:26:57Z",
+          "completed_at": "2026-10-26T09:26:58Z"
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 16,
+          "started_at": "2026-10-26T09:26:58Z",
+          "completed_at": "2026-10-26T09:27:00Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 17,
+          "started_at": "2026-10-26T09:27:00Z",
+          "completed_at": "2026-10-26T09:27:00Z"
+        }
+      ]
+    },
+    {
+      "id": 121490714273,
+      "name": "windows (stable)",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/qualife1291/document_detect_windows/actions/runs/40298617835/job/121490714273",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-10-26T09:19:16Z",
+          "completed_at": "2026-10-26T09:19:17Z"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-10-26T09:19:17Z",
+          "completed_at": "2026-10-26T09:19:24Z"
+        },
+        {
+          "name": "Run subosito/flutter-action@v2",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-10-26T09:19:24Z",
+          "completed_at": "2026-10-26T09:20:59Z"
+        },
+        {
+          "name": "Resolve, analyze, test, benchmark and build example",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-10-26T09:20:59Z",
+          "completed_at": "2026-10-26T09:26:12Z"
+        },
+        {
+          "name": "Analyze optional camera_desktop candidate",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-10-26T09:26:12Z",
+          "completed_at": "2026-10-26T09:26:20Z"
+        },
+        {
+          "name": "Check Dart formatting on stable",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-10-26T09:26:20Z",
+          "completed_at": "2026-10-26T09:26:21Z"
+        },
+        {
+          "name": "Build host with upstream and capture plugins together",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-10-26T09:26:21Z",
+          "completed_at": "2026-10-26T09:27:14Z"
+        },
+        {
+          "name": "Run actions/upload-artifact@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 8,
+          "started_at": "2026-10-26T09:27:14Z",
+          "completed_at": "2026-10-26T09:27:16Z"
+        },
+        {
+          "name": "Post Run subosito/flutter-action@v2",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 15,
+          "started_at": "2026-10-26T09:27:16Z",
+          "completed_at": "2026-10-26T09:27:16Z"
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 16,
+          "started_at": "2026-10-26T09:27:16Z",
+          "completed_at": "2026-10-26T09:27:18Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 17,
+          "started_at": "2026-10-26T09:27:18Z",
+          "completed_at": "2026-10-26T09:27:18Z"
+        }
+      ]
+    }
+  ],
+  "artifacts": [
+    {
+      "id": 12640215842,
+      "name": "windows-3.32.8-evidence",
+      "size_in_bytes": 57019,
+      "digest": "sha256:626b832fb46b98726b505ca319cdc902fb045ba93fbab29f8879af5b95d27f73"
+    },
+    {
+      "id": 12639647161,
+      "name": "windows-3.41.9-evidence",
+      "size_in_bytes": 56990,
+      "digest": "sha256:c2674810c3a537b4839cfa393812685386fddfe1ae209c736990ce30643377d2"
+    },
+    {
+      "id": 12639572653,
+      "name": "windows-stable-evidence",
+      "size_in_bytes": 57544,
+      "digest": "sha256:2183b028974d87362cd30956b8c05a2059cdcd17c60b4fbfee5fc2e0e2e81cdf"
+    }
+  ]
+}

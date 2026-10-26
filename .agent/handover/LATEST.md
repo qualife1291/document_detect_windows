@@ -1,43 +1,41 @@
 ---
 status: done
-slug: adaptive-preview-detail
+slug: export-capture-pair
 updated: 2026-10-26
 ---
 
-# Handover — adaptive-preview-detail
+# Handover — export-capture-pair
 
-Đã triển khai yêu cầu đã được user duyệt, commit/push main theo quyền hội thoại.
-Runtime 668fffd; test fixes 66b553e/fd0894a; clock regression/source cuối b6076ff.
+User đồng ý bổ sung xuất original/crop sau log 8. Feature d6b64c9, test finder
+2a1644b; đã push main theo quyền hội thoại. Không có lệch scope cần duyệt thêm.
 
-## Kết quả và spec
+## Kết quả
 
-Khớp specs/adaptive-preview-detail.md: native bounded resize trước FFI,
-profile 640/960/1280 tự giảm tải sampling/decode/host UI và phục hồi chậm;
-cadence từ đầu sample; demand theo visibility; late-session image disposal;
-crop integer inclusive không interpolation; JPEG 92 cho example và actual MP/
-aspect-aware document-size/focus guidance. Không đổi detector thresholds/storage.
-Backend Windows-only BSD có namespace DLL/channel/registration riêng, hashes và
-license. Không private-pointer hack, dependency_overrides hoặc clear host cache.
-Không có lệch scope cần duyệt thêm.
+Khớp specs/export-capture-pair.md: nút result-screen, native Windows folder
+picker file_selector_windows 0.9.3+5 chỉ trong example. Hủy picker không ghi;
+manual/auto đều dùng cùng CapturedDocument. Async copy nguyên byte JPEG vào
+staging unique, flush/close cả hai rồi publish thư mục capture-<timestamp>-<suffix>
+chứa original.jpg/cropped.jpg; UI hiện đường dẫn copy được. Không decode/re-encode.
+Busy guard chặn duplicate/retake/Esc; late picker/unmount không ghi/cập nhật UI.
+Graceful exit await write cleanup; completed pairs giữ lại; OS kill/media/cleanup
+failure có thể để lại staging. Không sweep/xóa user files hoặc đổi root saveDirectory.
+Logs export_pair chỉ outcome/byte counts/errorType, không path/raw exception.
 
 ## Kiểm chứng
 
-Windows CI 40283388912, source b6076ff9d8a07c07535fd3ee3d0e53c40b23b398:
-3.32.8/3.41.9/3.47.8 đạt 116 root/11 UVC/7 example tests, 3 benchmarks,
-native CTest5/8MP/bounds/pixels, endurance 60 s và release build. Stable formatter 56
-files, 0 changes; host chứa cả upstream/internal plugin build+license check đạt.
-Linux 3.32.8/3.41.9/3.47.7 đạt cùng Dart suites,3 benchmarks/native test và 30 s;
-clock seam cuối kiểm adapter mọi SDK. Root/example source-tree hashes trùng cuối.
-Regression mutation: completion-based cadence cho 7 thay vì 13 frame; code đúng 13.
-Intermediate CI failures là MSVC byte fixture và test clock, không hạ assertions.
-Evidence riêng giữ nguồn/SDK tại docs/progress/logs/adaptive-preview-detail/;
-review docs/progress/adaptive-preview-detail.md. Historical logs không bị ghi đè.
+Source 2a1644b06ca429c31a882a76dee1d59bde6fa279; Windows CI 40298617835 đạt
+3.32.8/3.41.9/3.47.8:116 root, 11 UVC, 18 example tests, 3 benchmarks/native CTest,
+endurance 60 s, x64 release build. Stable format 58 files, 0 changes và coexistence
+host upstream/capture plugins đạt. Linux 3.32.8/3.41.9/3.47.7 đạt example pub get,
+analyze/18 tests và stable format. Root/camera/adapter/tool/CI trees trùng baseline
+f4e215c; Windows full suites được rerun. Test icon-button subclass finder đã sửa
+cho SDK floor, không bỏ assertions; intermediate CI 40297949185 không phải proof cuối.
+Evidence docs/progress/logs/export-capture-pair/, review docs/progress/export-capture-pair.md.
 
-## Tích hợp và việc ngoài task
+## Cách dùng / giới hạn
 
-Rebuild native một lần: example/flutter clean +pub get, chạy profile có logs.
-DOC_CAPTURE_PREVIEW_PROFILE=lowResource|balanced|detail; mặc định balanced960.
-Một preview/source; host await camera handoff, await stop khi route ẩn lâu.
-TickerMode/inactive chỉ giảm bitmap, không dừng native producer/analysis.
-Không còn việc code trong task. Physical camera clarity/focus/latency/GPU,
-accessibility và 24–168h soak vẫn chưa xác nhận; product HANDOVER giữ CHUA DAT.
+Rebuild example do thêm native plugin. Sau chụp, bấm Xuất cặp ảnh gốc + crop,
+chọn folder. Hai file cùng capture để so sánh 100% trong Windows Photos. Không cần
+bật crop-only save checkbox. Camera đã dừng khi xuất; không thêm preview work.
+Không còn việc code trong task. Chưa thử native folder dialog thực tế/ảnh thật;
+physical clarity/GPU/accessibility/24–168h soak chưa được chứng nhận. Gate CHUA_DAT.
