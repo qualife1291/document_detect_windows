@@ -13,6 +13,7 @@ class Camera extends Fake implements UvcCamera {
   var copies = 0, created = 0, attached = 0, disposed = 0, sequence = 0;
   var failStart = false;
   Duration copyWork = Duration.zero;
+  void Function()? afterSample;
   List<UvcCameraMode>? modesOverride;
   UvcCameraMode mode = const UvcCameraMode(
     frameFormat: 1,
@@ -135,6 +136,7 @@ class Camera extends Fake implements UvcCamera {
       );
     }
 
+    afterSample?.call();
     return UvcSampledFrames(
       analysis: sample(analysisMaxDimension),
       preview: sample(previewMaxDimension),
@@ -268,9 +270,15 @@ void main() {
   testWidgets('10ms readback preserves cadence without full preview copies', (
     tester,
   ) async {
-    final camera = smallCamera()..copyWork = const Duration(milliseconds: 10);
+    var elapsed = Duration.zero;
+    final camera = smallCamera()
+      ..afterSample = () {
+        elapsed += const Duration(milliseconds: 10);
+      };
     final source = UvcFrameSource.testing(
       camera: camera,
+      samplingClock: () => elapsed,
+      automaticPolling: false,
       previewMode: UvcPreviewMode.bitmap,
       pollInterval: const Duration(milliseconds: 200),
     );
@@ -286,14 +294,17 @@ void main() {
           decodeFrame: (_) => Future.value(seed.clone()),
         ),
       );
-      await advance(
-        tester,
-        800,
-      ); // before governor's first one-second evaluation
-      expect(
-        source.bitmapPreviewMetrics!.offeredFrames,
-        inInclusiveRange(10, 14),
-      );
+      // Model 16ms scheduler slots, with 10ms native work in each due period.
+      // Counting from completion would miss every second 64ms slot (7 vs13).
+      for (var slot = 0; slot <= 12; slot++) {
+        elapsed = Duration(milliseconds: slot * 64);
+        source.pollForTesting();
+        await tester.pump();
+      }
+      final metrics = source.bitmapPreviewMetrics!;
+      expect(metrics.offeredFrames, 13);
+      expect(metrics.totalSamplingTime, const Duration(milliseconds: 130));
+      expect(metrics.lastOfferedAt, const Duration(milliseconds: 778));
       expect(camera.fullCopies, 0);
       expect(
         camera.requestedSamples.every((r) => r.$1 == 0 && r.$2 == 960),
@@ -312,7 +323,6 @@ void main() {
       seed.dispose();
     }
   });
-
   test('frame stream identity survives repeated preview builds', () async {
     final camera = Camera();
     final source = UvcFrameSource.testing(

@@ -25,18 +25,24 @@ class UvcFrameSource
     this.preferredNativeFps = 30,
     this.bitmapPreviewProfile = BitmapPreviewProfile.balanced,
     this.bitmapPreviewInterval = const Duration(milliseconds: 66),
-  }) : _testCamera = null {
+  }) : _testCamera = null,
+       _testElapsed = null,
+       _automaticPolling = true {
     _validateInterval();
   }
   @visibleForTesting
   UvcFrameSource.testing({
     required UvcCamera camera,
+    Duration Function()? samplingClock,
+    bool automaticPolling = true,
     this.previewMode = UvcPreviewMode.texture,
     this.pollInterval = const Duration(milliseconds: 100),
     this.preferredNativeFps = 30,
     this.bitmapPreviewProfile = BitmapPreviewProfile.balanced,
     this.bitmapPreviewInterval = const Duration(milliseconds: 66),
-  }) : _testCamera = camera {
+  }) : _testCamera = camera,
+       _testElapsed = samplingClock,
+       _automaticPolling = automaticPolling {
     _validateInterval();
   }
   final UvcPreviewMode previewMode;
@@ -71,6 +77,16 @@ class UvcFrameSource
   );
   int _sampleWidth = 0, _sampleHeight = 0;
   final UvcCamera? _testCamera;
+  final Duration Function()? _testElapsed;
+  final bool _automaticPolling;
+  Duration get _elapsed => _testElapsed?.call() ?? _samplingClock.elapsed;
+
+  @visibleForTesting
+  void pollForTesting() {
+    if (_testCamera == null) throw StateError('Injected camera required');
+    _poll();
+  }
+
   bool _streaming = false;
   void _validateInterval() {
     if (preferredNativeFps < 10 || preferredNativeFps > 120) {
@@ -119,7 +135,7 @@ class UvcFrameSource
       previewMode != UvcPreviewMode.bitmap || !_streaming
       ? null
       : BitmapPreviewMetrics(
-          elapsed: _samplingClock.elapsed,
+          elapsed: _elapsed,
           offeredFrames: _bitmapOffers,
           sampledFrames: _samples,
           totalSamplingTime: Duration(microseconds: _sampleTotalUs),
@@ -273,7 +289,7 @@ class UvcFrameSource
       final tick = previewMode == UvcPreviewMode.texture
           ? pollInterval
           : const Duration(milliseconds: 16);
-      _timer = Timer.periodic(tick, (_) => _poll());
+      if (_automaticPolling) _timer = Timer.periodic(tick, (_) => _poll());
     } catch (_) {
       await _stop();
       rethrow;
@@ -298,7 +314,7 @@ class UvcFrameSource
         ..reset()
         ..start();
       _sequence = sequence;
-      final now = _samplingClock.elapsed;
+      final now = _elapsed;
       final analysis =
           _frames.hasListener &&
           _due(now, _lastAnalysisAt, pollInterval) &&
@@ -312,7 +328,6 @@ class UvcFrameSource
       final extraReadAllowed = _due(now, _lastReadAt, _readbackInterval);
       if (!analysis && !(preview && extraReadAllowed)) return;
       if (analysis) _lastAnalysisAt = now;
-      final cost = Stopwatch()..start();
       final sampled = camera.copyLatestSampledFrames(
         analysisMaxDimension: analysis ? 640 : 0,
         previewMaxDimension: preview ? _previewMaximum : 0,
@@ -324,10 +339,10 @@ class UvcFrameSource
       _liveness
         ..reset()
         ..start();
-      cost.stop();
-      final us = cost.elapsedMicroseconds;
+      final cost = _elapsed - now;
+      final us = cost.inMicroseconds;
       _lastReadAt = now;
-      _bitmapDemand?.recordSamplingCost(cost.elapsed);
+      _bitmapDemand?.recordSamplingCost(cost);
       _samples++;
       _sampleTotalUs += us;
       _sampleMaxUs = math.max(_sampleMaxUs, us);
@@ -349,7 +364,7 @@ class UvcFrameSource
         // Reserve from sampling start. Copy/decode cost must not accumulate
         // in every requested period. Never catch up missed frames in a loop.
         _lastPreviewSampleAt = now;
-        _lastBitmapAt = _samplingClock.elapsed;
+        _lastBitmapAt = _elapsed;
         _sampleWidth = sampled.preview!.width;
         _sampleHeight = sampled.preview!.height;
         _bitmapOffers++;
