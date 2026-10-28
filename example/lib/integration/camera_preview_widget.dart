@@ -438,7 +438,7 @@ class _CameraPreviewWidgetState extends State<CameraPreviewWidget> {
       );
     }
     return Stack(
-      fit: StackFit.expand,
+      fit: StackFit.loose,
       children: [
         _capture.buildPreview(
           fit: BoxFit.contain,

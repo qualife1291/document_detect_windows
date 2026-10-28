@@ -28,11 +28,12 @@ hardware/control service implementation is available; those hooks are explicit.
 
 ## Verification
 
-Linux Flutter 3.47.7 example analyze and all 32 tests passed; stable format covers
-60 files. Ten new integration tests exercise manual/auto delivery, callback
+Linux Flutter 3.47.7 example analyze and all 33 tests passed; stable format covers
+60 files. Eleven new integration tests exercise manual/auto delivery, callback
 priority, batch repeated capture, rejection/retry, batch auto removal latch after
 cooldown/rebuilds, pending snapshot stop, late hardware acquisition, ambiguous
-selection, app hidden behavior and remount handoff. Test handoff pumps widget and
+selection, app hidden behavior, Column layout without a fixed height, and
+remount handoff. Test handoff pumps widget and
 real-isolate continuations; no assertion was removed to bypass a scheduling issue.
 
 Additional supported-SDK/Windows evidence will be recorded after CI completes.

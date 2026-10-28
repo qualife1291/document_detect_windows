@@ -463,6 +463,43 @@ void main() {
   );
 
   testWidgets(
+    'preview sizes itself inside a Column without an explicit height',
+    (tester) async {
+      final source = _Source(), controller = CameraPreviewController();
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Column(
+              children: [
+                SizedBox(
+                  width: 320,
+                  child: CameraPreviewWidget(
+                    controller: controller,
+                    autoStart: false,
+                    captureFactory: () => _capture(source),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+      try {
+        await tester.runAsync(controller.resume);
+        await tester.pump();
+        expect(tester.takeException(), isNull);
+        expect(
+          tester.getSize(find.byType(DocumentCameraPreview)),
+          const Size(320, 240),
+        );
+      } finally {
+        await _close(tester, controller, source);
+      }
+    },
+  );
+
+  testWidgets(
     'new view waits for the previous unmounted view to release the camera',
     (tester) async {
       final source = _Source(),
