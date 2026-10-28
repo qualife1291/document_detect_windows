@@ -1,4 +1,4 @@
-# Compile a host with BOTH plugins without opening physical devices.
+# Compile the copied kiosk widget with legacy camera plugins; no devices opened.
 $ErrorActionPreference = 'Stop'
 $repo = Split-Path $PSScriptRoot -Parent
 $fixture = Join-Path $env:TEMP "doc-capture-coexistence-$PID"
@@ -22,6 +22,7 @@ dependencies:
   flutter:
     sdk: flutter
   flutter_ffi_uvc: 1.1.2
+  camera_windows: 0.2.6+4
   windows_doc_capture:
     path: '$rootPath'
   windows_doc_capture_uvc:
@@ -30,14 +31,16 @@ dependencies:
   Copy-Item (Join-Path $repo 'example/lib/integration/camera_preview_widget.dart') 'lib/camera_preview_widget.dart'
   @'
 import 'package:flutter/material.dart';
+import 'package:camera_windows/camera_windows.dart';
 import 'package:flutter_ffi_uvc/flutter_ffi_uvc.dart';
 import 'package:windows_doc_capture_uvc/windows_doc_capture_uvc.dart';
 import 'camera_preview_widget.dart';
 void main() {
   final source = UvcFrameSource(previewMode: UvcPreviewMode.bitmap);
   final upstream = UvcCamera(); // lazy: no native device opened
+  final legacy = CameraWindows(); // no camera opened
   runApp(MaterialApp(home: Scaffold(body: Column(children: [
-    Text('${source.runtimeType} / ${upstream.runtimeType}'),
+    Text('${source.runtimeType} / ${upstream.runtimeType} / ${legacy.runtimeType}'),
     const Expanded(child: CameraPreviewWidget(autoStart: false)),
   ]))));
 }
@@ -45,14 +48,14 @@ void main() {
   Run-Checked @('pub', 'get')
   Run-Checked @('build', 'windows', '--release')
   $release = 'build/windows/x64/runner/Release'
-  foreach ($name in @('flutter_ffi_uvc_plugin.dll', 'windows_doc_capture_uvc_backend_plugin.dll', 'LICENSE.windows_doc_capture_uvc_backend')) {
+  foreach ($name in @('camera_windows_plugin.dll', 'flutter_ffi_uvc_plugin.dll', 'windows_doc_capture_uvc_backend_plugin.dll', 'LICENSE.windows_doc_capture_uvc_backend')) {
     if (-not (Test-Path (Join-Path $release $name))) { throw "Missing separate bundled file: $name" }
   }
   $registration = Get-Content windows/flutter/generated_plugin_registrant.cc -Raw
-  foreach ($name in @('FlutterFfiUvcPluginCApiRegisterWithRegistrar', 'WindowsDocCaptureUvcBackendPluginCApiRegisterWithRegistrar')) {
+  foreach ($name in @('CameraWindowsRegisterWithRegistrar', 'FlutterFfiUvcPluginCApiRegisterWithRegistrar', 'WindowsDocCaptureUvcBackendPluginCApiRegisterWithRegistrar')) {
     if (-not $registration.Contains($name)) { throw "Missing independent registration: $name" }
   }
-  'COEXISTENCE PASS: both DLLs, license and independent registration; copied kiosk widget compiled; no camera opened.' | Tee-Object -FilePath $log -Append
+  'COEXISTENCE PASS: all three DLLs, license and independent registration; copied kiosk widget compiled; no camera opened.' | Tee-Object -FilePath $log -Append
 } finally {
   Pop-Location
   Remove-Item -Recurse -Force $fixture -ErrorAction SilentlyContinue

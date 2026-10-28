@@ -41,7 +41,10 @@ Bỏ import camera_platform_interface khỏi widget này để tránh trùng
 ResolutionPreset. Không cần gỡ camera_windows/camera khỏi toàn project nếu tính
 năng khác vẫn dùng chúng. Chỉ thay camera giấy tờ; camera cũ phải đóng hoàn toàn
 trước khi UVC mở cùng thiết bị. Hai plugin cùng được cài không có nghĩa được mở
-cùng camera đồng thời. Widget này Windows x64 only; mobile dev giữ implementation
+cùng camera đồng thời. Bài build host có chép widget và cài cả camera_windows
+0.2.6+4 cùng hai plugin UVC; đây là version fixture, không yêu cầu hạ version
+trong kiosk. Không thay thế việc build app thật và kiểm tra handoff.
+Widget này Windows x64 only; mobile dev giữ implementation
 cũ riêng, không trỏ mobile vào UVC.
 
 ## 2. Nối camera và vòng đời đèn/phần cứng

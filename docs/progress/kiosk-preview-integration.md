@@ -21,7 +21,10 @@ hardware/control service implementation is available; those hooks are explicit.
   fixed ROI/digital zoom/mirror and CameraPlatform.takePicture/XFile are removed
   from the replacement; this migration is explicit in the guide.
 - Host coexistence fixture now compiles the copied widget in a separate Windows
-  application along with root/UVC and the original flutter_ffi_uvc plugin.
+  application along with root/UVC, camera_windows 0.2.6+4 (SDK-floor compatible
+  fixture pin) and the original flutter_ffi_uvc plugin. This does not change the
+  camera_windows version in the caller's project. Physical-device arbitration
+  still requires awaited handoff; dependency coexistence does not grant access.
 
 ## Verification
 
