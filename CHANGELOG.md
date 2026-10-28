@@ -4,6 +4,17 @@ This changelog follows Keep a Changelog. No production release has been made.
 
 ## [Unreleased]
 
+### Kiosk integration sample
+
+- Add a copyable UVC preview/controller with capture()/JPEG callbacks, enum
+  status, hardware hooks, and explicit single/batch modes. Batch keeps one
+  session/removal latch; single releases camera before review callbacks.
+- Guard hidden/route stop, late capture and hardware acquisition, and await
+  prior unmount cleanup before reusing a controller. No capture files or history.
+- Document GetX ID and multi-document upload wiring, camera-ID/geometry migration
+  and explicit camera handoff. Compile the copied sample in the external host
+  coexistence fixture; test synthetic lifecycle and callback behavior.
+
 ### Kiosk memory-only capture and lifecycle review
 
 - Remove automatic-save controls from the example. Manual/auto captures retain

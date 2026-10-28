@@ -130,6 +130,13 @@ display magnification and actual optical blur.
 
 ## Integration
 
+For the shared `CameraPreviewWidget` / GetX kiosk flow, use the copyable
+[preview/controller sample](example/lib/integration/camera_preview_widget.dart)
+and the [Vietnamese integration guide](docs/integration/kiosk-getx.md).
+It keeps capture()/Uint8List callbacks, with batch preview by default and an
+explicit single-photo mode that releases the camera before review callbacks.
+
+
 For kiosk memory-only capture use the UVC adapter. The optional desktop adapter
 creates a temporary image via its camera dependency; omit that adapter when
 image files must not be created. The existing root `saveDirectory` parameter is
