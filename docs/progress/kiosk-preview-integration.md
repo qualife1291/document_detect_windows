@@ -33,10 +33,24 @@ Linux Flutter 3.47.7 example analyze and all 33 tests passed; stable format cove
 priority, batch repeated capture, rejection/retry, batch auto removal latch after
 cooldown/rebuilds, pending snapshot stop, late hardware acquisition, ambiguous
 selection, app hidden behavior, Column layout without a fixed height, and
-remount handoff. Test handoff pumps widget and
-real-isolate continuations; no assertion was removed to bypass a scheduling issue.
+remount handoff. The handoff regression drives widget callbacks and real-isolate continuations
+while a held stop delays reuse of the controller.
 
-Additional supported-SDK/Windows evidence will be recorded after CI completes.
+Validated source: `1f55c45433467ced173c26f8e4ad925c574770d9`.
+[Windows CI 40730610952](https://github.com/qualife1291/document_detect_windows/actions/runs/40730610952) passed Flutter 3.32.8/3.41.9/3.47.8:
+117 root, 11 UVC and 33 example tests per SDK, analyze, three benchmarks,
+native sampler CTest, 60-second synthetic endurance and x64 release build.
+Stable passed format60 and compiled an external application with the copied
+widget, camera_windows0.2.6+4, original UVC and internal UVC: three DLLs,
+license and independent registrations verified. This is dependency/build
+coexistence; no physical cameras were opened by the build check.
+
+Linux3.32.8/3.41.9 example analyze/33 tests are logged. Linux3.47.7 example
+analyze/33 tests passed in the execution transcript before SDK switching; stable
+package configs and format were restored. Root/native component tree hashes
+match baseline2a7e31b; Windows reran the full suites. Evidence:
+[source record](logs/kiosk-preview-integration/source.json),
+[CI details](logs/kiosk-preview-integration/windows-ci.json) and nearby logs.
 Root library, native adapters and ordinary example capture app remain unchanged.
 Physical kiosk/hardware-control compatibility and 24–168 hour soak are not proven
 by these synthetic tests. Product readiness remains CHUA DAT.

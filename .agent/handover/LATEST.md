@@ -1,46 +1,49 @@
 ---
 status: done
-slug: kiosk-memory-review
-updated: 2026-10-26
+slug: kiosk-preview-integration
+updated: 2026-10-29
 ---
 
-# Handover — kiosk-memory-review
+# Handover — kiosk-preview-integration
 
-User yêu cầu review package/kiosk, không lưu file khi chụp, commit/push mọi file
-liên quan. Source 05355304ed3974677c225bdddb04f9abec5ccb3a đã push main.
-Phạm vi specs/kiosk-memory-review.md hoàn tất; phần sau chỉ documentation/evidence.
+User gửi shared CameraPlatform widget, flow GetX ID và upload nhiều chứng từ.
+Đã chuẩn bị sample + guide theo specs/kiosk-preview-integration.md. Source
+1f55c45433467ced173c26f8e4ad925c574770d9 đã push main. Phần sau chỉ docs/evidence.
 
 ## Kết quả
 
-Example bỏ save checkbox/directory, không truyền saveDirectory: manual/auto JPEG
-trong RAM. Giữ nút export pair chủ động phục vụ test; xuất vẫn tạo file theo yêu
-cầu, không xóa ảnh đã xuất. Root API saveDirectory opt-in giữ tương thích.
-UVC snapshot/worker không tạo temporary image; camera_desktop dependency có temp
-file nên không dùng khi cần no-capture-files. OS paging/secure erasure ngoài scope.
-Hidden/paused/detached stop native/analysis và cancel pending capture/start;
-operation epoch chặn late result/export kể cả hide rồi resume. Inactive focus/
-native picker không stop. Foreground restart thủ công sau cleanup; chặn concurrent
-UI/enumeration. Host route/tab hiding vẫn cần awaited stop/dispose trước handoff.
-Bounded frames/one decoder/cancellation/owned cache eviction không đổi. Sửa stale
-màu cam/save-error và docs còn nói full RGBA/Dart downsampling.
+example/lib/integration/camera_preview_widget.dart là file copyable độc lập GetX.
+Giữ optional CameraPreviewController/capture()/Uint8List callback; một callback,
+ưu tiên widget nếu có. Batch mặc định giữ session và removal latch (giống old
+widget giữ preview); ID chọn single để stop + release hook trước callback.
+Hardware select/acquire/configure/release là hook; callback/late capture/acquire
+được guard; stop ngay khi hidden, active=false hoặc shutdown. Remount cùng
+controller await cleanup cũ. Không file ảnh, image history hoặc global cache clear.
+Bỏ old fixed crop/zoom/mirror rõ trong guide; camera_windows ID không mặc định
+khớp UVC. Controller mỗi view ổn định; captureFactory tạo owned capture mới.
+Guide docs/integration/kiosk-getx.md có wiring hai flow, navigation/dialog/upload
+await stop, onClose fallback, limits cho host giữ/encode ảnh. Không đổi backend/
+AI nghiệp vụ của kiosk; services riêng chưa có source nên không giả định control.
 
 ## Kiểm chứng
 
-Windows CI 40311068502 source 0535530 success, Flutter 3.32.8/3.41.9/3.47.8:
-117 root, 11 UVC, 22 example tests; analyze tất cả, 3 benchmarks,native CTest,
-synthetic endurance 60 s và release build. Stable format 58 và host coexistence đạt.
-Linux 3.32.8/3.41.9 logs root/example analyze 117/22; stable 3.47.7 tương tự trong
-transcript trước SDK switching, đã restore configs/format. Evidence/source hashes:
-docs/progress/logs/kiosk-memory-review/. Review docs/progress/kiosk-memory-review.md.
-Lifecycle harness dùng transition hợp lệ, real-async start gate và cleanup gate
-một operation; không hạ assertions hay bỏ test. API runtime root chỉ thêm docs;
-adapters/tool/CI trees không đổi so với 6e7929b.
+Windows CI 40730610952 (https://github.com/qualife1291/document_detect_windows/actions/runs/40730610952) success,
+Flutter 3.32.8/3.41.9/3.47.8: 117 root, 11 UVC, 33 example tests/SDK;
+analyze, 3 benchmarks, native sampler CTest, endurance mô phỏng 60 s và release build.
+Stable format 60 và host riêng chép widget cùng camera_windows 0.2.6+4/original UVC/
+internal UVC đạt ba DLL/license/registration. Linux 3.32.8/3.41.9 example 33/analyze
+có logs; stable 3.47.7 tương tự trong transcript trước switching, configs/format
+đã restore. Root lib/test/adapters/.github trees không đổi so với 2a7e31b.
+Evidence docs/progress/logs/kiosk-preview-integration/, review tương ứng.
+11 regression mới có batch repeated/auto latch, snapshot cancel, acquire trễ,
+ambiguous selection, hidden, Column unbounded-height và remount handoff.
 
-## Giới hạn / việc sau
+## Giới hạn
 
-Hai cặp ảnh thật đã review ngoài repo: text mềm từ original 720p, crop thêm nhẹ;
-cặp 1 có dải đen che mép ngay original. Chưa đổi threshold/warp filter: cần fixture
-đa loại và CPU/calibration trước. Không commit ảnh/log thật. Physical camera/GPU/
-USB/accessibility/24–168h soak vẫn thiếu. Product gate CHUA DAT. Không còn việc
-code task này; tích hợp dùng UVC không saveDirectory, một camera owner/preview và
-awaited cleanup. Kiosk cấm export thì không đưa nút diagnostic vào UI sản phẩm.
+Chỉ build fixture riêng, chưa build cả app kiosk riêng/hardware/light/control.
+Caller phải điều phối camera_windows/UVC; compile coexistence không cấp shared
+camera access. Device ID và preset cần kiểm tra trên thiết bị thật; hooks cần
+completion/cancellation hữu hạn ở service. Physical GPU/USB/24–168h thiếu proof.
+Product gate CHUA DAT. Không còn code task này. User cuối xác nhận chỉ tập trung
+document_detect_windows; không tiếp tục xử lý repo thêm nhầm. Không thay saved
+repository selection; thư mục repo thêm nhầm còn nguyên do lệnh xóa bị từ chối.

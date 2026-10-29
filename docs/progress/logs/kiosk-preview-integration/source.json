@@ -1,0 +1,36 @@
+{
+  "source_commit": "1f55c45433467ced173c26f8e4ad925c574770d9",
+  "windows_workflow": "https://github.com/qualife1291/document_detect_windows/actions/runs/40730610952",
+  "windows_sdks": [
+    "3.32.8",
+    "3.41.9",
+    "3.47.8"
+  ],
+  "linux_sdks": [
+    "3.32.8",
+    "3.41.9",
+    "3.47.7"
+  ],
+  "tests_per_windows_sdk": {
+    "root": 117,
+    "uvc": 11,
+    "example": 33,
+    "benchmarks": 3,
+    "native_ctest": 1,
+    "endurance_seconds": 60
+  },
+  "linux_scope": "Example analyze/33 tests on all three installed SDKs; floor/middle logs, stable transcript before SDK switching. Stable configs/format restored. Unchanged root/native components retain baseline; all Windows suites rerun.",
+  "unchanged_component_trees_from_2a7e31b": {
+    "lib": "08eed24fc1bbdacc9dad34cf8477110cb1a29cac",
+    "test": "5957392efee2ace3da4d95b1f3bc8e3c1a6bd6da",
+    "adapters": "9d840b3c4a3b65c71ab5e7f404be22dd53ffcd76",
+    ".github": "6a31e5e8b41f0ea5f59cc539d2ed127e6f678cce"
+  },
+  "format_files": 60,
+  "external_host_copied_widget_compiled": true,
+  "legacy_camera_windows_fixture_version": "0.2.6+4",
+  "actual_kiosk_project_built": false,
+  "private_hardware_service_tested": false,
+  "physical_camera_24h_soak": false,
+  "product_handover": "CHUA DAT"
+}

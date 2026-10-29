@@ -1,0 +1,35 @@
+00:00 +0: loading D:/a/document_detect_windows/document_detect_windows/example/test/capture_pair_exporter_test.dart
+00:00 +0: D:/a/document_detect_windows/document_detect_windows/example/test/capture_pair_exporter_test.dart: exports unchanged bytes from one capture without overwriting prior pairs
+00:00 +1: D:/a/document_detect_windows/document_detect_windows/example/test/capture_pair_exporter_test.dart: cancelled before writing creates no directory or files
+00:00 +2: D:/a/document_detect_windows/document_detect_windows/example/test/capture_pair_exporter_test.dart: unmount cancellation between writes removes only its staged data
+00:00 +3: D:/a/document_detect_windows/document_detect_windows/example/test/capture_pair_exporter_test.dart: partial second-write failure publishes no pair and preserves caller files
+00:00 +4: D:/a/document_detect_windows/document_detect_windows/example/test/capture_pair_exporter_test.dart: unavailable destination surfaces IO error without creating fallback files
+00:00 +5: D:/a/document_detect_windows/document_detect_windows/example/test/kiosk_preview_integration_test.dart: manual capture stops and releases hardware before exactly one JPEG callback
+00:01 +6: D:/a/document_detect_windows/document_detect_windows/example/test/kiosk_preview_integration_test.dart: auto capture uses the existing bytes callback after stop and survives parent rebuilds
+00:02 +7: D:/a/document_detect_windows/document_detect_windows/example/test/kiosk_preview_integration_test.dart: stop cancels pending snapshot, suppresses late callbacks, and permits explicit resume
+00:02 +8: D:/a/document_detect_windows/document_detect_windows/example/test/kiosk_preview_integration_test.dart: a stale hardware acquisition releases its lease before stop completes
+00:02 +9: D:/a/document_detect_windows/document_detect_windows/example/test/kiosk_preview_integration_test.dart: multiple devices require explicit selection and never fall back
+00:03 +10: D:/a/document_detect_windows/document_detect_windows/example/test/kiosk_test.dart: pair picker cancellation blocks duplicate exports and Esc without restarting camera
+00:03 +11: D:/a/document_detect_windows/document_detect_windows/example/test/kiosk_test.dart: pair picker cancellation blocks duplicate exports and Esc without restarting camera
+00:03 +12: D:/a/document_detect_windows/document_detect_windows/example/test/kiosk_test.dart: pair picker cancellation blocks duplicate exports and Esc without restarting camera
+00:03 +13: D:/a/document_detect_windows/document_detect_windows/example/test/kiosk_test.dart: pair picker cancellation blocks duplicate exports and Esc without restarting camera
+00:05 +14: D:/a/document_detect_windows/document_detect_windows/example/test/kiosk_preview_integration_test.dart: batch auto capture keeps the remove-document latch through rebuilds and cooldown
+00:07 +15: D:/a/document_detect_windows/document_detect_windows/example/test/kiosk_preview_integration_test.dart: batch auto capture keeps the remove-document latch through rebuilds and cooldown
+00:08 +16: D:/a/document_detect_windows/document_detect_windows/example/test/kiosk_test.dart: pair IO error stays readable without private exception text and permits retry
+00:08 +17: D:/a/document_detect_windows/document_detect_windows/example/test/kiosk_test.dart: pair IO error stays readable without private exception text and permits retry
+00:08 +18: D:/a/document_detect_windows/document_detect_windows/example/test/kiosk_test.dart: pair IO error stays readable without private exception text and permits retry
+00:09 +19: D:/a/document_detect_windows/document_detect_windows/example/test/kiosk_test.dart: closing while folder picker is open never starts a late export
+00:10 +20: D:/a/document_detect_windows/document_detect_windows/example/test/kiosk_test.dart: unmount cancels pending pair write without updating disposed widgets
+00:11 +21: D:/a/document_detect_windows/document_detect_windows/example/test/kiosk_test.dart: graceful exit awaits cancellation of an in-progress pair write
+00:13 +22: D:/a/document_detect_windows/document_detect_windows/example/test/kiosk_test.dart: hidden kiosk stops fully, waits for cleanup and requires explicit restart
+00:13 +23: D:/a/document_detect_windows/document_detect_windows/example/test/kiosk_test.dart: hide during native startup rejects late start without a false camera error
+00:13 +24: D:/a/document_detect_windows/document_detect_windows/example/test/kiosk_test.dart: hide during snapshot cancels capture and rejects the late JPEG
+00:14 +25: D:/a/document_detect_windows/document_detect_windows/example/test/kiosk_test.dart: hide and resume permanently cancel an open export picker
+00:15 +26: D:/a/document_detect_windows/document_detect_windows/example/test/kiosk_test.dart: graceful window exit awaits camera cleanup
+00:16 +27: D:/a/document_detect_windows/document_detect_windows/example/test/kiosk_test.dart: Vietnamese kiosk supports start, manual result, retake and Esc
+00:17 +28: D:/a/document_detect_windows/document_detect_windows/example/test/kiosk_test.dart: result waits for native stop and removes live preview before JPEG display
+00:18 +29: D:/a/document_detect_windows/document_detect_windows/example/test/kiosk_test.dart: six capture/retake cycles evict only result images and stop camera on results
+00:20 +30: D:/a/document_detect_windows/document_detect_windows/example/test/kiosk_test.dart: result display decode fits a cap and evicts cached image on close
+00:20 +31: D:/a/document_detect_windows/document_detect_windows/example/test/kiosk_test.dart: result never enlarges decoded pixels at 100/150/200 percent DPI
+00:20 +32: D:/a/document_detect_windows/document_detect_windows/example/test/kiosk_test.dart: all quality warnings remain readable on a reduced-motion kiosk
+00:21 +33: All tests passed!

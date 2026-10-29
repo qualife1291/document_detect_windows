@@ -70,3 +70,14 @@
   đáp ứng no-capture-files. Hidden/paused/detached stop, epoch hủy late operations,
   foreground restart thủ công; inactive không giành/nhả camera do mất focus.
 - Nguồn: specs/kiosk-memory-review.md, docs/progress/kiosk-memory-review.md.
+
+## D-009 — Widget tích hợp chung có single/batch riêng
+
+- Ngày: 2026-10-28; trạng thái: accepted.
+- Lý do: user gửi widget dùng CameraPlatform, flow ID/review và upload nhiều ảnh.
+- Hệ quả: sample copyable ngoài root API, không thêm GetX dependency. Giữ
+  capture()/bytes, mặc định batch giống widget cũ; ID chọn single dừng trước
+  callback. Batch giữ session/removal latch, không giữ ảnh; app sở hữu history.
+  Hardware/control và camera-ID mapping là hook; không giả định service/ROI cũ
+  dùng được qua backend khác. Host vẫn điều phối camera_windows/UVC bằng await.
+- Nguồn: specs/kiosk-preview-integration.md, docs/integration/kiosk-getx.md.

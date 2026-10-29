@@ -1,0 +1,135 @@
+00:00 +0: loading D:/a/document_detect_windows/document_detect_windows/test/analysis_gate_test.dart
+00:00 +0: D:/a/document_detect_windows/document_detect_windows/test/analysis_gate_test.dart: copy time does not halve the cadence of a 100ms pull adapter
+00:00 +1: D:/a/document_detect_windows/document_detect_windows/test/analysis_gate_test.dart: pull jitter allowance is bounded and push-only sources stay strict
+00:00 +2: D:/a/document_detect_windows/document_detect_windows/test/analysis_gate_test.dart: discarded demand and new sessions cannot reuse a reservation
+00:02 +3: D:/a/document_detect_windows/document_detect_windows/test/analyzer_test.dart: persistent isolate processes active then newest pending frame
+00:03 +4: D:/a/document_detect_windows/document_detect_windows/test/auto_capture_test.dart: requires eight stable frames and visible 500ms feedback
+00:03 +5: D:/a/document_detect_windows/document_detect_windows/test/auto_capture_test.dart: fast frame count alone never skips feedback
+00:03 +6: D:/a/document_detect_windows/document_detect_windows/test/auto_capture_test.dart: motion accumulates relative to stable anchor and resets counter
+00:03 +7: D:/a/document_detect_windows/document_detect_windows/test/auto_capture_test.dart: bad quality, missing frame and time gaps reset stability
+00:03 +8: D:/a/document_detect_windows/document_detect_windows/test/auto_capture_test.dart: cooldown requires paper removal before a second auto capture
+00:03 +9: D:/a/document_detect_windows/document_detect_windows/test/auto_capture_test.dart: invalid feedback interval rejected
+00:03 +10: D:/a/document_detect_windows/document_detect_windows/test/auto_capture_test.dart: warning metadata and severity are accessible and bounded
+00:03 +11: D:/a/document_detect_windows/document_detect_windows/test/bitmap_preview_budget_test.dart: host UI pressure reduces load even when sampling and decode are cheap
+00:03 +12: D:/a/document_detect_windows/document_detect_windows/test/bitmap_preview_budget_test.dart: sampling and slow decoders independently trigger bounded reductions
+00:04 +13: D:/a/document_detect_windows/document_detect_windows/test/controller_test.dart: bitmap sampling pauses during capture and releases its predicate on teardown
+00:04 +14: D:/a/document_detect_windows/document_detect_windows/test/controller_test.dart: manual capture is single flight, restartable, and empty frames return null
+00:04 +15: D:/a/document_detect_windows/document_detect_windows/test/controller_test.dart: camera error fails start and can be retried without leaking analyzer
+00:04 +16: D:/a/document_detect_windows/document_detect_windows/test/controller_test.dart: automatic callback uses fresh snapshot and stops on stream errors
+00:05 +17: D:/a/document_detect_windows/document_detect_windows/test/controller_test.dart: automatic callback uses fresh snapshot and stops on stream errors
+00:05 +18: D:/a/document_detect_windows/document_detect_windows/test/controller_test.dart: automatic callback uses fresh snapshot and stops on stream errors
+00:05 +19: D:/a/document_detect_windows/document_detect_windows/test/controller_test.dart: automatic callback uses fresh snapshot and stops on stream errors
+00:05 +20: D:/a/document_detect_windows/document_detect_windows/test/controller_test.dart: automatic callback uses fresh snapshot and stops on stream errors
+00:05 +21: D:/a/document_detect_windows/document_detect_windows/test/controller_test.dart: automatic callback uses fresh snapshot and stops on stream errors
+00:05 +22: D:/a/document_detect_windows/document_detect_windows/test/controller_test.dart: automatic callback uses fresh snapshot and stops on stream errors
+00:05 +23: D:/a/document_detect_windows/document_detect_windows/test/controller_test.dart: automatic callback uses fresh snapshot and stops on stream errors
+00:05 +24: D:/a/document_detect_windows/document_detect_windows/test/controller_test.dart: automatic callback uses fresh snapshot and stops on stream errors
+00:05 +25: D:/a/document_detect_windows/document_detect_windows/test/controller_test.dart: production guard rejects unsupported OS or architecture before opening hardware
+[windows_doc_capture] {"v":1,"time":"2026-10-28T16:57:45.104081Z","id":"hnmzrp6gmy-1","session":1,"uptimeMs":2,"event":"start","backend":"FakeSource","os":"windows","processors":4,"preset":"high","specificDeviceRequested":false,"auto":true,"saving":false,"analysisIntervalMs":100,"analysisMaxSide":640,"jpegQuality":90,"blurThreshold":100.0,"brightnessRange":[0.2,0.85],"maxClipping":0.25,"minimumCoverage":0.15,"minimumMargin":0.02,"maximumTilt":15.0,"stableFrameCount":8,"feedbackMs":500,"maxFrameGapMs":400,"maximumMotion":0.015,"outputMaxSide":null,"imageFilter":"original","cropPadding":0.02}
+[windows_doc_capture] {"v":1,"time":"2026-10-28T16:57:45.111082Z","id":"hnmzrp6gmy-1","session":1,"uptimeMs":7,"event":"state","from":"idle","state":"processing","warnings":[],"quad":null,"coalesced":0}
+[windows_doc_capture] {"v":1,"time":"2026-10-28T16:57:45.115083Z","id":"hnmzrp6gmy-1","session":1,"uptimeMs":11,"event":"error","stage":"start","type":"UnsupportedError","frames":["package:windows_doc_capture/src/platform/windows_ffi/platform_guard.dart:11:5","package:windows_doc_capture/src/camera/camera_controller.dart:321:7","package:windows_doc_capture/src/camera/camera_controller.dart:251:7"]}
+[windows_doc_capture] {"v":1,"time":"2026-10-28T16:57:45.115083Z","id":"hnmzrp6gmy-1","session":1,"uptimeMs":11,"event":"state","from":"processing","state":"error","warnings":[],"quad":null,"coalesced":0}
+[windows_doc_capture] {"v":1,"time":"2026-10-28T16:57:45.116076Z","id":"hnmzrp6gmy-1","session":2,"uptimeMs":12,"event":"start","backend":"FakeSource","os":"windows","processors":4,"preset":"high","specificDeviceRequested":false,"auto":true,"saving":false,"analysisIntervalMs":100,"analysisMaxSide":640,"jpegQuality":90,"blurThreshold":100.0,"brightnessRange":[0.2,0.85],"maxClipping":0.25,"minimumCoverage":0.15,"minimumMargin":0.02,"maximumTilt":15.0,"stableFrameCount":8,"feedbackMs":500,"maxFrameGapMs":400,"maximumMotion":0.015,"outputMaxSide":null,"imageFilter":"original","cropPadding":0.02}
+[windows_doc_capture] {"v":1,"time":"2026-10-28T16:57:45.116076Z","id":"hnmzrp6gmy-1","session":2,"uptimeMs":12,"event":"state","from":"error","state":"processing","warnings":[],"quad":null,"coalesced":0}
+[windows_doc_capture] {"v":1,"time":"2026-10-28T16:57:45.118081Z","id":"hnmzrp6gmy-1","session":2,"uptimeMs":14,"event":"started","previewSize":[320.0,240.0]}
+[windows_doc_capture] {"v":1,"time":"2026-10-28T16:57:45.118081Z","id":"hnmzrp6gmy-1","session":2,"uptimeMs":14,"event":"stop","starting":false,"capturing":false}
+[windows_doc_capture] {"v":1,"time":"2026-10-28T16:57:45.120073Z","id":"hnmzrp6gmy-1","session":2,"uptimeMs":17,"event":"health","state":"processing","warnings":[],"quad":null,"running":true,"autoEnabled":true,"autoState":"idle","stableFrames":0,"feedbackProgress":0.0,"receivedAnalysisFrames":0,"submitted":0,"skippedAtController":0,"reports":0,"recentAnalysisFps":0.0,"staleReports":0,"expiries":0,"meanAnalysisMs":null,"maxAnalysisMs":0,"lastFrameAgeMs":null,"nativeDeliveredFps":null,"rssMiB":174}
+[windows_doc_capture] {"v":1,"time":"2026-10-28T16:57:45.120073Z","id":"hnmzrp6gmy-1","session":2,"uptimeMs":17,"event":"state","from":"processing","state":"idle","warnings":[],"quad":null,"coalesced":0}
+[windows_doc_capture] {"v":1,"time":"2026-10-28T16:57:45.121072Z","id":"hnmzrp6gmy-1","session":2,"uptimeMs":17,"event":"stopped"}
+[windows_doc_capture] {"v":1,"time":"2026-10-28T16:57:45.121072Z","id":"hnmzrp6gmy-1","session":2,"uptimeMs":17,"event":"dispose"}
+[windows_doc_capture] {"v":1,"time":"2026-10-28T16:57:45.121072Z","id":"hnmzrp6gmy-1","session":2,"uptimeMs":17,"event":"stop","starting":false,"capturing":false}
+[windows_doc_capture] {"v":1,"time":"2026-10-28T16:57:45.121072Z","id":"hnmzrp6gmy-1","session":2,"uptimeMs":17,"event":"health","state":"idle","warnings":[],"quad":null,"running":false,"autoEnabled":true,"autoState":"idle","stableFrames":0,"feedbackProgress":0.0,"receivedAnalysisFrames":0,"submitted":0,"skippedAtController":0,"reports":0,"recentAnalysisFps":0.0,"staleReports":0,"expiries":0,"meanAnalysisMs":null,"maxAnalysisMs":0,"lastFrameAgeMs":null,"nativeDeliveredFps":null,"rssMiB":174}
+[windows_doc_capture] {"v":1,"time":"2026-10-28T16:57:45.121072Z","id":"hnmzrp6gmy-1","session":2,"uptimeMs":18,"event":"stopped"}
+[windows_doc_capture] {"v":1,"time":"2026-10-28T16:57:45.122083Z","id":"hnmzrp6gmy-1","session":2,"uptimeMs":18,"event":"disposed"}
+00:05 +26: D:/a/document_detect_windows/document_detect_windows/test/controller_test.dart: dispose closes public streams even when native stop reports an error
+00:06 +27: D:/a/document_detect_windows/document_detect_windows/test/crop_test.dart: default capture returns JPEGs without accessing capture files or directories
+00:07 +28: D:/a/document_detect_windows/document_detect_windows/test/crop_test.dart: exact rectangular crop preserves fine print and all edge pixels
+00:07 +29: D:/a/document_detect_windows/document_detect_windows/test/crop_test.dart: perspective inverse mapping preserves all four colored corners
+00:07 +30: D:/a/document_detect_windows/document_detect_windows/test/crop_test.dart: fresh full resolution crop encodes JPEG and saves exact bytes to unique files
+00:07 +31: D:/a/document_detect_windows/document_detect_windows/test/crop_test.dart: fresh full resolution crop encodes JPEG and saves exact bytes to unique files
+00:07 +32: D:/a/document_detect_windows/document_detect_windows/test/crop_test.dart: fresh full resolution crop encodes JPEG and saves exact bytes to unique files
+00:08 +33: D:/a/document_detect_windows/document_detect_windows/test/crop_test.dart: fresh full resolution crop encodes JPEG and saves exact bytes to unique files
+00:08 +34: D:/a/document_detect_windows/document_detect_windows/test/crop_test.dart: fresh full resolution crop encodes JPEG and saves exact bytes to unique files
+00:08 +35: D:/a/document_detect_windows/document_detect_windows/test/crop_test.dart: fresh full resolution crop encodes JPEG and saves exact bytes to unique files
+00:08 +36: D:/a/document_detect_windows/document_detect_windows/test/crop_test.dart: fresh full resolution crop encodes JPEG and saves exact bytes to unique files
+00:08 +37: D:/a/document_detect_windows/document_detect_windows/test/crop_test.dart: fresh full resolution crop encodes JPEG and saves exact bytes to unique files
+00:08 +38: D:/a/document_detect_windows/document_detect_windows/test/crop_test.dart: no document and automatic poor quality never produce an output
+00:08 +39: D:/a/document_detect_windows/document_detect_windows/test/crop_test.dart: file IO failures propagate instead of returning a nonexistent savedPath
+00:08 +40: D:/a/document_detect_windows/document_detect_windows/test/crop_test.dart: moving full-resolution snapshot is rejected against the stable quad
+00:09 +41: D:/a/document_detect_windows/document_detect_windows/test/diagnostics_test.dart: bitmap health uses independent offers and sampling counters
+00:09 +42: D:/a/document_detect_windows/document_detect_windows/test/diagnostics_test.dart: debug builds enable production diagnostics by default
+00:09 +43: D:/a/document_detect_windows/document_detect_windows/test/diagnostics_test.dart: logging disabled leaves the camera flow silent
+00:09 +44: D:/a/document_detect_windows/document_detect_windows/test/diagnostics_test.dart: session, quality and capture logs are copyable JSON without identifiers or image data
+00:10 +45: D:/a/document_detect_windows/document_detect_windows/test/diagnostics_test.dart: short sessions log the first analysis and final quality before idle clears it
+00:10 +46: D:/a/document_detect_windows/document_detect_windows/test/document_conditions_test.dart: ID / driver card landscape: geometry under diffuse light and a mild shadow
+00:10 +47: D:/a/document_detect_windows/document_detect_windows/test/document_conditions_test.dart: ID / driver card landscape: geometry under diffuse light and a mild shadow
+00:10 +48: D:/a/document_detect_windows/document_detect_windows/test/document_conditions_test.dart: ID / driver card landscape: geometry under diffuse light and a mild shadow
+00:10 +49: D:/a/document_detect_windows/document_detect_windows/test/document_conditions_test.dart: ID / driver card landscape: geometry under diffuse light and a mild shadow
+00:10 +50: D:/a/document_detect_windows/document_detect_windows/test/document_conditions_test.dart: ID / driver card landscape: geometry under diffuse light and a mild shadow
+00:10 +51: D:/a/document_detect_windows/document_detect_windows/test/document_conditions_test.dart: ID / driver card landscape: geometry under diffuse light and a mild shadow
+00:10 +52: D:/a/document_detect_windows/document_detect_windows/test/diagnostics_test.dart: health heartbeat reports metrics and stops after dispose
+00:10 +53: D:/a/document_detect_windows/document_detect_windows/test/diagnostics_test.dart: health heartbeat reports metrics and stops after dispose
+00:10 +54: D:/a/document_detect_windows/document_detect_windows/test/diagnostics_test.dart: health heartbeat reports metrics and stops after dispose
+00:10 +55: D:/a/document_detect_windows/document_detect_windows/test/diagnostics_test.dart: health heartbeat reports metrics and stops after dispose
+00:10 +56: D:/a/document_detect_windows/document_detect_windows/test/diagnostics_test.dart: health heartbeat reports metrics and stops after dispose
+00:10 +57: D:/a/document_detect_windows/document_detect_windows/test/diagnostics_test.dart: health heartbeat reports metrics and stops after dispose
+00:11 +58: D:/a/document_detect_windows/document_detect_windows/test/diagnostics_test.dart: health heartbeat reports metrics and stops after dispose
+00:11 +59: D:/a/document_detect_windows/document_detect_windows/test/diagnostics_test.dart: health heartbeat reports metrics and stops after dispose
+00:11 +60: D:/a/document_detect_windows/document_detect_windows/test/diagnostics_test.dart: health heartbeat reports metrics and stops after dispose
+00:11 +61: D:/a/document_detect_windows/document_detect_windows/test/diagnostics_test.dart: health heartbeat reports metrics and stops after dispose
+00:11 +62: D:/a/document_detect_windows/document_detect_windows/test/diagnostics_test.dart: health heartbeat reports metrics and stops after dispose
+00:13 +63: D:/a/document_detect_windows/document_detect_windows/test/diagnostics_test.dart: health heartbeat reports metrics and stops after dispose
+00:16 +64: D:/a/document_detect_windows/document_detect_windows/test/diagnostics_test.dart: health heartbeat reports metrics and stops after dispose
+00:16 +65: D:/a/document_detect_windows/document_detect_windows/test/diagnostics_test.dart: health heartbeat reports metrics and stops after dispose
+00:17 +66: D:/a/document_detect_windows/document_detect_windows/test/diagnostics_test.dart: health heartbeat reports metrics and stops after dispose
+00:17 +67: D:/a/document_detect_windows/document_detect_windows/test/diagnostics_test.dart: health heartbeat reports metrics and stops after dispose
+00:17 +68: D:/a/document_detect_windows/document_detect_windows/test/diagnostics_test.dart: health heartbeat reports metrics and stops after dispose
+00:17 +69: D:/a/document_detect_windows/document_detect_windows/test/diagnostics_test.dart: health heartbeat reports metrics and stops after dispose
+00:17 +70: D:/a/document_detect_windows/document_detect_windows/test/diagnostics_test.dart: health heartbeat reports metrics and stops after dispose
+00:17 +71: D:/a/document_detect_windows/document_detect_windows/test/diagnostics_test.dart: health heartbeat reports metrics and stops after dispose
+00:17 +72: D:/a/document_detect_windows/document_detect_windows/test/diagnostics_test.dart: health heartbeat reports metrics and stops after dispose
+00:17 +73: D:/a/document_detect_windows/document_detect_windows/test/diagnostics_test.dart: health heartbeat reports metrics and stops after dispose
+00:17 +74: D:/a/document_detect_windows/document_detect_windows/test/diagnostics_test.dart: health heartbeat reports metrics and stops after dispose
+00:17 +75: D:/a/document_detect_windows/document_detect_windows/test/diagnostics_test.dart: health heartbeat reports metrics and stops after dispose
+00:17 +76: D:/a/document_detect_windows/document_detect_windows/test/diagnostics_test.dart: health heartbeat reports metrics and stops after dispose
+00:17 +77: D:/a/document_detect_windows/document_detect_windows/test/diagnostics_test.dart: health heartbeat reports metrics and stops after dispose
+00:17 +78: D:/a/document_detect_windows/document_detect_windows/test/diagnostics_test.dart: health heartbeat reports metrics and stops after dispose
+00:17 +79: D:/a/document_detect_windows/document_detect_windows/test/diagnostics_test.dart: health heartbeat reports metrics and stops after dispose
+00:19 +80: D:/a/document_detect_windows/document_detect_windows/test/diagnostics_test.dart: health heartbeat reports metrics and stops after dispose
+00:19 +81: D:/a/document_detect_windows/document_detect_windows/test/diagnostics_test.dart: health heartbeat reports metrics and stops after dispose
+00:20 +82: D:/a/document_detect_windows/document_detect_windows/test/diagnostics_test.dart: health heartbeat reports metrics and stops after dispose
+00:20 +83: D:/a/document_detect_windows/document_detect_windows/test/preview_status_test.dart: expired detection clears corners and returns processing without another camera frame
+00:20 +84: D:/a/document_detect_windows/document_detect_windows/test/preview_status_test.dart: manual capture publishes capturing and cooldown without needing more analysis frames
+00:20 +85: D:/a/document_detect_windows/document_detect_windows/test/preview_status_test.dart: start errors, stream errors and restart do not retain stale corners or callbacks
+00:21 +86: D:/a/document_detect_windows/document_detect_windows/test/preview_status_test.dart: throwing enum callback is surfaced on errors and does not interrupt camera operation
+00:21 +87: D:/a/document_detect_windows/document_detect_windows/test/preview_status_test.dart: preview snapshots retain all warnings, prioritize framing and protect corner lists
+00:21 +88: D:/a/document_detect_windows/document_detect_windows/test/preview_status_test.dart: enum callback can reenter stop without closing the native source twice
+00:21 +89: D:/a/document_detect_windows/document_detect_windows/test/preview_status_test.dart: a preview listener stopping on a frame cannot receive a stale clear enum afterward
+00:21 +90: D:/a/document_detect_windows/document_detect_windows/test/preview_widget_test.dart: contain/cover/fill project known corners with letterbox and crop offsets
+00:21 +91: D:/a/document_detect_windows/document_detect_windows/test/preview_widget_test.dart: normalized analysis corners match 4K frame rendered at different logical DPI sizes
+00:21 +92: D:/a/document_detect_windows/document_detect_windows/test/preview_widget_test.dart: outline is closed and app colors follow quality changes
+00:22 +93: D:/a/document_detect_windows/document_detect_windows/test/preview_widget_test.dart: cornerRadius passes through buildPreview and rounds DocumentFrameStyle.corners
+00:22 +94: D:/a/document_detect_windows/document_detect_windows/test/preview_widget_test.dart: cornerRadius passes through buildPreview and rounds DocumentFrameStyle.outline
+00:22 +95: D:/a/document_detect_windows/document_detect_windows/test/preview_widget_test.dart: rounded outline avoids sharp vertices and remains closed and aligned
+00:22 +96: D:/a/document_detect_windows/document_detect_windows/test/preview_widget_test.dart: large radius is bounded on small perspective edges and repeated vertices
+00:22 +97: D:/a/document_detect_windows/document_detect_windows/test/preview_widget_test.dart: cornerRadius rejects negative and non-finite configuration
+00:22 +98: D:/a/document_detect_windows/document_detect_windows/test/preview_widget_test.dart: native preview and four painted corners share the BoxFit.contain transform
+00:22 +99: D:/a/document_detect_windows/document_detect_windows/test/preview_widget_test.dart: native preview and four painted corners share the BoxFit.cover transform
+00:22 +100: D:/a/document_detect_windows/document_detect_windows/test/rgba_preview_test.dart: new session rejects late decode even when its stream is reused
+00:23 +101: D:/a/document_detect_windows/document_detect_windows/test/rgba_preview_test.dart: hidden and inactive consumers refuse new decode and recover safely
+00:23 +102: D:/a/document_detect_windows/document_detect_windows/test/rgba_preview_test.dart: bitmap preview drops busy frames and disposes replaced/closed images
+00:23 +103: D:/a/document_detect_windows/document_detect_windows/test/rgba_preview_test.dart: repeated decode without painting releases every superseded image
+00:23 +104: D:/a/document_detect_windows/document_detect_windows/test/rgba_preview_test.dart: unmount during decode disposes the late result without setState
+00:23 +105: D:/a/document_detect_windows/document_detect_windows/test/rgba_preview_test.dart: stream change discards old decode and releases old subscription
+00:23 +106: D:/a/document_detect_windows/document_detect_windows/test/rgba_preview_test.dart: decode errors recover, source errors are not fed back into source
+00:23 +107: D:/a/document_detect_windows/document_detect_windows/test/rgba_preview_test.dart: real RGBA decode is bounded and does not use the image cache
+00:23 +108: D:/a/document_detect_windows/document_detect_windows/test/scan_refinement_test.dart: complete document wins over a large clipped background
+00:23 +109: D:/a/document_detect_windows/document_detect_windows/test/scan_refinement_test.dart: low contrast with distracting high contrast scene edge is detected
+00:24 +110: D:/a/document_detect_windows/document_detect_windows/test/scan_refinement_test.dart: blank and unstructured low-level noise never acquire a document
+00:24 +111: D:/a/document_detect_windows/document_detect_windows/test/scan_refinement_test.dart: fast warp agrees with library bilinear sampling for RGB and RGBA
+00:24 +112: D:/a/document_detect_windows/document_detect_windows/test/scan_refinement_test.dart: warp limits output before sampling and supports single-channel fallback
+00:24 +113: D:/a/document_detect_windows/document_detect_windows/test/scan_refinement_test.dart: original preserves color, grayscale is explicit, blank enhancement is safe
+00:24 +114: D:/a/document_detect_windows/document_detect_windows/test/scan_refinement_test.dart: enhance expands printed contrast and caps gain
+00:24 +115: D:/a/document_detect_windows/document_detect_windows/test/scan_refinement_test.dart: UI diagnostic callback is never sent to the capture worker
+00:24 +116: D:/a/document_detect_windows/document_detect_windows/test/scan_refinement_test.dart: capture diagnostic identifies rejection and accepted processing stages
+00:24 +117: All tests passed!

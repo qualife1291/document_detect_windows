@@ -1,0 +1,6 @@
+00:00 +0: loading D:/a/document_detect_windows/document_detect_windows/tool/jpeg_quality_benchmark.dart
+00:00 +0: JPEG detail/size/time tradeoff on synthetic fine print
+JPEG_BENCHMARK os=windows synthetic=true quality=90 bytes=354022 encode_ms=50 luma_mse=5.4484
+JPEG_BENCHMARK os=windows synthetic=true quality=92 bytes=378906 encode_ms=41 luma_mse=3.6149
+JPEG_BENCHMARK os=windows synthetic=true quality=95 bytes=461853 encode_ms=55 luma_mse=1.6681
+00:00 +1: All tests passed!

@@ -35,7 +35,10 @@ Có hai chế độ theo từng chỗ dùng:
 Widget chung mặc định batch để giữ hành vi preview liên tục của code cũ.
 Wrapper bước ID ở dưới chọn single rõ ràng; các nơi dùng khác cần rà theo flow.
 Giữ một instance CameraPreviewController trong ATNProofIDController như hiện tại.
-Không tạo lại controller hoặc WindowsDocCapture trong build()/Obx().
+Không tạo lại controller hoặc WindowsDocCapture trong build()/Obx(). Widget
+mặc định tạo và dispose capture riêng theo mỗi lần mount. Nếu dùng captureFactory
+để chỉnh budget, factory phải trả capture mới cho mỗi view, không trả singleton
+đã dispose từ lần trước. Cấu hình preset/device chỉ đổi sau stop rồi resume.
 
 Bỏ import camera_platform_interface khỏi widget này để tránh trùng
 ResolutionPreset. Không cần gỡ camera_windows/camera khỏi toàn project nếu tính
@@ -94,7 +97,10 @@ Future<CameraHardwareRelease> acquireProofHardware() async {
 tiên khi cấu hình sai: kiosk có thể có cả camera khuôn mặt và camera giấy tờ.
 Nếu dùng màn hình settings để chọn, lưu `device.id` của UVC; không debugPrint
 ID/tên thiết bị hoặc giả định tên model là duy nhất. Chỉ enumerate khi camera dừng.
-Hook acquire phải tự rollback nếu lỗi trước khi trả về hàm release. acquire()
+Hook acquire phải tự rollback nếu lỗi trước khi trả về hàm release.
+Service đèn/control cần hoàn tất hoặc hủy có giới hạn, kể cả thiết bị offline;
+widget không thể hủy tùy ý Future của service bên ngoài. Không chỉ timeout rồi
+bỏ qua tác vụ còn chạy để bàn giao camera. acquire()
 trong service hiện tại chưa được kiểm tra: nó không tự chứng minh có mutex chung
 cho camera_windows/UVC; app vẫn phải điều phối các tính năng camera.
 
@@ -103,7 +109,9 @@ source service này nên **chưa gọi lại tự động**: ID/backend có th�
 có thể mở một camera khác. Sau khi xác nhận nó hỗ trợ UVC mà không mở camera mới,
 có thể nối `configureCamera: (device) => ...`. Hook được await trước khi widget
 bật auto capture. Nếu kiosk cần 5/8 MP, thử preset veryHigh và kiểm tra độ phân giải thật trong
-log; mặc định high ưu tiên cân bằng tải. Snapshot lấy đúng chế độ camera thương lượng; preset không
+log. Widget chung mặc định high để cân bằng tải; wrapper dưới chọn veryHigh
+như cấu hình MediaSettings cũ, còn máy yếu có thể chọn high sau khi đo độ nét/tải.
+Snapshot lấy đúng chế độ camera thương lượng; preset không
 bảo đảm có đủ MP nếu phần cứng chỉ hỗ trợ 1280x720.
 
 ## 3. Thay ATNContainerPreviewCameraProofID
@@ -146,7 +154,7 @@ class ATNContainerPreviewCameraProofID extends StatelessWidget {
           acquireHardware: acquireProofHardware,
           captureMode: captureMode,
           enableAutoCapture: false, // bật true riêng ở nơi muốn tự chụp.
-          preset: ResolutionPreset.high,
+          preset: ResolutionPreset.veryHigh, // tương ứng MediaSettings cũ; high nhẹ hơn.
           cornerRadius: 6,
           warningColor: Colors.white,
           validColor: Colors.greenAccent,

@@ -58,6 +58,12 @@ Root saveDirectory vẫn là caller opt-in; desktop dependency tạo temporary s
 Example stop khi hidden/paused/detached, epoch bỏ late result, inactive giữ session;
 foreground cần restart chủ động sau cleanup. Host route/tab vẫn cần awaited stop.
 File đã publish thuộc caller.
+Example/lib/integration có CameraPreviewWidget/Controller độc lập GetX: batch
+mặc định giữ camera/latch qua nhiều ảnh; single stop/release trước bytes callback.
+Host nối select/acquire/configure hooks, active route và awaited stop/shutdown.
+Guide docs/integration/kiosk-getx.md; fixed ROI/zoom/mirror cũ không được nối ngầm.
+Windows host fixture compile bản chép widget cùng camera_windows0.2.6+4 và hai
+UVC plugin, không mở camera. Đây không phải build project kiosk riêng của caller.
 
 Nguồn: camera_controller.dart, quality_analyzer.dart, crop_pipeline.dart,
 frame_source.dart, UVC adapter và example/lib/.

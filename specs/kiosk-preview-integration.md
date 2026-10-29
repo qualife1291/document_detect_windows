@@ -20,3 +20,13 @@
   stable format. Existing root/native suites may reuse unchanged source evidence.
   Commit/push authorized by the conversation. Physical kiosk build/test remains
   host work because the complete app and hardware service sources are absent.
+
+## Completion — 2026-10-29
+
+Done: source1f55c45, [Windows CI40730610952](https://github.com/qualife1291/document_detect_windows/actions/runs/40730610952) passed
+three SDKs and stable external host with copied widget/camera_windows/UVC.
+Example33 tests and analyze also passed on installed Linux SDKs; format60.
+The guide covers ID/single and upload/batch, byte callback compatibility,
+geometry/camera-ID migration, hardware hooks, awaited navigation and host-owned
+image memory limits. Full private kiosk services/app and physical soak remain
+outside available evidence. No saved repository configuration was changed.
