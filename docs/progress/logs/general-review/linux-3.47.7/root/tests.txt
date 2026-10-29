@@ -1,0 +1,134 @@
+00:00 +0: loading /workspace/document_detect_windows/test/analyzer_test.dart
+00:00 +0: /workspace/document_detect_windows/test/analyzer_test.dart: persistent isolate processes active then newest pending frame
+00:00 +1: /workspace/document_detect_windows/test/analyzer_test.dart: persistent isolate processes active then newest pending frame
+00:00 +2: /workspace/document_detect_windows/test/analyzer_test.dart: persistent isolate processes active then newest pending frame
+00:00 +3: /workspace/document_detect_windows/test/analyzer_test.dart: persistent isolate processes active then newest pending frame
+00:00 +4: /workspace/document_detect_windows/test/analyzer_test.dart: persistent isolate processes active then newest pending frame
+00:00 +5: /workspace/document_detect_windows/test/analyzer_test.dart: persistent isolate processes active then newest pending frame
+00:00 +6: /workspace/document_detect_windows/test/analyzer_test.dart: persistent isolate processes active then newest pending frame
+00:00 +7: /workspace/document_detect_windows/test/analyzer_test.dart: persistent isolate processes active then newest pending frame
+00:00 +8: /workspace/document_detect_windows/test/controller_test.dart: failed enumeration cleanup retains ownership until stop succeeds
+00:00 +9: /workspace/document_detect_windows/test/controller_test.dart: failed stop blocks another owner until cleanup retry succeeds
+00:00 +10: /workspace/document_detect_windows/test/controller_test.dart: stop during startup reports failed teardown instead of a false handoff
+00:00 +11: /workspace/document_detect_windows/test/controller_test.dart: failed dispose is retryable, terminal and closes streams only once
+00:00 +12: /workspace/document_detect_windows/test/crop_test.dart: default capture returns JPEGs without accessing capture files or directories
+00:00 +13: /workspace/document_detect_windows/test/crop_test.dart: default capture returns JPEGs without accessing capture files or directories
+00:01 +14: /workspace/document_detect_windows/test/crop_test.dart: default capture returns JPEGs without accessing capture files or directories
+00:01 +15: /workspace/document_detect_windows/test/crop_test.dart: default capture returns JPEGs without accessing capture files or directories
+00:01 +16: /workspace/document_detect_windows/test/controller_test.dart: automatic callback uses fresh snapshot and stops on stream errors
+00:01 +17: /workspace/document_detect_windows/test/controller_test.dart: automatic callback uses fresh snapshot and stops on stream errors
+00:01 +18: /workspace/document_detect_windows/test/controller_test.dart: automatic callback uses fresh snapshot and stops on stream errors
+00:02 +19: /workspace/document_detect_windows/test/controller_test.dart: automatic callback uses fresh snapshot and stops on stream errors
+00:02 +20: /workspace/document_detect_windows/test/controller_test.dart: automatic callback uses fresh snapshot and stops on stream errors
+00:02 +21: /workspace/document_detect_windows/test/controller_test.dart: automatic callback uses fresh snapshot and stops on stream errors
+00:02 +22: /workspace/document_detect_windows/test/crop_test.dart: moving full-resolution snapshot is rejected against the stable quad
+00:02 +22: /workspace/document_detect_windows/test/controller_test.dart: production guard rejects unsupported OS or architecture before opening hardware
+[windows_doc_capture] {"v":1,"time":"2026-10-29T03:45:52.168083Z","id":"hnnhmtj7fj-1","session":1,"uptimeMs":1,"event":"start","backend":"FakeSource","os":"linux","processors":5,"preset":"high","specificDeviceRequested":false,"auto":true,"saving":false,"analysisIntervalMs":100,"analysisMaxSide":640,"jpegQuality":90,"blurThreshold":100.0,"brightnessRange":[0.2,0.85],"maxClipping":0.25,"minimumCoverage":0.15,"minimumMargin":0.02,"maximumTilt":15.0,"stableFrameCount":8,"feedbackMs":500,"maxFrameGapMs":400,"maximumMotion":0.015,"outputMaxSide":null,"imageFilter":"original","cropPadding":0.02}
+[windows_doc_capture] {"v":1,"time":"2026-10-29T03:45:52.177141Z","id":"hnnhmtj7fj-1","session":1,"uptimeMs":9,"event":"state","from":"idle","state":"processing","warnings":[],"quad":null,"coalesced":0}
+[windows_doc_capture] {"v":1,"time":"2026-10-29T03:45:52.181064Z","id":"hnnhmtj7fj-1","session":1,"uptimeMs":13,"event":"error","stage":"start","type":"UnsupportedError","frames":["package:windows_doc_capture/src/platform/windows_ffi/platform_guard.dart:6:5","package:windows_doc_capture/src/camera/camera_controller.dart:335:28","package:windows_doc_capture/src/camera/camera_controller.dart:265:7"]}
+[windows_doc_capture] {"v":1,"time":"2026-10-29T03:45:52.181680Z","id":"hnnhmtj7fj-1","session":1,"uptimeMs":13,"event":"state","from":"processing","state":"error","warnings":[],"quad":null,"coalesced":0}
+[windows_doc_capture] {"v":1,"time":"2026-10-29T03:45:52.182750Z","id":"hnnhmtj7fj-1","session":1,"uptimeMs":14,"event":"dispose"}
+[windows_doc_capture] {"v":1,"time":"2026-10-29T03:45:52.183022Z","id":"hnnhmtj7fj-1","session":1,"uptimeMs":15,"event":"stop","starting":false,"capturing":false}
+[windows_doc_capture] {"v":1,"time":"2026-10-29T03:45:52.187140Z","id":"hnnhmtj7fj-1","session":1,"uptimeMs":19,"event":"health","state":"error","warnings":[],"quad":null,"running":false,"autoEnabled":true,"autoState":"idle","stableFrames":0,"feedbackProgress":0.0,"receivedAnalysisFrames":0,"submitted":0,"skippedAtController":0,"reports":0,"recentAnalysisFps":0.0,"staleReports":0,"expiries":0,"meanAnalysisMs":null,"maxAnalysisMs":0,"lastFrameAgeMs":null,"nativeDeliveredFps":null,"rssMiB":161}
+[windows_doc_capture] {"v":1,"time":"2026-10-29T03:45:52.187700Z","id":"hnnhmtj7fj-1","session":1,"uptimeMs":19,"event":"state","from":"error","state":"idle","warnings":[],"quad":null,"coalesced":0}
+[windows_doc_capture] {"v":1,"time":"2026-10-29T03:45:52.188117Z","id":"hnnhmtj7fj-1","session":1,"uptimeMs":20,"event":"stopped"}
+[windows_doc_capture] {"v":1,"time":"2026-10-29T03:45:52.188412Z","id":"hnnhmtj7fj-1","session":1,"uptimeMs":20,"event":"disposed"}
+00:02 +23: /workspace/document_detect_windows/test/crop_test.dart: moving full-resolution snapshot is rejected against the stable quad
+00:02 +24: /workspace/document_detect_windows/test/crop_test.dart: moving full-resolution snapshot is rejected against the stable quad
+00:02 +25: /workspace/document_detect_windows/test/detector_test.dart: detects A4 geometry, exposure and sharpness inside ROI
+00:03 +26: /workspace/document_detect_windows/test/detector_test.dart: rejects blank frame and small objects
+00:03 +27: /workspace/document_detect_windows/test/preview_status_test.dart: native document pixel estimate respects portrait and landscape geometry
+00:03 +28: /workspace/document_detect_windows/test/detector_test.dart: perspective quadrilateral retains distinct corners and detects tilt
+00:03 +29: /workspace/document_detect_windows/test/preview_status_test.dart: live detection and enum callbacks work with auto capture disabled
+00:03 +30: /workspace/document_detect_windows/test/preview_status_test.dart: live detection and enum callbacks work with auto capture disabled
+00:03 +31: /workspace/document_detect_windows/test/preview_status_test.dart: live detection and enum callbacks work with auto capture disabled
+00:03 +32: /workspace/document_detect_windows/test/preview_status_test.dart: live detection and enum callbacks work with auto capture disabled
+00:03 +33: /workspace/document_detect_windows/test/preview_status_test.dart: live detection and enum callbacks work with auto capture disabled
+00:03 +34: /workspace/document_detect_windows/test/preview_status_test.dart: real synthetic analysis reports missing, blurry, outside, lighting and tilt enums
+00:04 +35: /workspace/document_detect_windows/test/preview_status_test.dart: real synthetic analysis reports missing, blurry, outside, lighting and tilt enums
+00:04 +36: /workspace/document_detect_windows/test/preview_status_test.dart: real synthetic analysis reports missing, blurry, outside, lighting and tilt enums
+00:04 +37: /workspace/document_detect_windows/test/preview_status_test.dart: real synthetic analysis reports missing, blurry, outside, lighting and tilt enums
+00:04 +38: /workspace/document_detect_windows/test/preview_status_test.dart: real synthetic analysis reports missing, blurry, outside, lighting and tilt enums
+00:04 +39: /workspace/document_detect_windows/test/preview_status_test.dart: real synthetic analysis reports missing, blurry, outside, lighting and tilt enums
+00:04 +40: /workspace/document_detect_windows/test/preview_status_test.dart: real synthetic analysis reports missing, blurry, outside, lighting and tilt enums
+00:04 +41: /workspace/document_detect_windows/test/preview_status_test.dart: real synthetic analysis reports missing, blurry, outside, lighting and tilt enums
+00:04 +42: /workspace/document_detect_windows/test/preview_status_test.dart: real synthetic analysis reports missing, blurry, outside, lighting and tilt enums
+00:04 +43: /workspace/document_detect_windows/test/preview_status_test.dart: real synthetic analysis reports missing, blurry, outside, lighting and tilt enums
+00:04 +44: /workspace/document_detect_windows/test/preview_status_test.dart: real synthetic analysis reports missing, blurry, outside, lighting and tilt enums
+00:04 +45: /workspace/document_detect_windows/test/preview_status_test.dart: expired detection clears corners and returns processing without another camera frame
+00:05 +46: /workspace/document_detect_windows/test/document_conditions_test.dart: ID / driver card landscape: geometry under diffuse light and a mild shadow
+00:05 +47: /workspace/document_detect_windows/test/document_conditions_test.dart: ID / driver card landscape: geometry under diffuse light and a mild shadow
+00:05 +48: /workspace/document_detect_windows/test/preview_status_test.dart: start errors, stream errors and restart do not retain stale corners or callbacks
+00:05 +49: /workspace/document_detect_windows/test/document_conditions_test.dart: legacy driver card: geometry under diffuse light and a mild shadow
+00:05 +50: /workspace/document_detect_windows/test/preview_status_test.dart: throwing enum callback is surfaced on errors and does not interrupt camera operation
+00:05 +51: /workspace/document_detect_windows/test/preview_status_test.dart: throwing enum callback is surfaced on errors and does not interrupt camera operation
+00:05 +52: /workspace/document_detect_windows/test/document_conditions_test.dart: A4 medical form: geometry under diffuse light and a mild shadow
+00:05 +53: /workspace/document_detect_windows/test/preview_status_test.dart: preview snapshots retain all warnings, prioritize framing and protect corner lists
+00:05 +54: /workspace/document_detect_windows/test/document_conditions_test.dart: square medical card: geometry under diffuse light and a mild shadow
+00:05 +55: /workspace/document_detect_windows/test/document_conditions_test.dart: square medical card: geometry under diffuse light and a mild shadow
+00:05 +56: /workspace/document_detect_windows/test/document_conditions_test.dart: square medical card: geometry under diffuse light and a mild shadow
+00:05 +57: /workspace/document_detect_windows/test/document_conditions_test.dart: wide medical slip: geometry under diffuse light and a mild shadow
+00:05 +58: /workspace/document_detect_windows/test/document_conditions_test.dart: underexposure blocks automatic capture for ID and medical form
+00:05 +59: /workspace/document_detect_windows/test/document_conditions_test.dart: overexposure blocks automatic capture for ID and medical form
+00:06 +60: /workspace/document_detect_windows/test/document_conditions_test.dart: localized glare blocks automatic capture for ID and medical form
+00:06 +61: /workspace/document_detect_windows/test/document_conditions_test.dart: defocused / no interior detail blocks automatic capture for ID and medical form
+00:06 +62: /workspace/document_detect_windows/test/document_conditions_test.dart: weak contrast is rejected and dark card on light background remains detectable
+00:06 +63: /workspace/document_detect_windows/test/document_conditions_test.dart: 2592x1944: full resolution JPEG/crop and mapped corners
+00:06 +64: /workspace/document_detect_windows/test/document_conditions_test.dart: 2592x1944: full resolution JPEG/crop and mapped corners
+00:06 +65: /workspace/document_detect_windows/test/document_conditions_test.dart: 2592x1944: full resolution JPEG/crop and mapped corners
+00:06 +66: /workspace/document_detect_windows/test/document_conditions_test.dart: 2592x1944: full resolution JPEG/crop and mapped corners
+00:06 +67: /workspace/document_detect_windows/test/document_conditions_test.dart: 2592x1944: full resolution JPEG/crop and mapped corners
+00:06 +68: /workspace/document_detect_windows/test/document_conditions_test.dart: 2592x1944: full resolution JPEG/crop and mapped corners
+00:06 +69: /workspace/document_detect_windows/test/document_conditions_test.dart: 2592x1944: full resolution JPEG/crop and mapped corners
+00:07 +70: /workspace/document_detect_windows/test/document_conditions_test.dart: 2592x1944: full resolution JPEG/crop and mapped corners
+00:07 +71: /workspace/document_detect_windows/test/document_conditions_test.dart: 2592x1944: full resolution JPEG/crop and mapped corners
+00:07 +72: /workspace/document_detect_windows/test/document_conditions_test.dart: 2592x1944: full resolution JPEG/crop and mapped corners
+00:07 +73: /workspace/document_detect_windows/test/document_conditions_test.dart: 2592x1944: full resolution JPEG/crop and mapped corners
+00:07 +74: /workspace/document_detect_windows/test/document_conditions_test.dart: 2592x1944: full resolution JPEG/crop and mapped corners
+00:07 +75: /workspace/document_detect_windows/test/document_conditions_test.dart: 2592x1944: full resolution JPEG/crop and mapped corners
+00:07 +76: /workspace/document_detect_windows/test/document_conditions_test.dart: 2592x1944: full resolution JPEG/crop and mapped corners
+00:07 +77: /workspace/document_detect_windows/test/document_conditions_test.dart: 2592x1944: full resolution JPEG/crop and mapped corners
+00:07 +78: /workspace/document_detect_windows/test/document_conditions_test.dart: 2592x1944: full resolution JPEG/crop and mapped corners
+00:07 +79: /workspace/document_detect_windows/test/document_conditions_test.dart: 2592x1944: full resolution JPEG/crop and mapped corners
+00:08 +80: /workspace/document_detect_windows/test/document_conditions_test.dart: 3264x2448: full resolution JPEG/crop and mapped corners
+00:08 +81: /workspace/document_detect_windows/test/document_conditions_test.dart: 3264x2448: full resolution JPEG/crop and mapped corners
+00:08 +82: /workspace/document_detect_windows/test/document_conditions_test.dart: 3264x2448: full resolution JPEG/crop and mapped corners
+00:08 +83: /workspace/document_detect_windows/test/document_conditions_test.dart: 3264x2448: full resolution JPEG/crop and mapped corners
+00:08 +84: /workspace/document_detect_windows/test/document_conditions_test.dart: 3264x2448: full resolution JPEG/crop and mapped corners
+00:08 +85: /workspace/document_detect_windows/test/document_conditions_test.dart: 3264x2448: full resolution JPEG/crop and mapped corners
+00:08 +86: /workspace/document_detect_windows/test/document_conditions_test.dart: 3264x2448: full resolution JPEG/crop and mapped corners
+00:08 +87: /workspace/document_detect_windows/test/document_conditions_test.dart: 3264x2448: full resolution JPEG/crop and mapped corners
+00:08 +88: /workspace/document_detect_windows/test/document_conditions_test.dart: 3264x2448: full resolution JPEG/crop and mapped corners
+00:08 +89: /workspace/document_detect_windows/test/document_conditions_test.dart: 3264x2448: full resolution JPEG/crop and mapped corners
+00:08 +90: /workspace/document_detect_windows/test/document_conditions_test.dart: 3264x2448: full resolution JPEG/crop and mapped corners
+00:10 +91: /workspace/document_detect_windows/test/diagnostics_test.dart: health heartbeat reports metrics and stops after dispose
+00:10 +92: /workspace/document_detect_windows/test/diagnostics_test.dart: health heartbeat reports metrics and stops after dispose
+00:10 +93: /workspace/document_detect_windows/test/diagnostics_test.dart: health heartbeat reports metrics and stops after dispose
+00:10 +94: /workspace/document_detect_windows/test/diagnostics_test.dart: health heartbeat reports metrics and stops after dispose
+00:10 +95: /workspace/document_detect_windows/test/diagnostics_test.dart: health heartbeat reports metrics and stops after dispose
+00:10 +96: /workspace/document_detect_windows/test/diagnostics_test.dart: health heartbeat reports metrics and stops after dispose
+00:11 +97: /workspace/document_detect_windows/test/diagnostics_test.dart: health heartbeat reports metrics and stops after dispose
+00:11 +98: /workspace/document_detect_windows/test/diagnostics_test.dart: health heartbeat reports metrics and stops after dispose
+00:11 +99: /workspace/document_detect_windows/test/diagnostics_test.dart: health heartbeat reports metrics and stops after dispose
+00:11 +100: /workspace/document_detect_windows/test/diagnostics_test.dart: health heartbeat reports metrics and stops after dispose
+00:11 +101: /workspace/document_detect_windows/test/diagnostics_test.dart: health heartbeat reports metrics and stops after dispose
+00:11 +102: /workspace/document_detect_windows/test/diagnostics_test.dart: health heartbeat reports metrics and stops after dispose
+00:11 +103: /workspace/document_detect_windows/test/diagnostics_test.dart: health heartbeat reports metrics and stops after dispose
+00:11 +104: /workspace/document_detect_windows/test/diagnostics_test.dart: health heartbeat reports metrics and stops after dispose
+00:12 +105: /workspace/document_detect_windows/test/diagnostics_test.dart: health heartbeat reports metrics and stops after dispose
+00:12 +106: /workspace/document_detect_windows/test/diagnostics_test.dart: health heartbeat reports metrics and stops after dispose
+00:12 +107: /workspace/document_detect_windows/test/diagnostics_test.dart: health heartbeat reports metrics and stops after dispose
+00:12 +108: /workspace/document_detect_windows/test/diagnostics_test.dart: health heartbeat reports metrics and stops after dispose
+00:12 +109: /workspace/document_detect_windows/test/diagnostics_test.dart: health heartbeat reports metrics and stops after dispose
+00:12 +110: /workspace/document_detect_windows/test/diagnostics_test.dart: health heartbeat reports metrics and stops after dispose
+00:12 +111: /workspace/document_detect_windows/test/diagnostics_test.dart: health heartbeat reports metrics and stops after dispose
+00:12 +112: /workspace/document_detect_windows/test/diagnostics_test.dart: health heartbeat reports metrics and stops after dispose
+00:13 +113: /workspace/document_detect_windows/test/diagnostics_test.dart: health heartbeat reports metrics and stops after dispose
+00:13 +114: /workspace/document_detect_windows/test/diagnostics_test.dart: health heartbeat reports metrics and stops after dispose
+00:13 +115: /workspace/document_detect_windows/test/diagnostics_test.dart: health heartbeat reports metrics and stops after dispose
+00:13 +116: /workspace/document_detect_windows/test/diagnostics_test.dart: health heartbeat reports metrics and stops after dispose
+00:13 +117: /workspace/document_detect_windows/test/diagnostics_test.dart: health heartbeat reports metrics and stops after dispose
+00:13 +118: /workspace/document_detect_windows/test/diagnostics_test.dart: health heartbeat reports metrics and stops after dispose
+00:13 +119: /workspace/document_detect_windows/test/diagnostics_test.dart: health heartbeat reports metrics and stops after dispose
+00:13 +120: /workspace/document_detect_windows/test/diagnostics_test.dart: health heartbeat reports metrics and stops after dispose
+00:19 +121: All tests passed!

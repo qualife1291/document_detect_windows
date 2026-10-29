@@ -81,3 +81,13 @@
   Hardware/control và camera-ID mapping là hook; không giả định service/ROI cũ
   dùng được qua backend khác. Host vẫn điều phối camera_windows/UVC bằng await.
 - Nguồn: specs/kiosk-preview-integration.md, docs/integration/kiosk-getx.md.
+
+## D-010 — Failed cleanup giữ quyền và device key không theo thứ tự
+
+- Ngày: 2026-10-29; trạng thái: accepted.
+- Lý do: review tái hiện mất handle/lease khi native stop/dispose lỗi; ID số native
+  thay theo enumeration nên có thể mở nhầm webcam sau restart.
+- Hệ quả: retain owner/handle để retry rõ ràng, dispose terminal/đóng UI một lần;
+  widget giữ host lease và idempotent release đến khi thành công. UVC trả Windows
+  symbolic link normalized; settings ID số cần chọn lại, không numeric fallback.
+- Nguồn: specs/general-review.md, docs/progress/general-review.md.

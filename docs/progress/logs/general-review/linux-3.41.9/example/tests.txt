@@ -1,0 +1,42 @@
+00:00 +0: loading /workspace/document_detect_windows/example/test/kiosk_test.dart
+00:00 +0: /workspace/document_detect_windows/example/test/kiosk_test.dart: pair picker cancellation blocks duplicate exports and Esc without restarting camera
+00:01 +1: /workspace/document_detect_windows/example/test/kiosk_test.dart: pair picker cancellation blocks duplicate exports and Esc without restarting camera
+00:01 +2: /workspace/document_detect_windows/example/test/kiosk_test.dart: pair picker cancellation blocks duplicate exports and Esc without restarting camera
+00:01 +3: /workspace/document_detect_windows/example/test/kiosk_test.dart: pair picker cancellation blocks duplicate exports and Esc without restarting camera
+00:01 +4: /workspace/document_detect_windows/example/test/kiosk_test.dart: pair picker cancellation blocks duplicate exports and Esc without restarting camera
+00:01 +5: /workspace/document_detect_windows/example/test/kiosk_test.dart: pair picker cancellation blocks duplicate exports and Esc without restarting camera
+00:01 +6: /workspace/document_detect_windows/example/test/kiosk_test.dart: pair picker cancellation blocks duplicate exports and Esc without restarting camera
+00:01 +7: /workspace/document_detect_windows/example/test/kiosk_test.dart: pair picker cancellation blocks duplicate exports and Esc without restarting camera
+00:02 +8: /workspace/document_detect_windows/example/test/kiosk_test.dart: pair picker cancellation blocks duplicate exports and Esc without restarting camera
+00:02 +9: /workspace/document_detect_windows/example/test/kiosk_preview_integration_test.dart: auto capture uses the existing bytes callback after stop and survives parent rebuilds
+00:02 +10: /workspace/document_detect_windows/example/test/kiosk_test.dart: pair export waits for both files and leaves the same captured result visible
+00:02 +11: /workspace/document_detect_windows/example/test/kiosk_test.dart: pair export waits for both files and leaves the same captured result visible
+00:03 +12: /workspace/document_detect_windows/example/test/kiosk_test.dart: pair export waits for both files and leaves the same captured result visible
+00:03 +13: /workspace/document_detect_windows/example/test/kiosk_test.dart: pair export waits for both files and leaves the same captured result visible
+00:03 +14: /workspace/document_detect_windows/example/test/kiosk_test.dart: pair export waits for both files and leaves the same captured result visible
+00:03 +15: /workspace/document_detect_windows/example/test/kiosk_test.dart: pair export waits for both files and leaves the same captured result visible
+00:03 +16: /workspace/document_detect_windows/example/test/kiosk_test.dart: pair export waits for both files and leaves the same captured result visible
+00:03 +17: /workspace/document_detect_windows/example/test/kiosk_preview_integration_test.dart: batch auto capture keeps the remove-document latch through rebuilds and cooldown
+00:05 +18: /workspace/document_detect_windows/example/test/kiosk_preview_integration_test.dart: batch auto capture keeps the remove-document latch through rebuilds and cooldown
+00:06 +19: /workspace/document_detect_windows/example/test/kiosk_preview_integration_test.dart: batch auto capture keeps the remove-document latch through rebuilds and cooldown
+00:07 +20: /workspace/document_detect_windows/example/test/kiosk_test.dart: unmount cancels pending pair write without updating disposed widgets
+00:07 +21: /workspace/document_detect_windows/example/test/kiosk_test.dart: unmount cancels pending pair write without updating disposed widgets
+00:07 +22: /workspace/document_detect_windows/example/test/kiosk_test.dart: unmount cancels pending pair write without updating disposed widgets
+00:08 +23: /workspace/document_detect_windows/example/test/kiosk_test.dart: graceful exit awaits cancellation of an in-progress pair write
+00:08 +24: /workspace/document_detect_windows/example/test/kiosk_test.dart: graceful exit awaits cancellation of an in-progress pair write
+00:08 +25: /workspace/document_detect_windows/example/test/kiosk_test.dart: graceful exit awaits cancellation of an in-progress pair write
+00:08 +26: /workspace/document_detect_windows/example/test/kiosk_test.dart: graceful exit awaits cancellation of an in-progress pair write
+00:08 +27: /workspace/document_detect_windows/example/test/kiosk_test.dart: graceful exit awaits cancellation of an in-progress pair write
+00:08 +28: /workspace/document_detect_windows/example/test/kiosk_test.dart: graceful exit awaits cancellation of an in-progress pair write
+00:09 +29: /workspace/document_detect_windows/example/test/kiosk_test.dart: hidden kiosk stops fully, waits for cleanup and requires explicit restart
+00:10 +30: /workspace/document_detect_windows/example/test/kiosk_test.dart: hide during native startup rejects late start without a false camera error
+00:10 +31: /workspace/document_detect_windows/example/test/kiosk_test.dart: hide during snapshot cancels capture and rejects the late JPEG
+00:10 +32: /workspace/document_detect_windows/example/test/kiosk_test.dart: hide and resume permanently cancel an open export picker
+00:12 +33: /workspace/document_detect_windows/example/test/kiosk_test.dart: graceful window exit awaits camera cleanup
+00:12 +34: /workspace/document_detect_windows/example/test/kiosk_test.dart: Vietnamese kiosk supports start, manual result, retake and Esc
+00:13 +35: /workspace/document_detect_windows/example/test/kiosk_test.dart: result waits for native stop and removes live preview before JPEG display
+00:14 +36: /workspace/document_detect_windows/example/test/kiosk_test.dart: six capture/retake cycles evict only result images and stop camera on results
+00:16 +37: /workspace/document_detect_windows/example/test/kiosk_test.dart: result display decode fits a cap and evicts cached image on close
+00:16 +38: /workspace/document_detect_windows/example/test/kiosk_test.dart: result never enlarges decoded pixels at 100/150/200 percent DPI
+00:16 +39: /workspace/document_detect_windows/example/test/kiosk_test.dart: all quality warnings remain readable on a reduced-motion kiosk
+00:17 +40: All tests passed!

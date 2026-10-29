@@ -20,3 +20,7 @@
 - No storage-policy/API threshold/warp changes, no upload/OCR, no app-global cache
   clear, no automatic restart loops or claimed physical 24/7 certification.
 - Scope done requires review/evidence, updated handover and pushed commits.
+
+- Delivered: source `2ef4de5a50c7bcd084c9901b70d69995e4bf8afb`; review and exact SDK/CI evidence in
+  docs/progress/general-review.md and docs/progress/logs/general-review/source.json.
+  Task complete; physical product readiness remains CHUA DAT.

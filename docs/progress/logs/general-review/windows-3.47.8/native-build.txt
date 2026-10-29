@@ -1,0 +1,7 @@
+MSBuild version 17.14.60+43b635718 for .NET Framework
+
+  1>Checking Build System
+  Building Custom Rule D:/a/document_detect_windows/document_detect_windows/adapters/windows_doc_capture_uvc_backend/test/native/CMakeLists.txt
+  sampler_test.cpp
+  sampler_test.vcxproj -> C:\Users\runneradmin\AppData\Local\Temp\doc-capture-sampler-5760\Release\sampler_test.exe
+  Building Custom Rule D:/a/document_detect_windows/document_detect_windows/adapters/windows_doc_capture_uvc_backend/test/native/CMakeLists.txt

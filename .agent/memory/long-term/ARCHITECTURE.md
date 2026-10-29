@@ -61,6 +61,11 @@ File đã publish thuộc caller.
 Example/lib/integration có CameraPreviewWidget/Controller độc lập GetX: batch
 mặc định giữ camera/latch qua nhiều ảnh; single stop/release trước bytes callback.
 Host nối select/acquire/configure hooks, active route và awaited stop/shutdown.
+Cleanup lỗi giữ root lease/native/texture handle; stop/dispose retry được,
+dispose vẫn terminal và notifications đóng một lần. Widget giữ host release đến
+khi native đóng thành công; hook release idempotent, shutdown retry sau unmount.
+UVC ID là Windows symbolic link normalized; native số chỉ process-local. Settings
+số cũ phải chọn lại; đổi cổng USB/driver có thể đổi path. Không log device path.
 Guide docs/integration/kiosk-getx.md; fixed ROI/zoom/mirror cũ không được nối ngầm.
 Windows host fixture compile bản chép widget cùng camera_windows0.2.6+4 và hai
 UVC plugin, không mở camera. Đây không phải build project kiosk riêng của caller.

@@ -1,0 +1,41 @@
+{
+  "source_commit": "2ef4de5a50c7bcd084c9901b70d69995e4bf8afb",
+  "windows_workflow": "https://github.com/qualife1291/document_detect_windows/actions/runs/40813822587",
+  "windows_sdks": [
+    "3.32.8",
+    "3.41.9",
+    "3.47.8"
+  ],
+  "linux_sdks": [
+    "3.32.8",
+    "3.41.9",
+    "3.47.7"
+  ],
+  "tests_per_sdk": {
+    "root": 121,
+    "uvc": 16,
+    "example": 40
+  },
+  "windows_additional_checks": {
+    "benchmarks": 3,
+    "native_ctest": 1,
+    "endurance_seconds": 60,
+    "release_build": true
+  },
+  "linux_scope": "Root/UVC/example clean, pub get, analyze and full tests on all three SDKs with saved logs; stable configs/format restored.",
+  "unchanged_component_trees_from_02ae500": {
+    "adapters/windows_doc_capture_uvc_backend": "d803973f402861eb8a6ceba388e1ce6fed8e5cbc",
+    "lib/src/detection": "f3cf4e15ab7d37805012652dbcf56db3151dff9d",
+    "lib/src/capture": "604b12fe879c5978395e228728c57c4934004306",
+    "lib/src/preview": "f4f5654409b3aebe2bb156acad8b9645838893f4",
+    ".github": "6a31e5e8b41f0ea5f59cc539d2ed127e6f678cce",
+    "tool": "12623a202edd7a260c0adfb7145bd8d9509a8963"
+  },
+  "format_files": 60,
+  "external_host_copied_widget_compiled": true,
+  "legacy_camera_windows_fixture_version": "0.2.6+4",
+  "actual_kiosk_project_built": false,
+  "private_hardware_service_tested": false,
+  "physical_camera_24h_soak": false,
+  "product_handover": "CHUA DAT"
+}

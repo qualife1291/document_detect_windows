@@ -1,0 +1,4 @@
+00:00 +0: loading D:/a/document_detect_windows/document_detect_windows/tool/endurance_test.dart
+00:00 +0: bounded analysis under continuous burst load
+ENDURANCE {"platform":"windows","seconds":60,"offered":21300,"reports":1420,"dropped":19880,"peak_rss_bytes":158748672,"rss_samples":[144023552,147759104,149864448,149954560,150048768,150560768,151990272,151744512,155377664,155537408,156549120,156143616]}
+01:00 +1: All tests passed!

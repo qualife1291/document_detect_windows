@@ -2,6 +2,20 @@ Handover: CHUA DAT
 
 # Bằng chứng bàn giao
 
+Cập nhật general review (2026-10-29, source `2ef4de5`): cleanup thất bại giữ
+root lease/native/texture handle và host hardware release để retry; dispose vẫn
+terminal, notifications đóng một lần. Chặn reopen/enumeration trước stop thành
+công, sửa idle/error callback và teardown sau unmount. UVC ID đổi sang Windows
+symbolic link normalized: settings ID số cũ phải chọn lại để tránh mở nhầm camera.
+[Windows CI](https://github.com/qualife1291/document_detect_windows/actions/runs/40813822587) đạt Flutter 3.32.8/3.41.9/3.47.8: 121 root, 16 UVC, 40 example tests/SDK,
+analyze, 3 benchmarks, native CTest, endurance 60 s, release build. Stable format 60 và
+host riêng có copied widget/camera_windows 0.2.6+4/original/internal UVC đạt.
+Linux ba SDK đạt root/UVC/example analyze và 121/16/40 tests với log. Xem
+[review](general-review.md), [evidence](logs/general-review/source.json) và
+[guide](../integration/kiosk-getx.md). Không đổi crop/JPEG/storage policy.
+Camera thật/GPU/USB/hardware hooks/project kiosk riêng/24–168h còn thiếu proof;
+gate vẫn CHUA DAT.
+
 Cập nhật integration (2026-10-29, source `1f55c45`): đã chuẩn bị widget/controller
 copy vào kiosk, giữ capture()/JPEG bytes và enum callback. Batch mặc định giữ
 một session qua nhiều ảnh và removal latch; ID chọn single để stop/release trước
@@ -9,7 +23,7 @@ callback review. Hook chọn camera/đèn/control riêng, chặn stale capture/a
 await cleanup khi remount. Không giữ image history hoặc tạo file ảnh trong widget.
 [Windows CI](https://github.com/qualife1291/document_detect_windows/actions/runs/40730610952) đạt Flutter 3.32.8/3.41.9/3.47.8:
 117 root, 11 UVC, 33 example tests/SDK, native CTest, benchmarks/endurance60s và
-release build. Stable format60 và host riêng có chép widget + camera_windows
+release build. Stable format 60 và host riêng có chép widget + camera_windows
 0.2.6+4 + original/internal UVC đạt ba DLL/registration độc lập. Linux ba SDK đạt
 example analyze/33 tests (stable transcript; floor/middle logs). Xem
 [guide](../integration/kiosk-getx.md) và [review](kiosk-preview-integration.md).

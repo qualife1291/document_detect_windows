@@ -8,7 +8,7 @@ single/batch widget, ownership, diagnostics, file policy and integration guide.
 
 | Priority | Trigger / previous behavior | Result |
 | --- | --- | --- |
-| P1 | Native stop/dispose failed; root released ownership and UVC discarded retry handles | Retain the owner, native handle and failed texture token until closure succeeds. Another owner fails closed; explicit stop/dispose can retry. Stopped sources cannot copy frames from retained handles. |
+| P1 | Native stop/dispose failed; root released ownership and UVC discarded retry handles | Retain the owner, native handle and failed texture token until closure succeeds. The same or another owner cannot reopen; explicit stop/dispose can retry. Stopped sources cannot copy frames from retained handles. |
 | P1 | Stop overlapped failed startup or enumeration teardown | Retry/verify teardown instead of falsely granting the next owner access. Failed terminal dispose closes notifications once and can retry cleanup. |
 | P1 | Saved numeric UVC ID after another process enumerated webcams in a different order | Expose normalized Windows symbolic links and resolve to the current native handle. Legacy numbers fail closed and require explicit reselection. USB-port/driver changes can still change paths. |
 | P1 | Native closure failed while the kiosk released host hardware ownership | Keep the host release callback until native stop and idempotent release succeed; retry before acquiring again. Retain a retryable cleanup owner after unmount, removing it once successful. |
@@ -42,7 +42,22 @@ No private device paths or original user photos are included in evidence.
 
 ## Validation
 
-Final SDK matrix/source evidence is recorded alongside this review after the
-checks complete. Synthetic/hosted CI does not validate physical focus, GPU/USB,
-actual app load, accessibility or 24–168 hour operation. The product gate remains
+Validated code: `2ef4de5a50c7bcd084c9901b70d69995e4bf8afb`.
+[Windows CI 40813822587](https://github.com/qualife1291/document_detect_windows/actions/runs/40813822587) passed Flutter 3.32.8/3.41.9/3.47.8:
+121 root, 16 UVC and 40 example tests per SDK, all analyze checks, three
+benchmarks, native sampler CTest, synthetic endurance 60 s and x64 release build.
+Stable also passed format 60 and compiled the copied widget in an external host
+with camera_windows 0.2.6+4 plus original/internal UVC; three DLLs, license and
+independent registration verified. No physical camera was opened by that fixture.
+
+Linux Flutter 3.32.8/3.41.9/3.47.7 each passed clean/pub get/analyze/full tests
+for root/UVC/example (121/16/40). Stable configs/format restored. Evidence:
+[source record](logs/general-review/source.json),
+[CI details](logs/general-review/windows-ci.json) and per-SDK logs nearby.
+Native backend, detector, capture/warp and preview component tree hashes match
+baseline 02ae500; Windows reran their full checks. Root controller/UVC adapter and
+copied widget have new lifecycle/routing regressions on this validated source.
+
+Synthetic/hosted CI does not validate physical focus, GPU/USB, actual app load,
+accessibility or 24–168 hour operation. The product gate remains
 [CHUA DAT](HANDOVER.md); build coexistence is not concurrent camera access.
