@@ -63,7 +63,7 @@ import 'package:windows_doc_capture/windows_doc_capture.dart';
 CameraDevice selectProofCamera(List<CameraDevice> devices) {
   final configured = KioskConfigService.camCameraScanId.trim();
   // ID từ camera_windows có thể KHÁC ID của UVC: cấu hình lại nếu không khớp.
-  final byId = devices.where((d) => d.id == configured).toList();
+  final byId = devices.where((d) => d.id.toLowerCase() == configured.toLowerCase()).toList();
   if (configured.isNotEmpty && byId.length == 1) return byId.single;
   final byName = devices.where((d) => d.name == configured).toList();
   if (configured.isNotEmpty && byName.length == 1) return byName.single;
@@ -83,19 +83,24 @@ Future<CameraHardwareRelease> acquireProofHardware() async {
     release();
     Error.throwWithStackTrace(error, stack);
   }
+  var released = false;
   return () async {
-    try {
-      await Future<void>.sync(LightControlService.turnOff);
-    } finally {
-      release();
-    }
+    if (released) return;
+    // Giữ lease nếu tắt đèn thất bại để service có thể retry có kiểm soát.
+    await Future<void>.sync(LightControlService.turnOff);
+    release(); // Hợp đồng release của service cũng phải idempotent.
+    released = true;
   };
 }
 ```
 
 `selectProofCamera` nhận danh sách UVC mới ở mỗi lần mở. Không tự chọn camera đầu
 tiên khi cấu hình sai: kiosk có thể có cả camera khuôn mặt và camera giấy tờ.
-Nếu dùng màn hình settings để chọn, lưu `device.id` của UVC; không debugPrint
+UVC giờ trả device.id là Windows symbolic link, không còn số native theo thứ tự
+enumeration. ID số cũ (ví dụ "1") phải chọn/lưu lại trong settings; không tự migrate
+số đó sang camera đầu tiên. Windows path không phụ thuộc thứ tự enumerate, nhưng
+có thể đổi khi đổi cổng USB/driver; khi đó yêu cầu chọn lại, không fallback.
+Nếu dùng màn hình settings để chọn, lưu `device.id` dạng path của UVC; không debugPrint
 ID/tên thiết bị hoặc giả định tên model là duy nhất. Chỉ enumerate khi camera dừng.
 Hook acquire phải tự rollback nếu lỗi trước khi trả về hàm release.
 Service đèn/control cần hoàn tất hoặc hủy có giới hạn, kể cả thiết bị offline;
@@ -241,6 +246,13 @@ onClose: _closed = true, onCaptured = null, shutdown best effort và hủy AI
 registration. Chỉ giải phóng danh sách ảnh khi app không còn cần bytes (ví dụ
 upload thành công/thoát enrollment); không xóa bừa MediaModel trên server.
 Widget/package không tự thêm file hoặc giữ lịch sử ảnh hộ app.
+
+Nếu stop/shutdown báo lỗi cleanup, không coi thiết bị đã rảnh. Package giữ native
+handle và lease cho đến khi đóng được; có thể await stop()/shutdown() lại sau khi
+sửa nguyên nhân. shutdown vẫn kết thúc view, không mở lại cùng instance; widget
+remount dùng controller cũ sẽ chờ cleanup. Hook release phải idempotent và giữ
+lease đến khi hoàn tất. Enum idle biểu thị preview đã ngừng, không thay cho await
+stop thành công khi bàn giao camera cho tính năng khác.
 
 ## 5. Điều chỉnh navigation và lỗi thao tác trong controller
 

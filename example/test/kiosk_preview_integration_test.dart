@@ -17,7 +17,7 @@ class _Source implements FrameSource {
   ];
   Completer<void>? stopGate;
   Completer<FrameBuffer?>? snapshotGate;
-  bool running = false, document = true;
+  bool running = false, document = true, failStop = false;
   int starts = 0;
   String? selected;
   @override
@@ -41,6 +41,7 @@ class _Source implements FrameSource {
 
   @override
   Future<void> stop() async {
+    if (failStop) throw StateError('Native cleanup failed');
     if (running) {
       await stopGate?.future;
       running = false;
@@ -90,7 +91,281 @@ Future<void> _verifyJpeg(Uint8List bytes) async {
   }
 }
 
+Future<Object?> _driveWidgetFuture(
+  WidgetTester tester,
+  Future<void> work,
+) async {
+  var completed = false;
+  Object? failure;
+  unawaited(
+    work.then<void>(
+      (_) => completed = true,
+      onError: (Object error, StackTrace _) {
+        failure = error;
+        completed = true;
+      },
+    ),
+  );
+  for (var i = 0; i < 500 && !completed; i++) {
+    await tester.pump();
+    await tester.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 10)),
+    );
+  }
+  expect(completed, isTrue, reason: 'Widget-zone lifecycle must finish');
+  return failure;
+}
+
 void main() {
+  testWidgets('camera stream error remains error until explicit recovery', (
+    tester,
+  ) async {
+    final source = _Source(), controller = CameraPreviewController();
+    final states = <DocumentPreviewState>[];
+    await _mount(
+      tester,
+      CameraPreviewWidget(
+        controller: controller,
+        autoStart: false,
+        captureFactory: () => _capture(source),
+        onDocumentStateChanged: states.add,
+      ),
+    );
+    try {
+      await _driveWidgetFuture(tester, controller.resume());
+      source.framesController.addError(StateError('Unplugged'));
+      for (var i = 0; i < 20; i++) {
+        await tester.pump();
+        await tester.runAsync(
+          () => Future<void>.delayed(const Duration(milliseconds: 10)),
+        );
+      }
+      expect(source.running, isFalse);
+      expect(states.last, DocumentPreviewState.error);
+      expect(await _driveWidgetFuture(tester, controller.resume()), isNull);
+      expect(source.running, isTrue);
+      expect(states.last, DocumentPreviewState.processing);
+    } finally {
+      expect(await _driveWidgetFuture(tester, controller.shutdown()), isNull);
+      await tester.pumpWidget(const SizedBox.shrink());
+      await source.framesController.close();
+    }
+  });
+
+  testWidgets(
+    'stopping while camera configuration waits reports idle and rejects late ready',
+    (tester) async {
+      final source = _Source(), controller = CameraPreviewController();
+      final states = <DocumentPreviewState>[];
+      late Completer<void> entered, configured;
+      await _mount(
+        tester,
+        CameraPreviewWidget(
+          controller: controller,
+          autoStart: false,
+          captureFactory: () => _capture(source),
+          onDocumentStateChanged: states.add,
+          configureCamera: (_) async {
+            entered.complete();
+            await configured.future;
+          },
+        ),
+      );
+      try {
+        await tester.runAsync(() async {
+          entered = Completer<void>();
+          configured = Completer<void>();
+          final starting = controller.resume();
+          await entered.future;
+          final stopping = controller.stop();
+          expect(states.last, DocumentPreviewState.idle);
+          configured.complete();
+          await starting;
+          await stopping;
+        });
+        expect(source.running, isFalse);
+        expect(controller.isReady, isFalse);
+        expect(
+          states.where((s) => s == DocumentPreviewState.idle),
+          hasLength(1),
+        );
+      } finally {
+        await _close(tester, controller, source);
+      }
+    },
+  );
+
+  testWidgets(
+    'idle callback can resume without starting before the previous camera closes',
+    (tester) async {
+      final source = _Source(), controller = CameraPreviewController();
+      Future<void>? resumed;
+      await _mount(
+        tester,
+        CameraPreviewWidget(
+          controller: controller,
+          autoStart: false,
+          captureFactory: () => _capture(source),
+          onDocumentStateChanged: (state) {
+            if (state == DocumentPreviewState.idle) {
+              resumed = controller.resume();
+            }
+          },
+        ),
+      );
+      try {
+        await tester.runAsync(() async {
+          await controller.resume();
+          source.stopGate = Completer<void>();
+          final stopping = controller.stop();
+          expect(resumed, isNotNull);
+          expect(source.starts, 1);
+          source.stopGate!.complete();
+          source.stopGate = null;
+          await stopping;
+          await resumed;
+        });
+        expect(source.events, ['start', 'stop', 'start']);
+        expect(source.running, isTrue);
+      } finally {
+        await _close(tester, controller, source);
+      }
+    },
+  );
+
+  testWidgets(
+    'failed native stop retains the host lease until a verified retry',
+    (tester) async {
+      final source = _Source(), controller = CameraPreviewController();
+      var releases = 0;
+      await _mount(
+        tester,
+        CameraPreviewWidget(
+          controller: controller,
+          autoStart: false,
+          captureFactory: () => _capture(source),
+          acquireHardware: () async => () async {
+            releases++;
+          },
+        ),
+      );
+      try {
+        await tester.runAsync(controller.resume);
+        source.failStop = true;
+        await tester.runAsync(
+          () => expectLater(controller.stop(), throwsStateError),
+        );
+        expect(source.running, isTrue);
+        expect(releases, 0);
+        await tester.runAsync(
+          () => expectLater(controller.resume(), throwsStateError),
+        );
+        expect(releases, 0);
+        expect(source.starts, 1);
+        source.failStop = false;
+        await tester.runAsync(controller.resume);
+        expect(releases, 1);
+        expect(source.running, isTrue);
+        await tester.runAsync(controller.stop);
+        expect(releases, 2);
+        expect(source.running, isFalse);
+      } finally {
+        source.failStop = false;
+        await _close(tester, controller, source);
+      }
+    },
+  );
+
+  testWidgets(
+    'throwing idle callback cannot interrupt cleanup or hardware release',
+    (tester) async {
+      final source = _Source(), controller = CameraPreviewController();
+      var released = false;
+      await _mount(
+        tester,
+        CameraPreviewWidget(
+          controller: controller,
+          autoStart: false,
+          captureFactory: () => _capture(source),
+          acquireHardware: () async => () async {
+            released = true;
+          },
+          onDocumentStateChanged: (state) {
+            if (state == DocumentPreviewState.idle) {
+              throw StateError('Host callback');
+            }
+          },
+        ),
+      );
+      try {
+        await tester.runAsync(controller.resume);
+        await tester.runAsync(controller.stop);
+        expect(source.running, isFalse);
+        expect(released, isTrue);
+        expect(tester.takeException(), isNull);
+      } finally {
+        await _close(tester, controller, source);
+      }
+    },
+  );
+
+  testWidgets('shutdown can retry failed cleanup after the view unmounts', (
+    tester,
+  ) async {
+    final source = _Source(), controller = CameraPreviewController();
+    await _mount(
+      tester,
+      CameraPreviewWidget(
+        controller: controller,
+        autoStart: false,
+        captureFactory: () => _capture(source),
+      ),
+    );
+    // Unmount runs in this widget error zone; keep failed cleanup futures in it.
+    expect(await _driveWidgetFuture(tester, controller.resume()), isNull);
+    source.failStop = true;
+    await tester.pumpWidget(const SizedBox.shrink());
+    try {
+      expect(
+        await _driveWidgetFuture(tester, controller.shutdown()),
+        isA<StateError>(),
+      );
+      source.failStop = false;
+      expect(await _driveWidgetFuture(tester, controller.shutdown()), isNull);
+      expect(source.running, isFalse);
+      expect(controller.isAttached, isFalse);
+    } finally {
+      source.failStop = false;
+      expect(await _driveWidgetFuture(tester, controller.shutdown()), isNull);
+      await source.framesController.close();
+    }
+  });
+
+  testWidgets('explicit stop reports idle to the host after preview', (
+    tester,
+  ) async {
+    final source = _Source(), controller = CameraPreviewController();
+    final states = <DocumentPreviewState>[];
+    await _mount(
+      tester,
+      CameraPreviewWidget(
+        controller: controller,
+        autoStart: false,
+        captureFactory: () => _capture(source),
+        onDocumentStateChanged: states.add,
+      ),
+    );
+    try {
+      await tester.runAsync(controller.resume);
+      expect(states, contains(DocumentPreviewState.processing));
+      await tester.runAsync(controller.stop);
+      expect(states.last, DocumentPreviewState.idle);
+      expect(source.running, isFalse);
+    } finally {
+      await _close(tester, controller, source);
+    }
+  });
+
   testWidgets(
     'manual capture stops and releases hardware before exactly one JPEG callback',
     (tester) async {

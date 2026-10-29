@@ -53,6 +53,22 @@ the application remains resumed. Example captures stay in memory; diagnostic
 pair export is an explicit separate action. For no capture files use UVC without
 saveDirectory; camera_desktop's dependency creates a temporary still image.
 
+## Cleanup failures and device selection
+
+Failed stop/dispose retains native/texture handles and the root camera lease.
+An explicit retry must confirm closure before another owner can start; dispose
+remains terminal and closes public notifications once. The kiosk controller can
+retry shutdown even after unmount, and retains host hardware release until native
+stop succeeds. Release hooks must be idempotent; unresolved driver/hardware
+operations still require operator recovery. No automatic retry loop is added. Diagnostics emit camera_cleanup_pending and
+a safe error stage when closure fails; disposed is emitted only after successful
+cleanup. Copy metadata logs only, without image bytes or device paths.
+
+UVC CameraDevice.id uses a normalized Windows symbolic link. Previous numeric
+IDs were process-local; reselect those settings instead of interpreting the number
+as a current camera. New enumeration order does not change the stored key, while
+a USB-port/driver path change requires explicit reselection. Do not log paths.
+
 ## 5 MP / 8 MP and low-end devices
 
 Sensor resolution is not the negotiated stream resolution. The UVC adapter's

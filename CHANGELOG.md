@@ -4,6 +4,19 @@ This changelog follows Keep a Changelog. No production release has been made.
 
 ## [Unreleased]
 
+### General review: camera ownership and recovery
+
+- Keep native/texture handles and camera ownership when cleanup fails. Retry
+  stop/dispose safely, including failed startup/enumeration and unmounted kiosk
+  views; a failed stop never grants another controller the camera lease.
+- Keep the host hardware lease until native closure is confirmed; require
+  idempotent release hooks. Publish kiosk idle on stop and release session
+  callbacks. Dispose success logs now require successful cleanup.
+- **UVC device-ID migration:** public CameraDevice.id now uses the normalized
+  Windows device path, resolving the current native numeric handle when opening.
+  Old saved numeric IDs must be selected again; no numeric fallback can silently
+  open the wrong camera after enumeration order changes.
+
 ### Kiosk integration sample
 
 - Add a copyable UVC preview/controller with capture()/JPEG callbacks, enum

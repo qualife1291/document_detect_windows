@@ -136,6 +136,10 @@ and the [Vietnamese integration guide](docs/integration/kiosk-getx.md).
 It keeps capture()/Uint8List callbacks, with batch preview by default and an
 explicit single-photo mode that releases the camera before review callbacks.
 
+UVC device IDs now use Windows device paths. Re-select any saved numeric IDs
+from earlier versions; numeric values were process-local and could select a
+different camera after restart. Treat IDs as opaque/private; do not log them.
+A changed USB port/driver can change the path and should require explicit reselection.
 
 For kiosk memory-only capture use the UVC adapter. The optional desktop adapter
 creates a temporary image via its camera dependency; omit that adapter when
@@ -175,7 +179,15 @@ Import `package:windows_doc_capture/windows_doc_capture.dart` and the chosen
 adapter. Subscribe before starting. The caller owns the controller and must await
 `stop()`/`dispose()`. Auto-capture callbacks run once per capture; only successful
 automatic captures invoke `onAutoCapture`. `captureNow()` returns its result to
-its caller. Exceptions from capture/file IO are propagated; automatic errors
+its caller.
+
+A cleanup error means the camera lease has not been confirmed free. Await a
+successful stop/dispose retry after fixing the cause before handing the device
+to another feature. dispose remains terminal for capture/start, but failed native
+cleanup can be retried without re-notifying disposed UI. Hooks in the copied
+widget must be idempotent; idle is a UI state, not a substitute for awaited cleanup.
+
+Exceptions from capture/file IO are propagated; automatic errors
 appear on `errors`. Stream/device failures stop the camera and require restart.
 Concurrent manual capture calls return null while the first is in progress.
 

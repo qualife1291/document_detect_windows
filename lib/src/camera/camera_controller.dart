@@ -93,9 +93,13 @@ class WindowsDocCapture {
   late final _analysisGate = AnalysisGate(analysisInterval);
 
   void _claimCamera() {
-    if (_cameraOwner != null && _cameraOwner != this) {
+    if (_cameraOwner != null) {
       _diagnostics.event('camera_conflict');
-      throw StateError('Another document camera session is active');
+      throw StateError(
+        _cameraOwner == this
+            ? 'Previous camera cleanup is pending; await stop before reopening'
+            : 'Another document camera session is active',
+      );
     }
     _cameraOwner = this;
   }
@@ -131,6 +135,7 @@ class WindowsDocCapture {
   Future<void>? _starting, _stopping;
   Future<CapturedDocument?>? _capture;
   bool _running = false, _disposed = false, _autoEnabled = true;
+  bool _notificationsClosed = false;
   int _epoch = 0, _reportsCount = 0;
   Duration _fpsStart = Duration.zero;
   String? _directory;
@@ -173,16 +178,25 @@ class WindowsDocCapture {
     final future = _listDevices();
     _listing = future;
     _diagnostics.event('enumeration_start');
+    var releaseOwner = true;
     try {
       final devices = await future;
       _diagnostics.event('enumeration_complete', {'count': devices.length});
       return devices;
     } catch (error, stack) {
       _diagnostics.error('enumeration', error, stack);
+      // A failed enumeration can include a failed native session disposal.
+      // Keep the lease if cleanup still fails; another controller must not open.
+      try {
+        await _source.stop();
+      } catch (cleanupError, cleanupStack) {
+        releaseOwner = false;
+        _diagnostics.error('enumeration_cleanup', cleanupError, cleanupStack);
+      }
       rethrow;
     } finally {
       _listing = null;
-      if (_cameraOwner == this) _cameraOwner = null;
+      if (releaseOwner && _cameraOwner == this) _cameraOwner = null;
     }
   }
 
@@ -367,6 +381,7 @@ class WindowsDocCapture {
         DocumentPreviewStatus(state: DocumentPreviewState.processing),
       );
     } catch (error, stack) {
+      _running = false;
       _diagnostics.error('start', error, stack);
       _publishPreview(
         DocumentPreviewStatus(
@@ -475,6 +490,7 @@ class WindowsDocCapture {
   }
 
   void _publishPreview(DocumentPreviewStatus value) {
+    if (_notificationsClosed) return;
     final previous = _previewStatus.value;
     final changed = previous.state != value.state;
     _previewStatus.value = value;
@@ -612,9 +628,8 @@ class WindowsDocCapture {
     );
   }
 
-  Future<void> stop() => _disposed
-      ? (_disposing ?? Future<void>.value())
-      : _stopSession(DocumentPreviewState.idle);
+  Future<void> stop() =>
+      _disposed ? dispose() : _stopSession(DocumentPreviewState.idle);
 
   Future<void> _stopSession(DocumentPreviewState finalState) {
     final pending = _stopping;
@@ -651,7 +666,8 @@ class WindowsDocCapture {
       try {
         await _starting;
       } catch (_) {
-        return;
+        // Startup attempted cleanup, but it may have failed. Verify/retry below
+        // instead of reporting a successful handoff while native remains open.
       }
     }
     _logHealth(); // Preserve the final fresh quality snapshot before idle clears it.
@@ -699,14 +715,23 @@ class WindowsDocCapture {
       if (source is AnalysisDemandSource) {
         (source as AnalysisDemandSource).analysisWanted = null;
       }
-      await attempt('camera_stop', _source.stop);
+      var stopped = false;
+      await attempt('camera_stop', () async {
+        await _source.stop();
+        stopped = true;
+      });
       if (source is PreviewSamplingSource) {
         (source as PreviewSamplingSource).previewSamplingAllowed = null;
       }
-      if (_cameraOwner == this) _cameraOwner = null;
+      if (stopped && _cameraOwner == this) {
+        _cameraOwner = null;
+      } else if (!stopped) {
+        _diagnostics.event('camera_cleanup_pending');
+      }
     }
     _callback = null;
     _directory = null;
+    _onDocumentStateChanged = null;
     if (failure != null) Error.throwWithStackTrace(failure!, failureStack!);
   }
 
@@ -715,7 +740,16 @@ class WindowsDocCapture {
     final completion = Completer<void>();
     _disposing = completion.future;
     unawaited(
-      _dispose().then(completion.complete, onError: completion.completeError),
+      _dispose().then(
+        completion.complete,
+        onError: (Object error, StackTrace stack) {
+          // Remain terminal, but allow a later dispose/stop to retry native cleanup.
+          // Concurrent callers still share the same in-flight future.
+          if (identical(_disposing, completion.future)) _disposing = null;
+          _diagnostics.error('dispose', error, stack);
+          completion.completeError(error, stack);
+        },
+      ),
     );
     return completion.future;
   }
@@ -733,12 +767,15 @@ class WindowsDocCapture {
       }
       await _stopSession(DocumentPreviewState.idle);
     } finally {
-      await _warnings.close();
-      await _statuses.close();
-      await _errors.close();
-      _onDocumentStateChanged = null;
-      _previewStatus.dispose();
-      _diagnostics.event('disposed');
+      if (!_notificationsClosed) {
+        _notificationsClosed = true;
+        await _warnings.close();
+        await _statuses.close();
+        await _errors.close();
+        _onDocumentStateChanged = null;
+        _previewStatus.dispose();
+      }
     }
+    _diagnostics.event('disposed');
   }
 }

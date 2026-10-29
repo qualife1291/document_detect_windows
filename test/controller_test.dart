@@ -48,8 +48,141 @@ class PreviewSource extends FakeSource implements PreviewSamplingSource {
       snapshotGate?.future ?? super.latestFullResolutionFrame();
 }
 
+class CleanupSource extends FakeSource {
+  final entered = Completer<void>(), opened = Completer<void>();
+  bool delayedStart = false, failEnumeration = false;
+  @override
+  Future<List<CameraDevice>> listDevices() async {
+    if (failEnumeration) throw StateError('Enumeration teardown failed');
+    return super.listDevices();
+  }
+
+  int stops = 0;
+  @override
+  Future<void> start({
+    String? deviceId,
+    ResolutionPreset preset = ResolutionPreset.high,
+  }) async {
+    if (delayedStart) {
+      entered.complete();
+      await opened.future;
+    }
+    await super.start(deviceId: deviceId, preset: preset);
+  }
+
+  @override
+  Future<void> stop() async {
+    stops++;
+    if (failStop) throw StateError('Device still open');
+    await super.stop();
+  }
+}
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+  test(
+    'failed enumeration cleanup retains ownership until stop succeeds',
+    () async {
+      final source = CleanupSource()
+        ..failEnumeration = true
+        ..failStop = true;
+      final owner = WindowsDocCapture.testing(frameSource: source);
+      final next = WindowsDocCapture.testing(frameSource: FakeSource());
+      try {
+        await expectLater(owner.listDevices(), throwsStateError);
+        await expectLater(next.start(), throwsStateError);
+        source.failStop = false;
+        await owner.stop();
+        await next.start();
+      } finally {
+        source.failStop = false;
+        await owner.dispose();
+        await next.dispose();
+        await source.stream.close();
+      }
+    },
+  );
+
+  test(
+    'failed stop blocks another owner until cleanup retry succeeds',
+    () async {
+      final source = CleanupSource();
+      final owner = WindowsDocCapture.testing(frameSource: source);
+      final next = WindowsDocCapture.testing(frameSource: FakeSource());
+      try {
+        await owner.start();
+        source.failStop = true;
+        await expectLater(owner.stop(), throwsStateError);
+        expect(source.running, isTrue);
+        await expectLater(next.start(), throwsStateError);
+        await expectLater(owner.start(), throwsStateError);
+        await expectLater(owner.listDevices(), throwsStateError);
+        source.failStop = false;
+        await owner.stop();
+        expect(source.running, isFalse);
+        await next.start();
+      } finally {
+        source.failStop = false;
+        await owner.dispose();
+        await next.dispose();
+        await source.stream.close();
+      }
+    },
+  );
+
+  test(
+    'stop during startup reports failed teardown instead of a false handoff',
+    () async {
+      final source = CleanupSource()..delayedStart = true;
+      final owner = WindowsDocCapture.testing(frameSource: source);
+      try {
+        final starting = expectLater(owner.start(), throwsStateError);
+        await source.entered.future;
+        source.failStop = true;
+        final stopping = expectLater(owner.stop(), throwsStateError);
+        source.opened.complete();
+        await starting;
+        await stopping;
+        expect(source.running, isTrue);
+      } finally {
+        source.failStop = false;
+        await owner.dispose();
+        await source.stream.close();
+      }
+    },
+  );
+
+  test(
+    'failed dispose is retryable, terminal and closes streams only once',
+    () async {
+      final source = CleanupSource();
+      final owner = WindowsDocCapture.testing(frameSource: source);
+      final next = WindowsDocCapture.testing(frameSource: FakeSource());
+      try {
+        await owner.start();
+        source.failStop = true;
+        final closed = Future.wait([
+          owner.errors.drain<void>(),
+          owner.statuses.drain<void>(),
+          owner.warnings.drain<void>(),
+        ]);
+        await expectLater(owner.dispose(), throwsStateError);
+        await closed;
+        await expectLater(next.start(), throwsStateError);
+        source.failStop = false;
+        await Future.wait([owner.dispose(), owner.dispose()]);
+        expect(source.running, isFalse);
+        await expectLater(owner.start(), throwsStateError);
+        await next.start();
+      } finally {
+        source.failStop = false;
+        await owner.dispose();
+        await next.dispose();
+        await source.stream.close();
+      }
+    },
+  );
+
   test(
     'bitmap sampling pauses during capture and releases its predicate on teardown',
     () async {
@@ -183,6 +316,8 @@ void main() {
       await expectLater(capture.dispose(), throwsStateError);
       await closed.timeout(const Duration(seconds: 2));
       expect(source.running, isFalse);
+      source.failStop = false;
+      await capture.dispose();
       await source.stream.close();
     },
   );

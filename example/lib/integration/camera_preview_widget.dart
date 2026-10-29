@@ -17,7 +17,7 @@ typedef DocumentCameraSelector = CameraDevice Function(List<CameraDevice>);
 /// One controller per preview. The host owns received JPEG bytes and callbacks.
 class CameraPreviewController {
   _CameraPreviewWidgetState? _view;
-  Future<void> _released = Future<void>.value();
+  _CameraPreviewWidgetState? _releaseOwner;
   ValueChanged<Uint8List>? onCaptured;
   bool get isAttached => _view != null;
   bool get isReady => _view?._canCapture ?? false;
@@ -36,10 +36,12 @@ class CameraPreviewController {
   }
 
   /// Await this BEFORE navigation/handoff to another camera feature.
-  Future<void> stop() => _view?._stop() ?? _released;
+  Future<void> stop() =>
+      _view?._stop() ?? _releaseOwner?._shutdown() ?? Future<void>.value();
 
   /// Terminal for the current view. stop() is the reusable route pause.
-  Future<void> shutdown() => _view?._shutdown() ?? _released;
+  Future<void> shutdown() =>
+      _view?._shutdown() ?? _releaseOwner?._shutdown() ?? Future<void>.value();
 }
 
 /// Copyable kiosk integration sample, Windows x64 / UVC only.
@@ -75,7 +77,8 @@ class CameraPreviewWidget extends StatefulWidget {
   /// Required if multiple devices exist. No fallback to a different camera.
   final DocumentCameraSelector? selectCamera;
 
-  /// Returns cleanup that turns off lights/releases the host hardware lease.
+  /// Returns idempotent cleanup for lights/shared lease. Must complete or fail
+  /// within the host service budget; a failure retains it for explicit retry.
   final CameraHardwareAcquire? acquireHardware;
 
   /// Optional verified UVC-compatible controls; never open a second camera here.
@@ -98,7 +101,7 @@ class CameraPreviewWidget extends StatefulWidget {
 class _CameraPreviewWidgetState extends State<CameraPreviewWidget> {
   late final WindowsDocCapture _capture;
   late final CameraPreviewController _controller;
-  Future<void>? _previousRelease;
+  _CameraPreviewWidgetState? _previousOwner;
   final _operations = CameraOperationQueue();
   CameraHardwareRelease? _release;
   StreamSubscription<Object>? _errors;
@@ -106,8 +109,10 @@ class _CameraPreviewWidgetState extends State<CameraPreviewWidget> {
   Future<void>? _starting, _stopping, _closing;
   bool _wanted = false, _closed = false, _ready = false;
   bool _taking = false, _delivering = false, _captured = false;
+  bool _cleanupPending = false;
   int _epoch = 0;
   String? _error, _notice;
+  DocumentPreviewState _documentState = DocumentPreviewState.idle;
 
   bool get _canCapture =>
       _ready &&
@@ -143,22 +148,36 @@ class _CameraPreviewWidgetState extends State<CameraPreviewWidget> {
     }
   }
 
+  void _notifyDocumentState(DocumentPreviewState state) {
+    if (!mounted || _closed || state == _documentState) return;
+    _documentState = state;
+    try {
+      widget.onDocumentStateChanged?.call(state);
+    } catch (error) {
+      _log('state_callback_error', error);
+    }
+  }
+
   void _observe(Future<void> operation) {
     unawaited(
-      operation.catchError((Object error) async {
+      operation.catchError((Object error) {
+        // Operation scopes own cleanup/state. A late error must not stop a newer
+        // session from here after a route or callback has already resumed it.
         _log('operation_error', error);
-        _error =
-            'Không mở hoặc đóng được camera. Kiểm tra thiết bị rồi thử lại.';
-        if (!_closed) {
-          try {
-            await _stop();
-          } catch (cleanupError) {
-            _log('cleanup_error', cleanupError);
-          }
-        }
         _refresh();
       }),
     );
+  }
+
+  Future<void> _failSession(int epoch, Object error) async {
+    _log('session_error', error);
+    if (!mounted || _closed || epoch != _epoch) return;
+    _error = 'Camera hoặc xử lý ảnh gặp lỗi. Kiểm tra thiết bị rồi thử lại.';
+    try {
+      await _stop(state: DocumentPreviewState.error);
+    } catch (cleanupError) {
+      _log('cleanup_error', cleanupError);
+    }
   }
 
   @override
@@ -177,7 +196,7 @@ class _CameraPreviewWidgetState extends State<CameraPreviewWidget> {
             preferredNativeFps: 15,
           ),
         );
-    _previousRelease = _controller._released;
+    _previousOwner = _controller._releaseOwner;
     if (_controller._view != null) {
       throw StateError('Mount only one preview per CameraPreviewController');
     }
@@ -186,7 +205,7 @@ class _CameraPreviewWidgetState extends State<CameraPreviewWidget> {
       _log('camera_error', error);
       _error =
           'Camera gặp lỗi hoặc ngắt kết nối. Kiểm tra thiết bị rồi thử lại.';
-      _observe(_stop());
+      _observe(_stop(state: DocumentPreviewState.error));
     });
     _lifecycle = AppLifecycleListener(
       onStateChange: (state) {
@@ -224,11 +243,8 @@ class _CameraPreviewWidgetState extends State<CameraPreviewWidget> {
     final epoch = ++_epoch;
     final future = _operations.run(() async {
       try {
-        final previousRelease = _previousRelease;
-        if (previousRelease != null) {
-          await previousRelease;
-          _previousRelease = null;
-        }
+        await _finishPreviousRelease();
+        if (_cleanupPending) await _stopHardware();
         if (!_current(epoch)) return;
         if (widget.acquireHardware != null) {
           _release = await widget.acquireHardware!();
@@ -252,7 +268,7 @@ class _CameraPreviewWidgetState extends State<CameraPreviewWidget> {
           // No saveDirectory: both JPEGs stay in memory.
           onAutoCapture: (document) => _observe(_deliver(document, epoch)),
           onDocumentStateChanged: (state) {
-            if (_current(epoch)) widget.onDocumentStateChanged?.call(state);
+            if (_current(epoch)) _notifyDocumentState(state);
           },
         );
         if (!_current(epoch)) return;
@@ -266,6 +282,7 @@ class _CameraPreviewWidgetState extends State<CameraPreviewWidget> {
           _wanted = false;
           _error =
               'Không mở được camera giấy tờ. Kiểm tra cấu hình camera và quyền Windows.';
+          _notifyDocumentState(DocumentPreviewState.error);
           rethrow;
         }
       } finally {
@@ -280,34 +297,37 @@ class _CameraPreviewWidgetState extends State<CameraPreviewWidget> {
     });
   }
 
+  Future<void> _finishPreviousRelease() async {
+    final owner = _previousOwner;
+    if (owner == null) return;
+    await owner._shutdown();
+    if (identical(_previousOwner, owner)) _previousOwner = null;
+  }
+
   Future<void> _stopHardware() async {
     _ready = false;
-    Object? failure;
-    StackTrace? failureStack;
-    try {
-      await _capture.stop();
-    } catch (error, stack) {
-      failure = error;
-      failureStack = stack;
-    }
+    _cleanupPending = true;
+    // The host lease can coordinate camera_windows too. Never release it while
+    // native closure is unconfirmed; retain the callback for an explicit retry.
+    await _capture.stop();
     final release = _release;
-    _release = null;
-    try {
-      if (release != null) await release();
-    } catch (error, stack) {
-      failure ??= error;
-      failureStack ??= stack;
+    if (release != null) {
+      await release();
+      if (identical(_release, release)) _release = null;
     }
-    if (failure != null) Error.throwWithStackTrace(failure, failureStack!);
+    _cleanupPending = false;
     _log('stopped');
   }
 
-  Future<void> _stop() {
+  Future<void> _stop({DocumentPreviewState state = DocumentPreviewState.idle}) {
     _wanted = false;
     ++_epoch;
     _ready = false;
-    _refresh();
-    if (_stopping != null) return _stopping!;
+    if (_stopping != null) {
+      _notifyDocumentState(state);
+      _refresh();
+      return _stopping!;
+    }
     // Cancel root startup/snapshot/worker immediately, before queued host work.
     final cancellation = _capture.stop();
     unawaited(
@@ -315,12 +335,27 @@ class _CameraPreviewWidgetState extends State<CameraPreviewWidget> {
     );
     final future = _operations.run(() async {
       try {
-        await cancellation;
-      } finally {
-        await _stopHardware();
+        try {
+          await cancellation;
+        } finally {
+          try {
+            await _finishPreviousRelease();
+          } finally {
+            await _stopHardware();
+          }
+        }
+      } catch (_) {
+        if (!_wanted && !_closed) {
+          _error = 'Chưa đóng camera hoàn toàn. Kiểm tra thiết bị rồi thử lại.';
+          _notifyDocumentState(DocumentPreviewState.error);
+        }
+        rethrow;
       }
     });
     _stopping = future;
+    // Install cleanup first: an idle callback may reenter resume/stop.
+    _notifyDocumentState(state);
+    _refresh();
     return future.whenComplete(() {
       if (identical(_stopping, future)) _stopping = null;
       _refresh();
@@ -344,6 +379,9 @@ class _CameraPreviewWidgetState extends State<CameraPreviewWidget> {
         return;
       }
       await _deliver(document, epoch);
+    } catch (error) {
+      await _failSession(epoch, error);
+      rethrow;
     } finally {
       _taking = false;
       _refresh();
@@ -371,21 +409,45 @@ class _CameraPreviewWidgetState extends State<CameraPreviewWidget> {
       final callback = widget.onCaptured ?? _controller.onCaptured;
       callback?.call(document.croppedJpeg);
       _log('delivered');
+    } catch (error) {
+      await _failSession(epoch, error);
+      rethrow;
     } finally {
       _delivering = false;
       _refresh();
     }
   }
 
-  Future<void> _shutdown() => _closing ??= _close();
+  Future<void> _shutdown() {
+    if (_closing != null) return _closing!;
+    final completion = Completer<void>();
+    _closing = completion.future;
+    unawaited(
+      _close().then(
+        (_) {
+          if (identical(_controller._releaseOwner, this)) {
+            _controller._releaseOwner = null;
+          }
+          completion.complete();
+        },
+        onError: (Object error, StackTrace stack) {
+          if (identical(_closing, completion.future)) _closing = null;
+          completion.completeError(error, stack);
+        },
+      ),
+    );
+    return completion.future;
+  }
 
   Future<void> _close() async {
     _closed = true;
     try {
       await _stop();
     } finally {
+      final errors = _errors;
+      _errors = null;
       try {
-        await _errors?.cancel();
+        await errors?.cancel();
       } finally {
         await _capture.dispose();
       }
@@ -398,7 +460,16 @@ class _CameraPreviewWidgetState extends State<CameraPreviewWidget> {
     final closing = _shutdown();
     if (identical(_controller._view, this)) {
       _controller._view = null;
-      _controller._released = closing;
+      _controller._releaseOwner = this;
+      // Retain a retryable owner only while teardown is pending/failed. Healthy
+      // cleanup releases this State rather than retaining a history of views.
+      unawaited(
+        closing.then<void>((_) {
+          if (identical(_controller._releaseOwner, this)) {
+            _controller._releaseOwner = null;
+          }
+        }, onError: (Object _, StackTrace __) {}),
+      );
     }
     _observe(closing);
     super.dispose();

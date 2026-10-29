@@ -161,8 +161,10 @@ class UvcFrameSource
   Size _size = Size.zero;
   final _liveness = Stopwatch();
   @override
-  double? get deliveredPreviewFps => _camera?.getStreamStats().deliveredFps;
-  int get nativeSequence => _camera?.latestFrameSequence() ?? 0;
+  double? get deliveredPreviewFps =>
+      _streaming ? _camera?.getStreamStats().deliveredFps : null;
+  int get nativeSequence =>
+      _streaming ? _camera?.latestFrameSequence() ?? 0 : 0;
   @override
   Stream<FrameBuffer> get frames => _frameStream;
   @override
@@ -177,16 +179,26 @@ class UvcFrameSource
   @override
   Future<List<CameraDevice>> listDevices() => _operations.run(_listDevices);
 
+  // Native numeric IDs are allocated per process/enumeration order. Persist
+  // the Windows symbolic link instead; resolve its numeric handle at open time.
+  String _deviceKey(UvcUsbDevice device) {
+    if (device.deviceName.isEmpty) {
+      throw StateError('Camera has no stable Windows device path');
+    }
+    return device.deviceName.toLowerCase();
+  }
+
   Future<List<CameraDevice>> _listDevices() async {
+    if (!_streaming && _camera != null) await _stop();
     try {
       return (await _getCamera().listUsbDevices())
-          .map((d) => CameraDevice(id: '${d.deviceId}', name: d.displayName))
+          .map((d) => CameraDevice(id: _deviceKey(d), name: d.displayName))
           .toList();
     } finally {
       if (!_streaming) {
         final camera = _camera;
-        _camera = null;
         await camera?.dispose();
+        if (identical(_camera, camera)) _camera = null;
       }
     }
   }
@@ -202,6 +214,7 @@ class UvcFrameSource
     required ResolutionPreset preset,
   }) async {
     if (_streaming) throw StateError('Camera already started');
+    if (_camera != null) await _stop();
     final camera = _getCamera();
     camera.setLogLevel(UvcLogLevel.error);
     try {
@@ -214,7 +227,7 @@ class UvcFrameSource
       final selected = deviceId == null
           ? devices.first
           : devices.firstWhere(
-              (d) => '${d.deviceId}' == deviceId,
+              (d) => _deviceKey(d) == deviceId.toLowerCase(),
               orElse: () =>
                   throw StateError('Camera đã chọn không còn kết nối.'),
             );
@@ -297,6 +310,7 @@ class UvcFrameSource
   }
 
   void _poll() {
+    if (!_streaming) return;
     try {
       final camera = _camera;
       if (camera == null) return;
@@ -383,7 +397,9 @@ class UvcFrameSource
       _operations.run(_snapshot);
 
   Future<FrameBuffer?> _snapshot() async {
-    if (_liveness.elapsed > const Duration(milliseconds: 500)) return null;
+    if (!_streaming || _liveness.elapsed > const Duration(milliseconds: 500)) {
+      return null;
+    }
     final raw = _camera?.copyLatestFrame();
     if (raw == null) return null;
     return FrameBuffer(
@@ -428,23 +444,37 @@ class UvcFrameSource
     _bitmapDemand = null;
     _timer?.cancel();
     _timer = null;
-    await _errors?.cancel();
-    _errors = null;
-    final camera = _camera;
-    _camera = null;
-    final texture = _texture;
-    _texture = null;
     _size = Size.zero;
     _liveness.stop();
-    if (camera == null) return;
-    try {
-      await camera.stopPreview();
-    } finally {
+    Object? failure;
+    StackTrace? failureStack;
+    Future<bool> attempt(Future<void> Function() cleanup) async {
       try {
-        if (texture != null) await camera.disposePreviewTexture(texture);
-      } finally {
-        await camera.dispose();
+        await cleanup();
+        return true;
+      } catch (error, stack) {
+        failure ??= error;
+        failureStack ??= stack;
+        return false;
       }
     }
+
+    final errors = _errors;
+    _errors = null;
+    if (errors != null) await attempt(errors.cancel);
+    final camera = _camera;
+    if (camera != null) {
+      await attempt(camera.stopPreview);
+      final texture = _texture;
+      if (texture != null &&
+          await attempt(() => camera.disposePreviewTexture(texture))) {
+        _texture = null;
+      }
+      final disposed = await attempt(camera.dispose);
+      // Keep retryable handles until BOTH native and Flutter texture teardown
+      // succeed. A failed destroy request leaves the native session alive.
+      if (disposed && _texture == null) _camera = null;
+    }
+    if (failure != null) Error.throwWithStackTrace(failure!, failureStack!);
   }
 }

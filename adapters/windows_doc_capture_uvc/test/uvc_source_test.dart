@@ -11,10 +11,12 @@ class Camera extends Fake implements UvcCamera {
   final events = StreamController<UvcStreamError>.broadcast();
   final order = <String>[];
   var copies = 0, created = 0, attached = 0, disposed = 0, sequence = 0;
-  var failStart = false;
+  var failStart = false, failDispose = false, failTexture = false;
   Duration copyWork = Duration.zero;
   void Function()? afterSample;
   List<UvcCameraMode>? modesOverride;
+  List<UvcUsbDevice>? devicesOverride;
+  final openedDeviceIds = <int>[];
   UvcCameraMode mode = const UvcCameraMode(
     frameFormat: 1,
     formatName: 'synthetic',
@@ -25,20 +27,25 @@ class Camera extends Fake implements UvcCamera {
   @override
   void setLogLevel(UvcLogLevel level) {}
   @override
-  Future<List<UvcUsbDevice>> listUsbDevices() async => [
-    const UvcUsbDevice(
-      deviceId: 1,
-      deviceName: 'test',
-      vendorId: 0,
-      productId: 0,
-      productName: 'test',
-      manufacturerName: 'test',
-      serialNumber: '',
-      hasPermission: true,
-    ),
-  ];
+  Future<List<UvcUsbDevice>> listUsbDevices() async =>
+      devicesOverride ??
+      [
+        const UvcUsbDevice(
+          deviceId: 1,
+          deviceName: 'test',
+          vendorId: 0,
+          productId: 0,
+          productName: 'test',
+          manufacturerName: 'test',
+          serialNumber: '',
+          hasPermission: true,
+        ),
+      ];
   @override
-  Future<void> openUsbDevice(int deviceId) async {}
+  Future<void> openUsbDevice(int deviceId) async {
+    openedDeviceIds.add(deviceId);
+  }
+
   @override
   Stream<UvcStreamError> get streamErrors => events.stream;
   @override
@@ -153,14 +160,27 @@ class Camera extends Fake implements UvcCamera {
   @override
   Future<void> disposePreviewTexture(int textureId) async {
     order.add('texture_dispose');
+    if (failTexture) throw StateError('Texture still registered');
   }
 
   @override
   Future<void> dispose() async {
     disposed++;
     order.add('camera_dispose');
+    if (failDispose) throw StateError('Native teardown not queued');
   }
 }
+
+UvcUsbDevice namedDevice(int id, String path) => UvcUsbDevice(
+  deviceId: id,
+  deviceName: path,
+  vendorId: 0,
+  productId: 0,
+  productName: 'Synthetic camera',
+  manufacturerName: '',
+  serialNumber: '',
+  hasPermission: true,
+);
 
 Camera smallCamera() => Camera()
   ..modesOverride = [
@@ -195,6 +215,113 @@ Future<void> advance(WidgetTester tester, int milliseconds) async {
 }
 
 void main() {
+  test(
+    'saved camera path survives numeric ID and enumeration order changes',
+    () async {
+      final camera = Camera()
+        ..devicesOverride = [
+          namedDevice(1, r'\\?\USB#DOC#GLOBAL'),
+          namedDevice(2, r'\\?\USB#FACE#GLOBAL'),
+        ];
+      final source = UvcFrameSource.testing(
+        camera: camera,
+        previewMode: UvcPreviewMode.bitmap,
+      );
+      try {
+        final saved = (await source.listDevices()).first.id;
+        camera.devicesOverride = [
+          namedDevice(1, r'\\?\USB#FACE#GLOBAL'),
+          namedDevice(77, r'\\?\USB#DOC#GLOBAL'),
+        ];
+        await source.start(deviceId: saved.toUpperCase());
+        expect(camera.openedDeviceIds, [77]);
+      } finally {
+        await source.stop();
+        await camera.events.close();
+      }
+    },
+  );
+
+  test(
+    'legacy numeric selection fails closed instead of opening another camera',
+    () async {
+      final camera = Camera()
+        ..devicesOverride = [
+          namedDevice(1, r'\\?\USB#FACE#GLOBAL'),
+          namedDevice(2, r'\\?\USB#DOC#GLOBAL'),
+        ];
+      final source = UvcFrameSource.testing(camera: camera);
+      try {
+        await expectLater(source.start(deviceId: '1'), throwsStateError);
+        expect(camera.openedDeviceIds, isEmpty);
+      } finally {
+        await source.stop();
+        await camera.events.close();
+      }
+    },
+  );
+
+  test('failed native disposal keeps its handle for stop retry', () async {
+    final camera = Camera();
+    final source = UvcFrameSource.testing(
+      camera: camera,
+      previewMode: UvcPreviewMode.bitmap,
+    );
+    try {
+      await source.start();
+      camera.failDispose = true;
+      await expectLater(source.stop(), throwsStateError);
+      expect(await source.latestFullResolutionFrame(), isNull);
+      expect(camera.fullCopies, 0);
+      camera.failDispose = false;
+      await source.stop();
+      expect(camera.disposed, 2);
+      expect(source.previewSize, Size.zero);
+    } finally {
+      camera.failDispose = false;
+      await source.stop();
+      await camera.events.close();
+    }
+  });
+
+  test(
+    'failed texture cleanup retries unregister after native disposal',
+    () async {
+      final camera = Camera();
+      final source = UvcFrameSource.testing(camera: camera);
+      try {
+        await source.start();
+        camera.failTexture = true;
+        await expectLater(source.stop(), throwsStateError);
+        camera.failTexture = false;
+        await source.stop();
+        expect(camera.order.where((e) => e == 'texture_dispose'), hasLength(2));
+      } finally {
+        camera.failTexture = false;
+        await source.stop();
+        await camera.events.close();
+      }
+    },
+  );
+
+  test(
+    'failed enumeration disposal is retried before a new camera operation',
+    () async {
+      final camera = Camera()..failDispose = true;
+      final source = UvcFrameSource.testing(camera: camera);
+      try {
+        await expectLater(source.listDevices(), throwsStateError);
+        camera.failDispose = false;
+        await source.stop();
+        expect(camera.disposed, 2);
+      } finally {
+        camera.failDispose = false;
+        await source.stop();
+        await camera.events.close();
+      }
+    },
+  );
+
   testWidgets(
     'profiles bound 8MP samples while snapshots retain every native pixel',
     (tester) async {

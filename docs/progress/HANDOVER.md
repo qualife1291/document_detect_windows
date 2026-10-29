@@ -171,10 +171,11 @@ Bootstrap đã chạy và chạy lại đạt, log
 | Windows accessibility | Chưa inspect | Accessibility Insights / Inspect + Narrator trên app đã build có preview/warning/result |
 | Release no-op mechanism | Không áp dụng cho cơ chế có điều kiện | Không có no-op switch; start mở camera ở debug và release. Release camera vẫn phải kiểm tra thật |
 
-Chưa chọn backend default trước khi đo. Root không hard-depend candidate nào;
-example chọn UVC thử nghiệm tường minh. UVC copy full RGBA rồi downsample trong
-Dart, cần profiling/native downsampling để chấp nhận gate hiệu năng. Không có
-dartcv4 dependency; facade mặc định pure Dart giữ nguyên SDK floor.
+Chưa chọn backend production trước khi đo. Root không hard-depend candidate nào;
+example chọn UVC thử nghiệm tường minh. Source hiện tại downsample native trước
+FFI cho analysis/bitmap; producer và snapshot vẫn có full-frame cost nên cần đo
+trên kiosk để chấp nhận gate hiệu năng. Không có dartcv4 dependency; facade mặc
+định pure Dart giữ nguyên SDK floor.
 
 ## Accessibility và Nielsen
 
